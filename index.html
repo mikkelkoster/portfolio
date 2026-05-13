@@ -1,0 +1,2503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mikkel Køster — Design Leader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Inter + Fraunces (the exact font pair from the design) -->
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── RESET ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; background: #0F1729; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #FAFAFA;
+      color: #0F1729;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { display: block; max-width: 100%; }
+
+    /* ── DESIGN TOKENS ──────────────────────────────────── */
+    :root {
+      --dark:       #0F1729;
+      --bg:         #FAFAFA;
+      --card:       #FFFFFF;
+      --text:       #0F1729;
+      --body:       #475569;
+      --muted:      #64748B;
+      --faint:      #94A3B8;
+      --blue:       #2563EB;
+      --blue-dk:    #1D4ED8;
+      --blue-50:    #EFF6FF;
+      --slate-50:   #F8FAFC;
+      --slate-100:  #F1F5F9;
+      --slate-200:  #E2E8F0;
+      --slate-300:  #CBD5E1;
+      --challenge:  #1E293B;
+      --px:         64px;
+      --max-w:      1600px;
+    }
+
+    .container {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 var(--px);
+    }
+
+    /* ── FRAUNCES helper ─────────────────────────────────── */
+    .ff { font-family: 'Fraunces', Georgia, serif; }
+
+    /* ── ANIMATION INIT ──────────────────────────────────── */
+    /* Applied by JS after DOMContentLoaded so hero is visible on first paint */
+    .will-fade       { opacity: 1; }
+    .will-fade-left  { opacity: 1; }
+    .will-fade-scale { opacity: 1; }
+    .will-fade-up    { opacity: 1; }
+
+
+    /* ════════════════════════════════════════════════════
+       NAV
+    ════════════════════════════════════════════════════ */
+    .nav {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 999;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      /* All colour/blur props transition together */
+      transition: background 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                  border-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                  backdrop-filter 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+      border-bottom: 1px solid transparent;
+    }
+    /* ── In the dark hero section ── */
+    .nav.in-dark {
+      background: rgba(15, 23, 41, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-color: rgba(255, 255, 255, 0.06);
+    }
+    /* ── In a light section — transparent frosted glass ── */
+    .nav.in-light {
+      background: rgba(250, 250, 250, 0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-color: rgba(15, 23, 41, 0.07);
+    }
+    .nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 var(--px);
+    }
+    .nav__logo {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 22px;
+      color: #fff;
+      line-height: 1.5;
+      transition: color 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .nav.in-light .nav__logo { color: var(--dark); }
+    .nav__links {
+      display: flex;
+      gap: 40px;
+      list-style: none;
+    }
+    .nav__links a {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--faint);
+      transition: color 0.18s, color 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .nav.in-dark  .nav__links a { color: var(--faint); }
+    .nav.in-dark  .nav__links a:hover { color: #fff; }
+    .nav.in-light .nav__links a { color: var(--muted); }
+    .nav.in-light .nav__links a:hover { color: var(--dark); }
+    .nav__buttons { display: flex; gap: 8px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 20px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      transition: background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease, color 0.28s ease, transform 0.22s ease;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    /* Smaller variant for nav */
+    .btn--sm {
+      font-size: 12px;
+      padding: 5px 11px;
+      border-radius: 6px;
+    }
+    .btn--primary {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+    }
+    .btn--primary:hover {
+      background: var(--blue-dk);
+      border-color: var(--blue-dk);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+    }
+    .btn--secondary {
+      background: #fff;
+      border-color: #CBD5E1;
+      color: #334155;
+    }
+    .btn--secondary:hover {
+      background: #F8FAFC;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    /* Secondary on dark background */
+    .btn--ghost {
+      background: transparent;
+      border-color: rgba(255,255,255,0.30);
+      color: #fff;
+    }
+    .btn--ghost:hover {
+      background: transparent;
+      border-color: rgba(255,255,255,0.55);
+      transform: translateY(-1px);
+    }
+    .btn--ghost-linkedin {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
+    }
+    .btn--ghost-linkedin:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: none;
+      transform: translateY(-1px);
+    }
+    /* LinkedIn — adapts between dark hero and light nav */
+    .btn--linkedin {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.10);
+      border-color: rgba(255,255,255,0.18);
+      color: #fff;
+    }
+    .btn--linkedin:hover {
+      background: rgba(255,255,255,0.16);
+      transform: translateY(-1px);
+    }
+    .nav.in-light .btn--linkedin {
+      background: transparent;
+      border-color: var(--slate-200);
+      color: var(--muted);
+    }
+    .nav.in-light .btn--linkedin:hover {
+      background: var(--slate-100);
+      color: var(--dark);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+
+    /* ════════════════════════════════════════════════════
+       HERO
+    ════════════════════════════════════════════════════ */
+    .hero {
+      background: var(--dark);
+      height: 100svh;
+      min-height: 700px;
+      overflow: hidden;
+      position: relative;
+    }
+    .hero__inner {
+      position: relative;
+      height: 100%;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding-top: 56px; /* nav height */
+      padding-bottom: 56px;
+      padding-left: var(--px);
+      padding-right: var(--px);
+      display: flex;
+      align-items: center;
+      z-index: 1;
+    }
+    .hero__text {
+      flex: 0 0 auto;
+      max-width: 660px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+    }
+    .hero__kicker {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--blue);
+      line-height: 1.5;
+      margin-bottom: 0;
+      will-change: opacity, transform;
+    }
+    .hero__headlines {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 0;
+      margin-bottom: 32px;
+    }
+    .hero__line {
+      overflow: hidden;
+      line-height: 1; /* clip descenders */
+      padding-bottom: 4px;
+    }
+    .hero__line-inner {
+      display: block;
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 60px;
+      color: #fff;
+      line-height: 1.5;
+      letter-spacing: -2px;
+      will-change: opacity, transform;
+    }
+    .hero__tagline {
+      font-size: 18px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: var(--faint);
+      letter-spacing: -0.1px;
+      max-width: 562px;
+      will-change: opacity, transform;
+    }
+    .hero__cta {
+      display: flex;
+      gap: 12px;
+      margin-top: 36px;
+    }
+    @media (min-width: 1400px) {
+      .hero__line-inner { font-size: 76px; letter-spacing: -3px; }
+      .hero__tagline    { font-size: 20px; max-width: 640px; }
+      .hero__kicker     { font-size: 20px; }
+      .hero__text       { max-width: 820px; }
+    }
+    .hero__photo {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      pointer-events: none;
+    }
+    /* Hero photo image */
+    .hero__photo-img {
+      height: 100%;
+      width: auto;
+      object-fit: cover;
+      object-position: top center;
+      border-radius: 0 0 0 0;
+      display: block;
+    }
+    /* Placeholder — swap for real <img> when ready */
+    .hero__photo-placeholder {
+      width: 520px;
+      height: 720px;
+      background: linear-gradient(175deg, #141a2e 0%, #1a2344 50%, #0f1a3d 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px 4px 0 0;
+      flex-shrink: 0;
+    }
+    .hero__photo-placeholder svg { opacity: 0.12; }
+
+
+    /* ════════════════════════════════════════════════════
+       ABOUT
+    ════════════════════════════════════════════════════ */
+    .about {
+      background: var(--bg);
+      padding: 100px var(--px) 50px;
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .about__card {
+      background: var(--card);
+      border-radius: 24px;
+      border: 1px solid var(--slate-200);
+      padding: 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+    .about__content { display: flex; flex-direction: column; gap: 20px; }
+
+    .section-label {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--blue);
+      line-height: 1.5;
+    }
+    .about__headline {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 36px;
+      line-height: 1.2;
+      letter-spacing: -0.9px;
+      color: var(--text);
+    }
+    .about__body {
+      font-size: 18px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: var(--body);
+      letter-spacing: -0.1px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .stat {
+      padding: 0 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .stat:first-child { padding-left: 0; }
+    .stat:last-child { padding-right: 0; }
+    .stat + .stat { border-left: none; }
+    .stat__value {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 40px;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat__label {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--body);
+    }
+
+
+    /* ════════════════════════════════════════════════════
+       CORE SKILLS (What I do)
+    ════════════════════════════════════════════════════ */
+    .skills {
+      background: var(--bg);
+      padding: 50px var(--px);
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .skills__label { margin-bottom: 0; }
+    .skill-row:first-of-type { border-top: none; }
+
+    .skill-row {
+      display: flex;
+      gap: 200px;
+      align-items: flex-start;
+      padding: 48px 0;
+      border-top: 1px solid var(--slate-200);
+    }
+    .skill-row__left {
+      flex: 0 0 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .skill-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--blue-50);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--blue-dk);
+      font-variant-numeric: tabular-nums;
+    }
+    .skill-title {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 36px;
+      line-height: 1.2;
+      letter-spacing: -0.9px;
+      color: var(--text);
+    }
+    .skill-row__right {
+      flex: 1;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--body);
+      letter-spacing: -0.1px;
+      padding-top: 38px; /* align with title */
+    }
+    .skills__divider {
+      height: 1px;
+      background: var(--slate-200);
+      margin: 0;
+    }
+
+
+    /* ════════════════════════════════════════════════════
+       WORK
+    ════════════════════════════════════════════════════ */
+    .work {
+      background: var(--bg);
+      padding: 50px var(--px);
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .work__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 48px;
+    }
+    .work__label { margin-bottom: 0; }
+    .work__subtitle {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .case-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .case {
+      display: grid;
+      grid-template-columns: 576px 1fr;
+      min-height: 420px;
+      border: 1px solid var(--slate-200);
+      border-radius: 20px;
+      overflow: hidden;
+      background: var(--card);
+    }
+    /* Even cards: image left (wider), text right */
+    .case:nth-child(even) {
+      grid-template-columns: 1fr 576px;
+    }
+    .case:nth-child(even) .case__text { order: 2; }
+    .case:nth-child(even) .case__image { order: 1; }
+
+    .case__text {
+      background: var(--card);
+      padding: 0 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .case__content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 48px 0;
+    }
+    .case__header { display: flex; flex-direction: column; gap: 8px; }
+    .case__title {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 48px;
+      line-height: 1.05;
+      letter-spacing: -1.5px;
+      color: var(--text);
+    }
+    .case__meta {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .case__challenge {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.6;
+      color: var(--challenge);
+      letter-spacing: -0.1px;
+    }
+    .case__body {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--body);
+    }
+    .case__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      color: #404040;
+      background: #F1F5F9;
+      padding: 2px 8px;
+      border-radius: 16px;
+      border: none;
+      display: inline-block;
+    }
+
+    .case__image {
+      background: var(--slate-100);
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .case__image:hover { transform: scale(1.03); }
+    .case__image-inner {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center center;
+      /* transform set by JS parallax — no CSS transition to avoid fighting */
+      will-change: transform;
+    }
+
+    /* ── 2×2 GRID VARIANT ──────────────────────────────────
+       Toggle: change "case-list" → "case-list case-list--grid"
+       in the HTML to switch layouts. Remove to revert.
+    ──────────────────────────────────────────────────── */
+    .case-list--grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    .case-list--grid .case {
+      display: flex;
+      flex-direction: column;
+      grid-template-columns: unset;
+      min-height: 0;
+      height: auto; /* let text content dictate height */
+    }
+    .case-list--grid .case:nth-child(even) {
+      grid-template-columns: unset;
+    }
+    .case-list--grid .case__image {
+      order: 1;
+      flex: 0 0 380px; /* fixed image height */
+      min-height: 0;
+      overflow: hidden;
+      padding: 32px;
+    }
+    .case-list--grid .case__text {
+      order: 2;
+      padding: 0 36px;
+      flex: 0 0 auto; /* grows with content */
+      overflow: visible;
+    }
+    .case-list--grid .case:nth-child(even) .case__text { order: 2; }
+    .case-list--grid .case:nth-child(even) .case__image { order: 1; }
+    .case-list--grid .case__title { font-size: 32px; letter-spacing: -1px; }
+    .case-list--grid .case__content { gap: 12px; padding: 28px 0 32px; }
+    .case-list--grid .case__body { display: block; }
+    .case-list--grid .case__tags { gap: 6px; }
+
+    /* Gradient placeholders per project */
+    .case-img--formalize    { background: linear-gradient(135deg, #F0F4FF 0%, #C7D7FD 60%, #93AEFB 100%); }
+    .case-img--maersk       { background: linear-gradient(135deg, #EBF5FF 0%, #93C5FD 55%, #1D4ED8 100%); }
+    .case-img--finansforb   { background: linear-gradient(135deg, #FFF0F6 0%, #FCA5A5 55%, #E11D48 100%); }
+    .case-img--matas        { background: linear-gradient(135deg, #FFF7ED 0%, #FCD34D 55%, #D97706 100%); }
+
+    .case__img-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .case__img-placeholder svg { opacity: 0.20; }
+
+
+    /* ════════════════════════════════════════════════════
+       CLIENT STRIP
+    ════════════════════════════════════════════════════ */
+    /* ── Apple-style Carousel ──────────────────────────── */
+    .carousel-wrap {
+      background: var(--bg);
+      padding: 0 0 72px var(--px);
+      overflow: hidden; /* clip right peek */
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .carousel-track {
+      display: flex;
+      gap: 16px;
+      will-change: transform;
+    }
+    /* Each column = card image + static caption, slides together             */
+    /* Formula: 3 cards fill the content area (viewport − 2×64px padding)   */
+    /* card = (100vw − 128px − 2×16px_gap) / 3 = 33.33vw − 53.33px        */
+    /* → 4th card peeks ~50px inside right margin at every viewport width   */
+    .carousel-col {
+      /* min() caps at the 1600px-derived value so peek stays ~50px on wide monitors */
+      flex: 0 0 min(calc(33.33vw - 54px), 479px);
+      max-width: 500px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      transition: opacity 0.45s ease;
+    }
+    .carousel-col.is-peek   { opacity: 0.3 !important; }
+    .carousel-col.is-hidden { opacity: 0; pointer-events: none; }
+
+    .client-card {
+      width: 100%;
+      /* Height tracks card width — clamp keeps it sensible across all sizes */
+      height: clamp(260px, 38vw, 440px);
+      border-radius: 20px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+    .cc--img { position: relative; overflow: hidden; background: var(--bg); transition: background-color 0.3s ease; }
+    .cc--img:hover { background: var(--bg-hover); }
+    .card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 24px; display: block; }
+
+    /* Static caption below each card */
+    .carousel-col-cap { padding-top: 16px; }
+    .client-card__name {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 22px;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+    .client-card__industry {
+      font-size: 13px;
+      font-weight: 400;
+      opacity: 0.65;
+    }
+    /* Footer row: just the arrow controls, pushed to the right */
+    .carousel-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 16px;
+      padding: 18px var(--px) 0 0;
+      width: 100%;
+    }
+    .carousel-dots {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .carousel-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--slate-200);
+      flex-shrink: 0;
+      transition: background 0.3s ease, width 0.3s ease;
+    }
+    .carousel-dot.is-active {
+      background: var(--blue);
+      width: 16px;
+    }
+    .carousel-cap-name {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 17px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .carousel-cap-desc {
+      font-size: 13px;
+      color: var(--body);
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+    .carousel-cap-industry {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .carousel-cap-desc:empty { display: none; }
+    .carousel-controls {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .carousel-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--slate-200);
+      background: var(--card);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+      color: var(--text);
+    }
+    .carousel-btn:hover { background: var(--slate-100); border-color: var(--slate-200); }
+    .carousel-btn:disabled { opacity: 0.3; cursor: default; }
+    .carousel-btn svg { display: block; }
+
+    /* Card colours */
+    .cc--sleepacy   { background: #F5EFE0; color: #2C1F0E; }
+    .cc--sleepacy .client-card__name,
+    .cc--sleepacy .client-card__industry { color: #2C1F0E; }
+
+    .cc--danskebank { background: #0B1F3A; }
+    .cc--danskebank .client-card__name,
+    .cc--danskebank .client-card__industry { color: #fff; }
+
+    .cc--brobizz    { background: #1A6B3A; }
+    .cc--brobizz .client-card__name,
+    .cc--brobizz .client-card__industry { color: #fff; }
+
+    .cc--danskMetal { background: #00B4E0; }
+    .cc--danskMetal .client-card__name,
+    .cc--danskMetal .client-card__industry { color: #fff; }
+
+    .cc--varier     { background: #5B8A80; }
+    .cc--varier .client-card__name,
+    .cc--varier .client-card__industry { color: #fff; }
+
+    .cc--caPsychics { background: #C89030; }
+    .cc--caPsychics .client-card__name,
+    .cc--caPsychics .client-card__industry { color: #fff; }
+
+    .cc--bolius     { background: #C85A38; }
+    .cc--bolius .client-card__name,
+    .cc--bolius .client-card__industry { color: #fff; }
+
+    /* ── Mobile: 1 visible + ~44px peek                                        */
+    /* card = 100vw − 20px_padding − 44px_peek − 12px_gap = 100vw − 76px      */
+    @media (max-width: 600px) {
+      .carousel-wrap    { padding-left: 20px; padding-bottom: 48px; }
+      .carousel-footer  { padding-right: 20px; }
+      .carousel-track   { gap: 12px; }
+      .carousel-col     { flex: 0 0 calc(100vw - 76px); max-width: none; }
+      .client-card      { height: 300px; border-radius: 16px; }
+      .carousel-col-cap { padding-top: 12px; }
+      .carousel-cap-name     { font-size: 14px; }
+      .carousel-cap-industry { gap: 3px; }
+      .carousel-cap-desc     { font-size: 12px; }
+      /* Arrows hidden at mobile — swipe only */
+      .carousel-controls { display: none; }
+    }
+
+
+    /* ════════════════════════════════════════════════════
+       BEYOND THE WORK
+    ════════════════════════════════════════════════════ */
+    .beyond {
+      background: var(--bg);
+      padding: 50px var(--px) 60px;
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .beyond__label { margin-bottom: 48px; }
+
+    .beyond__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .beyond-card {
+      background: var(--card);
+      border-radius: 20px;
+      border: 1px solid var(--slate-200);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.28s ease, border-color 0.3s ease;
+      cursor: default;
+    }
+    .beyond-card:hover {
+      background: var(--slate-100);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      transform: translateY(-2px);
+    }
+    .beyond-card__illus {
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+    .beyond-card__illus svg { display: block; }
+    .beyond-card__title {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 18px;
+      line-height: 1.4;
+      color: var(--text);
+    }
+    .beyond-card__body {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--body);
+      padding-top: 14px;
+    }
+
+
+    /* ════════════════════════════════════════════════════
+       EXPERIENCE
+    ════════════════════════════════════════════════════ */
+    .experience {
+      background: var(--bg);
+      padding: 50px var(--px) 60px;
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .experience__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .exp-list { display: flex; flex-direction: column; }
+    .exp-row {
+      display: grid;
+      grid-template-columns: 220px 1fr auto;
+      gap: 24px;
+      align-items: baseline;
+      padding: 28px 16px;
+      border-radius: 8px;
+      position: relative;
+    }
+    .exp-row::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: var(--slate-200);
+    }
+    .exp-period {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--faint);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.4;
+    }
+    .exp-company {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .exp-detail { display: flex; flex-direction: column; gap: 4px; }
+    .exp-role {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .exp-desc {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--body);
+      line-height: 1.5;
+    }
+    .exp-badge {
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      color: #404040;
+      background: #F1F5F9;
+      padding: 2px 8px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      align-self: flex-start;
+      display: inline-block;
+      transition: border-color 0.18s ease;
+    }
+
+    /* ── Experience accordion ─────────────────────────── */
+    .exp-item {
+      display: flex;
+      flex-direction: column;
+      border-radius: 8px;
+      transition: background 0.18s ease;
+    }
+    .exp-item:hover { background: #F1F5F9; }
+    .exp-item:hover .exp-badge { border-color: var(--slate-300); }
+    .exp-item:last-child {
+      border-bottom: 1px solid var(--slate-200);
+    }
+    .exp-toggle { cursor: pointer; user-select: none; }
+    .exp-company-wrap { display: flex; flex-direction: column; gap: 3px; }
+    .exp-row-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      align-self: flex-start;
+    }
+    .exp-chevron {
+      color: var(--faint);
+      transition: transform 0.35s ease;
+      flex-shrink: 0;
+      display: block;
+      margin-top: 2px;
+    }
+    .exp-item.is-open .exp-chevron { transform: rotate(180deg); }
+    .exp-expand {
+      height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: height 0.52s cubic-bezier(0.33, 1, 0.68, 1),
+                  opacity 0.38s cubic-bezier(0.33, 1, 0.68, 1);
+    }
+    .exp-expand-inner {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 24px;
+      align-items: start;
+      padding: 0 16px 32px 16px;
+    }
+    .exp-expand-imgs {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+    }
+    .exp-expand-img {
+      width: 96px;
+      height: 96px;
+      border-radius: 8px;
+      background: var(--slate-100);
+      border: 1px solid var(--slate-200);
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .exp-expand-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .exp-expand-text {
+      font-size: 12px;
+      color: var(--body);
+      line-height: 1.68;
+      padding-top: 2px;
+    }
+
+    /* ── Testimonial ─────────────────────────────────── */
+    .testimonial {
+      background: var(--bg);
+      padding: 50px var(--px) 20px;
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .testimonial-card {
+      background: var(--dark);
+      border-radius: 24px;
+      padding: 64px;
+      position: relative;
+      overflow: hidden;
+    }
+    .testimonial-mark {
+      position: absolute;
+      top: 36px; right: 60px;
+      font-family: 'Times New Roman', 'Georgia', serif;
+      font-size: 180px;
+      line-height: 1;
+      color: rgba(255,255,255,0.05);
+      pointer-events: none;
+      user-select: none;
+    }
+    .testimonial-quote {
+      font-family: 'Inter', sans-serif;
+      font-style: normal;
+      font-size: 19px;
+      font-weight: 400;
+      line-height: 1.65;
+      color: rgba(255,255,255,0.88);
+      letter-spacing: -0.1px;
+      max-width: 100%;
+      padding-right: 160px;
+      margin-bottom: 36px;
+    }
+    .testimonial-author { display: flex; align-items: center; gap: 16px; }
+    .testimonial-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.14);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .testimonial-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+    .testimonial-avatar svg { opacity: 0.45; }
+    .testimonial-name {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      color: #fff;
+      line-height: 1.3;
+    }
+    .testimonial-role { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+    .testimonial-role--prev { color: rgba(255,255,255,0.3); margin-top: 1px; }
+    .testimonial-tag {
+      display: inline-block;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.08);
+      border: none;
+      border-radius: 16px;
+      padding: 2px 8px;
+      white-space: nowrap;
+    }
+
+
+    /* ════════════════════════════════════════════════════
+       FOOTER
+    ════════════════════════════════════════════════════ */
+    .footer {
+      background: var(--dark);
+      padding: 48px 0;
+    }
+    .footer__inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer__name {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 24px;
+      color: #fff;
+    }
+    .footer__email {
+      font-size: 14px;
+      color: var(--faint);
+      transition: color 0.18s;
+    }
+    .footer__email:hover { color: #fff; }
+    .footer__copy {
+      margin-top: 32px;
+      padding-top: 24px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.28);
+    }
+
+    /* ════════════════════════════════════════════════════
+       RESPONSIVE — TABLET  (≤ 1024px)
+    ════════════════════════════════════════════════════ */
+    @media (max-width: 1100px) {
+      :root { --px: 40px; }
+
+    }
+
+    @media (max-width: 1024px) {
+      /* Nav — compact */
+      .nav__links { display: none; }
+      .nav__logo { font-size: 18px; }
+      .btn { padding: 6px 12px; font-size: 13px; line-height: 18px; }
+    }
+
+    /* ── Mid-range: side-by-side but compressed (951px – 1200px) ── */
+    /* At this range the photo is still absolute-right, so text needs         */
+    /* to stay well clear — 460px max gives ~100px gap to the photo edge.    */
+    @media (max-width: 1200px) {
+      .hero__text       { max-width: 460px; }
+      .hero__line-inner { font-size: 50px; letter-spacing: -1.5px; }
+      .hero__tagline    { font-size: 16px; }
+      .hero__kicker     { font-size: 16px; }
+    }
+
+    @media (max-width: 950px) {
+      /* Hero — stack image below text */
+      .hero { height: auto; min-height: 0; overflow: hidden; }
+      .hero__inner {
+        height: auto;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding-top: 110px;
+        padding-bottom: 0;
+        gap: 0;
+        height: auto !important;
+        min-height: 0;
+      }
+      .hero__text { max-width: 100%; }
+      .hero__photo {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        width: 100%;
+        justify-content: center;
+        pointer-events: auto;
+        overflow: hidden;
+        max-height: 620px;
+      }
+      .hero__photo-img { height: 640px; width: 100%; object-fit: cover; object-position: top center; margin-bottom: -20px; border-radius: 12px 12px 0 0; }
+
+      /* Work cards — single column */
+      .case,
+      .case:nth-child(even) { grid-template-columns: 1fr; }
+      .case:nth-child(even) .case__text { order: 1; }
+      .case:nth-child(even) .case__image { order: 2; }
+      .case__image { min-height: 300px; }
+
+      /* Grid variant — single column on tablet */
+      .case-list--grid { grid-template-columns: 1fr; }
+      .case-list--grid .case { height: auto; }
+      .case-list--grid .case__image { flex: 0 0 360px; }
+
+      /* Skills */
+      .skill-row { gap: 60px; }
+      .skill-row__left { flex: 0 0 260px; }
+
+      /* Beyond */
+      .beyond__grid { grid-template-columns: repeat(2, 1fr); }
+
+      /* Experience */
+      .exp-row { grid-template-columns: 180px 1fr auto; gap: 16px; }
+      .exp-expand-inner { grid-template-columns: 180px 1fr; gap: 16px; }
+    }
+
+
+    /* ════════════════════════════════════════════════════
+       RESPONSIVE — MOBILE  (≤ 768px)
+    ════════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      :root { --px: 20px; }
+
+      /* Nav */
+      .nav__inner { padding: 0 20px; }
+
+      /* Hero */
+      .hero__inner { padding-top: 90px; gap: 0; }
+      .hero__line-inner { font-size: 38px; letter-spacing: -1px; }
+      .hero__tagline { font-size: 15px; max-width: 100%; }
+      .hero__kicker { font-size: 15px; }
+      .hero__headlines { margin-bottom: 16px; }
+      .hero__photo { max-height: 560px; }
+      .hero__photo-img { height: 580px; width: 100%; object-fit: cover; object-position: top center; }
+
+      /* About */
+      .about { padding: 40px var(--px) 32px; }
+      .about__card { padding: 28px 24px; gap: 32px; border-radius: 16px; }
+      .about__headline { font-size: 26px; }
+      .about__body { font-size: 15px; }
+      .stats { grid-template-columns: repeat(2, 1fr); row-gap: 28px; }
+      .stat { padding: 0 20px; }
+      .stat:first-child { padding-left: 0; }
+      .stat:last-child { padding-right: 0; }
+      .stat:nth-child(2) { border-left: none; }
+      .stat:nth-child(3) { border-left: none; padding-left: 0; border-top: none; padding-top: 0; }
+      .stat:nth-child(4) { border-left: none; border-top: none; padding-top: 0; }
+      .stat__value { font-size: 32px; }
+
+      /* Skills */
+      .skills { padding: 40px var(--px); }
+      .skill-row { flex-direction: column; gap: 16px; padding: 32px 0; }
+      .skill-row__left { flex: none; width: 100%; }
+      .skill-row__right { padding-top: 0; font-size: 15px; }
+      .skill-title { font-size: 28px; }
+
+      /* Work */
+      .work { padding: 40px var(--px); }
+      .work__header { flex-direction: column; gap: 4px; margin-bottom: 28px; }
+      .case,
+      .case:nth-child(even) { grid-template-columns: 1fr; border-radius: 16px; }
+      .case:nth-child(even) .case__text { order: 1; }
+      .case:nth-child(even) .case__image { order: 2; }
+      .case__image { min-height: 220px; }
+      .case__image:hover { transform: none; }
+      .case__text { padding: 0 24px; }
+      .case__content { padding: 28px 0; gap: 16px; }
+      .case__title { font-size: 32px; letter-spacing: -0.8px; }
+      .case__challenge { font-size: 14px; }
+
+      /* Grid variant — single column on mobile */
+      .case-list--grid { grid-template-columns: 1fr; gap: 16px; }
+      .case-list--grid .case { height: auto; }
+      .case-list--grid .case__image { flex: 0 0 260px; }
+      .case-list--grid .case__text { flex: 0 0 auto; padding: 0 24px; }
+
+      /* Carousel mobile override handled in carousel CSS block */
+
+      /* Beyond */
+      .beyond { padding: 40px var(--px) 48px; }
+      .beyond__label { margin-bottom: 28px; }
+      .beyond__grid { grid-template-columns: 1fr; gap: 10px; }
+      .beyond-card { padding: 22px; }
+      .beyond-card:hover { transform: none; }
+
+      /* Experience */
+      .experience { padding: 40px var(--px) 48px; }
+      .experience__header { flex-direction: column; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
+      .exp-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        padding: 20px 12px;
+      }
+      .exp-period { font-size: 12px; }
+      .exp-company { font-size: 15px; }
+      .exp-badge { margin-top: 4px; justify-self: start; }
+
+      /* Testimonial */
+      .testimonial { padding: 40px var(--px) 16px; }
+      .testimonial-card { padding: 36px 28px; border-radius: 20px; }
+      .testimonial-quote { font-size: 17px; margin-bottom: 28px; max-width: 100%; padding-right: 0; }
+      .testimonial-mark { display: none; }
+
+      /* Accordion images */
+      .exp-expand-imgs { display: none; }
+      .exp-expand-inner { grid-template-columns: 1fr; padding: 4px 16px 24px 16px; }
+
+      /* Footer */
+      .footer { padding: 40px var(--px); }
+      .footer__inner { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════ NAV ═══════════════════ -->
+  <nav class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="#" class="nav__logo">Mikkel Køster</a>
+      <div class="nav__buttons">
+        <a href="mailto:hello@mikkelkoster.com" class="btn btn--primary btn--sm">Get in touch</a>
+        <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--secondary btn--sm">Download CV</a>
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- ═══════════════════════════ HERO ══════════════════ -->
+  <section class="hero">
+    <div class="hero__inner">
+
+      <div class="hero__text">
+        <p class="hero__kicker" id="hero-kicker">Design Leader &amp; Product Strategist</p>
+        <div class="hero__headlines">
+          <div class="hero__line"><span class="hero__line-inner" id="hl1">Design at scale.</span></div>
+          <div class="hero__line"><span class="hero__line-inner" id="hl2">People who thrive.</span></div>
+          <div class="hero__line"><span class="hero__line-inner" id="hl3">Solving hard problems.</span></div>
+        </div>
+        <p class="hero__tagline" id="hero-tagline">
+          Design leader who never stopped designing. 15 years building teams, setting strategy, and staying close to the work.
+        </p>
+        <div class="hero__cta">
+          <a href="mailto:hello@mikkelkoster.com" class="btn btn--primary">Get in touch</a>
+          <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--ghost">Download CV</a>
+          <a href="https://www.linkedin.com/in/mikkelkoester/" target="_blank" rel="noopener noreferrer" class="btn btn--ghost btn--ghost-linkedin">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0;"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn
+          </a>
+        </div>
+      </div>
+
+      <div class="hero__photo" id="hero-photo">
+        <img src="public/images/Mikkel.png" alt="Mikkel Køster" class="hero__photo-img">
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════ ABOUT ═════════════════ -->
+  <section id="about">
+    <div class="about">
+      <div class="about__card">
+        <div class="about__content">
+          <p class="section-label will-fade-left">About me</p>
+          <h2 class="about__headline will-fade-up" data-delay="80">I care deeply about the quality of the work – and the people behind it.</h2>
+          <p class="about__body will-fade-up" data-delay="180">
+            The best design leaders I've encountered never fully let go of the craft — and that's always been my model. Fifteen years across consultancies and in-house roles taught me that the problems change, but the fundamentals don't: set a high bar, build the right conditions, stay close enough to the work to know when something's off. I don't lead from a distance. I'm in the details alongside my team — then stepping back to make sure the direction is still right. I've built products and led teams across Copenhagen, New York, London, and Shanghai.
+          </p>
+        </div>
+        <div class="stats" id="stats-row">
+          <div class="stat will-fade-up" data-delay="0">
+            <span class="stat__value" data-count="15">15+</span>
+            <span class="stat__label">Years of design experience</span>
+          </div>
+          <div class="stat will-fade-up" data-delay="80">
+            <span class="stat__value" data-count="6">6+</span>
+            <span class="stat__label">Years of design leadership</span>
+          </div>
+          <div class="stat will-fade-up" data-delay="160">
+            <span class="stat__value" data-count="25">25+</span>
+            <span class="stat__label">Designers led &amp; mentored</span>
+          </div>
+          <div class="stat will-fade-up" data-delay="240">
+            <span class="stat__value" data-count="8">8+</span>
+            <span class="stat__label">Industries worked across</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════ CORE SKILLS ═══════════ -->
+  <section id="skills">
+    <div class="skills">
+      <p class="section-label skills__label will-fade-left">What I do</p>
+
+      <div class="skill-row will-fade-up" data-delay="0">
+        <div class="skill-row__left">
+          <span class="skill-badge">01</span>
+          <h3 class="skill-title">Design at scale</h3>
+        </div>
+        <p class="skill-row__right">
+          Design systems built for real adoption — not just documented in Figma. Processes that hold up as teams grow. A quality bar that doesn't slip under pressure. I've scaled this at Maersk across 20+ product teams and rebuilt it from the ground up at Formalize — always starting from what the team actually needs to work well together.
+        </p>
+      </div>
+
+      <div class="skill-row will-fade-up" data-delay="100">
+        <div class="skill-row__left">
+          <span class="skill-badge">02</span>
+          <h3 class="skill-title">People who thrive</h3>
+        </div>
+        <p class="skill-row__right">
+          I hire deliberately, mentor closely, and stay in the work alongside my team — not managing from a distance. I've led 25+ designers across agencies and in-house teams, and I still believe the most powerful thing a design leader can do is help someone grow into a version of themselves they didn't know was possible.
+        </p>
+      </div>
+
+      <div class="skill-row will-fade-up" data-delay="200">
+        <div class="skill-row__left">
+          <span class="skill-badge">03</span>
+          <h3 class="skill-title">Solving hard problems</h3>
+        </div>
+        <p class="skill-row__right">
+          Multi-persona platforms, high-density data, complex enterprise workflows — the kind of problems where the brief itself needs redesigning before anything else. I know how to break ambiguity into clear priorities, make the case for the right approach, and keep teams moving with confidence even when the path forward isn't obvious yet.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════ WORK ══════════════════ -->
+  <section id="work">
+    <div class="work">
+      <div class="work__header">
+        <p class="section-label work__label will-fade-left">Selected work</p>
+        <span class="work__subtitle will-fade-up" data-delay="60">15 years · 15+ clients · 8+ industries</span>
+      </div>
+
+      <div class="case-list case-list--grid">
+
+        <!-- Formalize -->
+        <div class="case will-fade-scale" data-delay="0">
+          <div class="case__text">
+            <div class="case__content">
+              <div class="case__header">
+                <h3 class="case__title">Formalize</h3>
+              </div>
+              <div>
+                <p class="case__challenge">Building the design function from zero at a hyper-growth compliance startup.</p>
+              </div>
+              <p class="case__body">Joined as the first design leader on a platform still shaped largely by engineering priorities. Reoriented the product around user journeys, information architecture, and ease of use — shifting from developer-led to genuinely UX-led thinking. Hired a team of four, built the design system from scratch, and now own the full product experience end to end.</p>
+              <div class="case__tags">
+                <span class="tag">Digital transformation</span>
+                <span class="tag">Scale-up</span>
+                <span class="tag">Product eco-system</span>
+                <span class="tag">UX strategy</span>
+                <span class="tag">Team leadership</span>
+                <span class="tag">Design system</span>
+              </div>
+            </div>
+          </div>
+          <div class="case__image">
+            <img src="public/images/formalize.png" alt="Formalize" class="case__image-inner">
+          </div>
+        </div>
+
+        <!-- Maersk -->
+        <div class="case will-fade-scale" data-delay="120">
+          <div class="case__text">
+            <div class="case__content">
+              <div class="case__header">
+                <h3 class="case__title">Maersk</h3>
+              </div>
+              <p class="case__challenge">End-to-end supply chain platform — 20+ product teams, 260 engineers.</p>
+              <p class="case__body">Each designer was embedded in a product team alongside a Product Owner, Tech Lead, and developers — responsible for their own area of the platform. I scaled the team from 6 to 12, introduced cross-team critique and shared design principles, and championed a project called Grand Central Station: a unified starting point built around user journeys, giving operators a clear overview of their tasks and a direct path to where they needed to go.</p>
+              <div class="case__tags">
+                <span class="tag">Design leadership</span>
+                <span class="tag">Enterprise UX</span>
+                <span class="tag">Data heavy UI</span>
+                <span class="tag">Design system</span>
+              </div>
+            </div>
+          </div>
+          <div class="case__image">
+            <img src="public/images/maersk.png" alt="Maersk" class="case__image-inner">
+          </div>
+        </div>
+
+        <!-- Finansforbundet -->
+        <div class="case will-fade-scale" data-delay="0">
+          <div class="case__text">
+            <div class="case__content">
+              <div class="case__header">
+                <h3 class="case__title">Finansforbundet</h3>
+              </div>
+              <p class="case__challenge">8 new digital products from scratch for Denmark's leading financial union.</p>
+              <p class="case__body">A 50,000-member financial union with a 3-year innovation budget and no product capability. I led the full digital transformation — building 8 new digital products from scratch, embedding design thinking into a political organisation, and shifting Finansforbundet from output-focused delivery to a human-centred, insight-driven product culture.</p>
+              <div class="case__tags">
+                <span class="tag">Digital transformation</span>
+                <span class="tag">Product eco-system</span>
+                <span class="tag">UX strategy</span>
+                <span class="tag">Team leadership</span>
+              </div>
+            </div>
+          </div>
+          <div class="case__image">
+            <img src="public/images/finansforbundet.png" alt="Finansforbundet" class="case__image-inner">
+          </div>
+        </div>
+
+        <!-- Matas -->
+        <div class="case will-fade-scale" data-delay="120">
+          <div class="case__text">
+            <div class="case__content">
+              <div class="case__header">
+                <h3 class="case__title">Matas</h3>
+              </div>
+              <p class="case__challenge">1.3M members. 4.6 App Store rating. Denmark's leading loyalty app.</p>
+              <p class="case__body">Club Matas had lost its edge — declining engagement, outdated mechanics, no clear product direction. I led the full redesign of the app and loyalty experience, shifting from transactional to relationship-led design. The result: Denmark's leading loyalty app with 1.3M members and a 4.6 App Store rating.</p>
+              <div class="case__tags">
+                <span class="tag">Consumer app</span>
+                <span class="tag">Loyalty program</span>
+                <span class="tag">iOS</span>
+                <span class="tag">1.3 million members</span>
+              </div>
+            </div>
+          </div>
+          <div class="case__image">
+            <img src="public/images/matas.png" alt="Matas" class="case__image-inner">
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════ CAROUSEL ═════════════ -->
+  <div class="carousel-wrap will-fade-up" data-delay="0">
+    <div class="carousel-track" id="carousel-track">
+      <!-- 01 Danske Bank -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#D4E8EF; --bg-hover:#99D9F0;">
+          <img src="public/images/01 danske bank.png" alt="Danske Bank" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">Danske Bank</p>
+          <p class="carousel-cap-desc">Designed the Nordics' first pocket money solution — giving kids a real debit card and the tools to manage, save, and spend responsibly.</p>
+          <div class="carousel-cap-industry"><span class="tag">Banking</span><span class="tag">Fintech</span></div>
+        </div>
+      </div>
+      <!-- 02 Varier -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#DEEDE8; --bg-hover:#BEDBD2;">
+          <img src="public/images/02 varier.png" alt="Varier" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">Varier</p>
+          <p class="carousel-cap-desc">Helping people move more at work by turning smart furniture into an active lifestyle platform.</p>
+          <div class="carousel-cap-industry"><span class="tag">Wellness</span><span class="tag">IoT</span></div>
+        </div>
+      </div>
+      <!-- 03 Pensionsinfo -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#FAE9D1; --bg-hover:#F5D3A4;">
+          <img src="public/images/03 pensionsinfo.png" alt="Pensionsinfo" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">Pensionsinfo</p>
+          <p class="carousel-cap-desc">Making Denmark's pension savings tangible and accessible — redesigned for couples planning their future together.</p>
+          <div class="carousel-cap-industry"><span class="tag">Finance</span><span class="tag">Gov</span></div>
+        </div>
+      </div>
+      <!-- 04 Coop -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#ECD2D4; --bg-hover:#E59DA5;">
+          <img src="public/images/04 coop.png" alt="Coop" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">Coop</p>
+          <p class="carousel-cap-desc">Designed a grocery e-commerce concept to challenge the market leader for Denmark's largest supermarket chain.</p>
+          <div class="carousel-cap-industry"><span class="tag">E-commerce</span><span class="tag">Grocery</span></div>
+        </div>
+      </div>
+      <!-- 05 Sleepacy -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#F1E6DA; --bg-hover:#E9D5C6;">
+          <img src="public/images/05 sleepacy.png" alt="Sleepacy" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">Sleepacy</p>
+          <p class="carousel-cap-desc">Reimagined how a mattress brand sells sleep — e-commerce site and Sleep Services app built from scratch.</p>
+          <div class="carousel-cap-industry"><span class="tag">E-commerce</span><span class="tag">Sleep</span></div>
+        </div>
+      </div>
+      <!-- 06 BroBizz -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#C4E4D4; --bg-hover:#99D9B9;">
+          <img src="public/images/06 brobizz.png" alt="BroBizz" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">BroBizz</p>
+          <p class="carousel-cap-desc">Innovated a seamless self-service platform simplifying road toll management for drivers across Scandinavia.</p>
+          <div class="carousel-cap-industry"><span class="tag">Transport</span><span class="tag">Self-service</span></div>
+        </div>
+      </div>
+      <!-- 07 Dansk Metal -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#CCF2FF; --bg-hover:#99E4FF;">
+          <img src="public/images/07 dansk metal.png" alt="Dansk Metal" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">Dansk Metal</p>
+          <p class="carousel-cap-desc">Built a job-finding app in 12 weeks — cutting through the complexity of unemployment for union members.</p>
+          <div class="carousel-cap-industry"><span class="tag">Union</span><span class="tag">Mobile app</span></div>
+        </div>
+      </div>
+      <!-- 08 Alka -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#FEDED2; --bg-hover:#FEBCA5;">
+          <img src="public/images/08 alka.png" alt="Alka" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">Alka</p>
+          <p class="carousel-cap-desc">Redesigned insurance for the digital age — engaging customers long before they ever need to file a claim.</p>
+          <div class="carousel-cap-industry"><span class="tag">Insurance</span><span class="tag">Consumer</span></div>
+        </div>
+      </div>
+      <!-- 09 Canvas -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#FDEFED; --bg-hover:#FBE0DB;">
+          <img src="public/images/09 canvas.png" alt="Canvas" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">Canvas</p>
+          <p class="carousel-cap-desc">A skincare platform that matches you with people who share your skin profile for hyper-personalised recommendations.</p>
+          <div class="carousel-cap-industry"><span class="tag">Beauty tech</span><span class="tag">Personalisation</span></div>
+        </div>
+      </div>
+      <!-- 10 Bolius -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#F8E0DC; --bg-hover:#F1C2B9;">
+          <img src="public/images/10 bolius.png" alt="Bolius" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">Bolius</p>
+          <p class="carousel-cap-desc">Helping older homeowners make smarter decisions about their homes, finances, and retirement.</p>
+          <div class="carousel-cap-industry"><span class="tag">Housing</span><span class="tag">Editorial</span></div>
+        </div>
+      </div>
+      <!-- 11 Jill -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#DCF5E5; --bg-hover:#B9EBCC;">
+          <img src="public/images/11 jill.png" alt="Jill" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">Jill</p>
+          <p class="carousel-cap-desc">A health support platform that treats people like humans, not patients — making guidance feel personal and approachable.</p>
+          <div class="carousel-cap-industry"><span class="tag">Health</span><span class="tag">Wellness</span></div>
+        </div>
+      </div>
+      <!-- 12 California Psychics -->
+      <div class="carousel-col">
+        <div class="client-card cc--img" style="--bg:#F9ECDB; --bg-hover:#F1CFA4;">
+          <img src="public/images/12 california psychics.png" alt="California Psychics" class="card-img">
+        </div>
+        <div class="carousel-col-cap">
+          <p class="carousel-cap-name">California Psychics</p>
+          <p class="carousel-cap-desc">A dual-sided marketplace app connecting psychics and clients — redesigned for a modern mobile experience.</p>
+          <div class="carousel-cap-industry"><span class="tag">Marketplace</span><span class="tag">Mobile app</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="carousel-footer">
+      <div class="carousel-dots" id="carousel-dots"></div>
+      <div class="carousel-controls">
+        <button class="carousel-btn" id="carousel-prev" aria-label="Previous" disabled>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="carousel-btn" id="carousel-next" aria-label="Next">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════ BEYOND THE WORK ═══════ -->
+  <section id="beyond">
+    <div class="beyond">
+      <p class="section-label beyond__label will-fade-left">Beyond the work</p>
+
+      <!-- 3×2 principles grid -->
+      <div class="beyond__grid">
+        <!-- Card 1: No assholes -->
+        <div class="beyond-card will-fade-scale" data-delay="0">
+          <div class="beyond-card__illus">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="b1s" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1E3A8A" flood-opacity="0.3"/>
+                </filter>
+                <linearGradient id="b1gl" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#BFDBFE"/>
+                  <stop offset="100%" stop-color="#3B82F6"/>
+                </linearGradient>
+                <linearGradient id="b1gr" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#60A5FA"/>
+                  <stop offset="100%" stop-color="#1D4ED8"/>
+                </linearGradient>
+                <clipPath id="b1cp">
+                  <path d="M26,42 C20,36 6,28 6,18 C6,11.5 11,8 16,8 C19.5,8 22.5,9.8 26,13 C29.5,9.8 32.5,8 36,8 C41,8 46,11.5 46,18 C46,28 32,36 26,42Z"/>
+                </clipPath>
+              </defs>
+              <g filter="url(#b1s)">
+                <g clip-path="url(#b1cp)">
+                  <!-- Left bump: lit face -->
+                  <rect x="0" y="0" width="26" height="52" fill="url(#b1gl)"/>
+                  <!-- Right bump: shadow face -->
+                  <rect x="26" y="0" width="26" height="52" fill="url(#b1gr)"/>
+                  <!-- Bottom tip deepens -->
+                  <polygon points="20,36 32,36 26,43" fill="#1E40AF" opacity="0.45"/>
+                  <!-- Centre crease -->
+                  <rect x="24" y="7" width="4" height="33" fill="#1D4ED8" opacity="0.1"/>
+                  <!-- Left specular highlight -->
+                  <ellipse cx="17" cy="14" rx="6" ry="4.5" fill="white" opacity="0.55"/>
+                  <!-- Right specular (softer) -->
+                  <ellipse cx="35" cy="14" rx="3.5" ry="2.5" fill="white" opacity="0.28"/>
+                </g>
+              </g>
+            </svg>
+          </div>
+          <h4 class="beyond-card__title">No assholes</h4>
+          <p class="beyond-card__body">Work is a big part of life. I refuse to spend it in toxic environments — or creating them. The culture I build is one where people feel safe, challenged, and actually want to show up.</p>
+        </div>
+
+        <!-- Card 2: No shortcuts on quality -->
+        <div class="beyond-card will-fade-scale" data-delay="80">
+          <div class="beyond-card__illus">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="b2s" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1E3A8A" flood-opacity="0.3"/>
+                </filter>
+              </defs>
+              <!-- 8 triangular facets tiling the kite — top(26,6) left(8,24) right(44,24) bottom(26,46) -->
+              <!-- table line at y=16: left corner (20,16) right corner (32,16) centre girdle (26,24) -->
+              <g filter="url(#b2s)">
+                <polygon points="26,6 20,16 32,16"  fill="#EFF6FF"/>  <!-- table: lightest -->
+                <polygon points="26,6 8,24 20,16"   fill="#BFDBFE"/>  <!-- left crown -->
+                <polygon points="26,6 32,16 44,24"  fill="#93C5FD"/>  <!-- right crown -->
+                <polygon points="20,16 32,16 26,24" fill="#60A5FA"/>  <!-- centre girdle -->
+                <polygon points="20,16 8,24 26,24"  fill="#3B82F6"/>  <!-- left girdle -->
+                <polygon points="32,16 44,24 26,24" fill="#2563EB"/>  <!-- right girdle -->
+                <polygon points="8,24 26,24 26,46"  fill="#2563EB"/>  <!-- left pavilion -->
+                <polygon points="44,24 26,24 26,46" fill="#1D4ED8"/>  <!-- right pavilion: darkest -->
+                <!-- Specular highlights -->
+                <ellipse cx="26" cy="11.5" rx="4" ry="2.5" fill="white" opacity="0.72"/>
+                <ellipse cx="17" cy="20" rx="2.5" ry="1.5" fill="white" opacity="0.3"/>
+              </g>
+            </svg>
+          </div>
+          <h4 class="beyond-card__title">No shortcuts on quality</h4>
+          <p class="beyond-card__body">There's no point putting time and effort into something if the outcome isn't exceptional. In a world where AI can generate anything, taste is the new currency. Push for quality. Be proud of the work.</p>
+        </div>
+
+        <!-- Card 3: Getting things done -->
+        <div class="beyond-card will-fade-scale" data-delay="160">
+          <div class="beyond-card__illus">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="b3s" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1E3A8A" flood-opacity="0.3"/>
+                </filter>
+                <linearGradient id="b3g" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%"   stop-color="#EFF6FF"/>
+                  <stop offset="35%"  stop-color="#60A5FA"/>
+                  <stop offset="100%" stop-color="#1D4ED8"/>
+                </linearGradient>
+                <clipPath id="b3cp">
+                  <path d="M30,3 L13,27 H23 L16,49 L39,25 H29 Z"/>
+                </clipPath>
+              </defs>
+              <g filter="url(#b3s)">
+                <g clip-path="url(#b3cp)">
+                  <!-- Diagonal gradient: top-left lit → bottom-right shadow -->
+                  <rect x="0" y="0" width="52" height="52" fill="url(#b3g)"/>
+                  <!-- Top-right face highlight polygon -->
+                  <polygon points="30,3 39,6 29,24 22,22" fill="white" opacity="0.22"/>
+                  <!-- Specular dot on top face -->
+                  <ellipse cx="32" cy="10" rx="4" ry="3" fill="white" opacity="0.5"/>
+                </g>
+              </g>
+            </svg>
+          </div>
+          <h4 class="beyond-card__title">Getting things done</h4>
+          <p class="beyond-card__body">I favour asking forgiveness over permission. I move fast and I don't wait for perfect conditions. Thoroughness and momentum aren't opposites — you just have to care enough to do both.</p>
+        </div>
+
+        <!-- Card 4: Tenacious, not stubborn -->
+        <div class="beyond-card will-fade-scale" data-delay="60">
+          <div class="beyond-card__illus">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="b4s" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1E3A8A" flood-opacity="0.3"/>
+                </filter>
+                <linearGradient id="b4gl" x1="26" y1="8" x2="4" y2="46" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%"   stop-color="#93C5FD"/>
+                  <stop offset="100%" stop-color="#3B82F6"/>
+                </linearGradient>
+                <linearGradient id="b4gr" x1="26" y1="8" x2="48" y2="46" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%"   stop-color="#3B82F6"/>
+                  <stop offset="100%" stop-color="#1D4ED8"/>
+                </linearGradient>
+              </defs>
+              <g filter="url(#b4s)">
+                <!-- Left face: lit (apex 26,8 → base-left 4,46 → base-centre 26,46) -->
+                <polygon points="26,8 4,46 26,46"  fill="url(#b4gl)"/>
+                <!-- Right face: shadow -->
+                <polygon points="26,8 26,46 48,46" fill="url(#b4gr)"/>
+                <!-- Snow cap left (lightest) -->
+                <polygon points="26,8 18,22 26,22" fill="#DBEAFE"/>
+                <!-- Snow cap right (slightly darker) -->
+                <polygon points="26,8 26,22 34,22" fill="#BFDBFE"/>
+                <!-- Specular on snow -->
+                <ellipse cx="26" cy="13" rx="3.5" ry="2.5" fill="white" opacity="0.65"/>
+                <!-- Flag pole -->
+                <line x1="26" y1="8" x2="26" y2="2" stroke="#1D4ED8" stroke-width="1.5" stroke-linecap="round"/>
+                <!-- Flag pennant -->
+                <polygon points="26,2 33,4.5 26,7" fill="#2563EB"/>
+              </g>
+            </svg>
+          </div>
+          <h4 class="beyond-card__title">Tenacious, not stubborn</h4>
+          <p class="beyond-card__body">I challenge the status quo and say what I think — without arrogance. I'll push hard for the right solution, then listen just as hard if someone has a better one.</p>
+        </div>
+
+        <!-- Card 5: Positive by default -->
+        <div class="beyond-card will-fade-scale" data-delay="140">
+          <div class="beyond-card__illus">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="b5s" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#1E3A8A" flood-opacity="0.3"/>
+                </filter>
+                <radialGradient id="b5d" cx="38%" cy="34%" r="68%">
+                  <stop offset="0%"   stop-color="#EFF6FF"/>
+                  <stop offset="50%"  stop-color="#93C5FD"/>
+                  <stop offset="100%" stop-color="#2563EB"/>
+                </radialGradient>
+              </defs>
+              <!-- Soft outer glow -->
+              <circle cx="26" cy="26" r="24" fill="#EFF6FF" opacity="0.35"/>
+              <g transform="translate(26,26)" filter="url(#b5s)">
+                <!-- 8 rays, colour tracks light source (top = lightest, bottom = darkest) -->
+                <!-- rotate(0)=top rotate(90)=right rotate(180)=bottom rotate(270)=left -->
+                <ellipse cx="0" cy="-18" rx="3.5" ry="5" fill="#EFF6FF"  transform="rotate(0)"/>
+                <ellipse cx="0" cy="-18" rx="3.5" ry="5" fill="#BFDBFE"  transform="rotate(45)"/>
+                <ellipse cx="0" cy="-18" rx="3.5" ry="5" fill="#93C5FD"  transform="rotate(90)"/>
+                <ellipse cx="0" cy="-18" rx="3.5" ry="5" fill="#3B82F6"  transform="rotate(135)"/>
+                <ellipse cx="0" cy="-18" rx="3.5" ry="5" fill="#2563EB"  transform="rotate(180)"/>
+                <ellipse cx="0" cy="-18" rx="3.5" ry="5" fill="#3B82F6"  transform="rotate(225)"/>
+                <ellipse cx="0" cy="-18" rx="3.5" ry="5" fill="#60A5FA"  transform="rotate(270)"/>
+                <ellipse cx="0" cy="-18" rx="3.5" ry="5" fill="#93C5FD"  transform="rotate(315)"/>
+                <!-- Central disc with radial gradient -->
+                <circle cx="0" cy="0" r="11" fill="url(#b5d)"/>
+                <!-- Specular highlight -->
+                <ellipse cx="-3.5" cy="-3.5" rx="4" ry="3" fill="white" opacity="0.55"/>
+              </g>
+            </svg>
+          </div>
+          <h4 class="beyond-card__title">Positive by default</h4>
+          <p class="beyond-card__body">I'm a social extrovert who genuinely loves the people side of this work. I bring energy, look for the good, and believe a team that enjoys working together consistently outperforms one that doesn't.</p>
+        </div>
+
+        <!-- Card 6: I finish what I start -->
+        <div class="beyond-card will-fade-scale" data-delay="220">
+          <div class="beyond-card__illus">
+            <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="b6s" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#1E3A8A" flood-opacity="0.25"/>
+                </filter>
+                <!-- Vertical gradient: top (lit) → bottom (shadow) gives 3-D torus feel -->
+                <linearGradient id="b6g" x1="0" y1="8" x2="0" y2="44" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%"   stop-color="#BFDBFE"/>
+                  <stop offset="100%" stop-color="#1D4ED8"/>
+                </linearGradient>
+              </defs>
+              <g filter="url(#b6s)">
+                <!-- Background track -->
+                <circle cx="26" cy="26" r="18" stroke="#EFF6FF" stroke-width="7" fill="none"/>
+                <!-- Progress arc: 97% (circumference 113.1 → dash 109.7) -->
+                <circle cx="26" cy="26" r="18"
+                        stroke="url(#b6g)"
+                        stroke-width="7"
+                        fill="none"
+                        stroke-dasharray="109.7 113.1"
+                        stroke-linecap="round"
+                        transform="rotate(-90 26 26)"/>
+                <!-- Subtle front-face highlight arc (top half, softer blue) -->
+                <circle cx="26" cy="26" r="18"
+                        stroke="#EFF6FF"
+                        stroke-width="3"
+                        fill="none"
+                        opacity="0.5"
+                        stroke-dasharray="56 57"
+                        stroke-linecap="round"
+                        transform="rotate(-90 26 26)"/>
+                <!-- Centre number -->
+                <text x="26" y="31" text-anchor="middle"
+                      font-family="Fraunces, Georgia, serif"
+                      font-size="18" font-weight="700"
+                      fill="#2563EB">3</text>
+              </g>
+            </svg>
+          </div>
+          <h4 class="beyond-card__title">I finish what I start</h4>
+          <p class="beyond-card__body">Three Ironman finishes. Competitive road cyclist in the top amateur category. I never give up — and that same relentlessness shows up in everything I build, every team I lead, every problem I refuse to leave unsolved.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════ TESTIMONIAL ══════════ -->
+  <section id="testimonial">
+    <div class="testimonial">
+      <div class="testimonial-card will-fade-up" data-delay="0">
+        <div class="testimonial-mark">&ldquo;</div>
+        <p class="testimonial-quote">Mikkel brings something rare — he's both a strong creative leader and a strategic partner who genuinely understands business context. He came in, took ownership of the full design function, and built something that punched well above its weight. The quality of thinking and execution he brought lifted the entire product.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">
+            <img src="public/images/tarun.jpeg" alt="Tarun Sharma" />
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <p class="testimonial-name">Tarun Sharma</p>
+              <span class="testimonial-tag">My manager at Maersk</span>
+            </div>
+            <p class="testimonial-role">Chief Product &amp; Technology Officer, Foundit</p>
+            <p class="testimonial-role testimonial-role--prev">formerly Head of Product Management, User &amp; Platform Experience, Maersk</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════ EXPERIENCE ════════════ -->
+  <section id="experience">
+    <div class="experience">
+      <div class="experience__header">
+        <p class="section-label will-fade-left">Experience</p>
+      </div>
+
+      <div class="exp-list">
+
+        <!-- Formalize -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="0">
+            <div class="exp-company-wrap">
+              <span class="exp-company">Formalize</span>
+              <span class="exp-period">Sep 2024 – Now</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Head of Product Design</span>
+              <span class="exp-desc">Building the design function from zero at a hyper-growth compliance startup.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge">Startup</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img"></div>
+                <div class="exp-expand-img"></div>
+              </div>
+              <p class="exp-expand-text">Joined as the first design leader, inheriting a product still largely shaped by engineering decisions. Mapped user journeys end to end, identified where the experience broke down, and established a shared design language the whole team could build from. Replaced freelance contributors with in-house hires — a Senior Product Designer and a Student Designer — within the first three months. Designed and implemented a new design system with reusable components, enabling a faster, more consistent development process. Working closely with the CTO and product teams to shift the platform from developer-led to genuinely UX-led.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Maersk -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="60">
+            <div class="exp-company-wrap">
+              <span class="exp-company">Maersk</span>
+              <span class="exp-period">Jul 2021 – Sep 2024</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Lead UX Designer</span>
+              <span class="exp-desc">Led a team of 12 designers across one of the world's most complex supply chain platforms — 20+ product teams, 260 engineers.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge">Enterprise</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img"></div>
+                <div class="exp-expand-img"></div>
+              </div>
+              <p class="exp-expand-text">Led UX across a platform serving 350+ people across 20+ product teams and 260 engineers. Grew the design function from 6 to 12 in just 6 months and introduced a new organisational structure across three sub-teams: Product Design, Design System, and Research. Championed earlier involvement of UX in problem-solving, elevated design standards across the organisation, and initiated the "Flea Market" design system to modernise Maersk's existing framework. Successfully advocated for UX moving from under Technology into Product — a structural shift that changed how design influenced decisions platform-wide. Maersk was named one of Fast Company's Most Innovative Companies in Design 2023.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sleepacy -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="120">
+            <div class="exp-company-wrap">
+              <span class="exp-company">Sleepacy</span>
+              <span class="exp-period">Jan – Jul 2021</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Head of UX</span>
+              <span class="exp-desc">Transformed a global bedding brand into a digital-first health and wellness company.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge">Consumer</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img"></div>
+                <div class="exp-expand-img"></div>
+              </div>
+              <p class="exp-expand-text">Brought in as Head of UX as Hilding Anders Group transformed its Sleepacy brand from a global mattress manufacturer into a digital-first health and wellness company. Managed digital experience across both SLEEPACY (Sleep Health) and Carpe Diem Beds (luxury). Conceptualised and designed an e-commerce site from scratch, led the "Sleep Services" app from concept through to validated prototypes, and directed external design and development agencies to align on the vision for digital offerings.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1508 -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="180">
+            <div class="exp-company-wrap">
+              <span class="exp-company">1508</span>
+              <span class="exp-period">Oct 2018 – Jan 2021</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Experience Design Director</span>
+              <span class="exp-desc">Led UX strategy across major Danish accounts — Finansforbundet, Club Matas, Dansk Metal.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge">Agency</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img"></div>
+                <div class="exp-expand-img"></div>
+              </div>
+              <p class="exp-expand-text">Led UX and strategy across 1508's most prominent accounts. Led UX for Club Matas' new customer-facing app and loyalty programme — now Denmark's largest loyalty club with 1.3M members and a 4.6 App Store rating (32,193 reviews). Drove Finansforbundet's full digital transformation — conceptualising, designing, and optimising 5+ new digital products and thinking them into a coherent ecosystem for 50,000 members. Designed the Dansk Metal job-finding app — used weekly by 66% of all unemployed members, with an iOS rating of 4.0.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Firstborn -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="240">
+            <div class="exp-company-wrap">
+              <span class="exp-company">Firstborn — New York</span>
+              <span class="exp-period">Apr – Oct 2018</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Senior Experience Strategist</span>
+              <span class="exp-desc">Six months in NYC at one of the US's top independent digital agencies — global brands, high craft.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge">Agency</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img"></div>
+                <div class="exp-expand-img"></div>
+              </div>
+              <p class="exp-expand-text">Seven months in New York at Firstborn — named #7 best US design studio, known for purpose-driven craft with forward-looking global brands. Acted as the bridge between UX and strategy teams, fostering a more unified understanding of how strategic design should function. Led a new business venture that resulted in a skincare platform creating unique skin IDs to simplify product discovery. Conducted comprehensive UX research and conversion optimisation for Ted Baker's e-commerce platform, and delivered internal training on design thinking, agile methodologies, and hypothesis-driven design.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- NoA Ignite -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="300">
+            <div class="exp-company-wrap">
+              <span class="exp-company">NoA Ignite</span>
+              <span class="exp-period">Jan 2014 – Jan 2018</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Senior Strategist</span>
+              <span class="exp-desc">Four years across strategy and UX — Danske Bank, Varier, and growing the agency from the ground up.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge">Agency</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img"></div>
+                <div class="exp-expand-img"></div>
+              </div>
+              <p class="exp-expand-text">Four years translating deep human insights into new business concepts and digital products. Led UX and strategy for Danske Bank's "Pocket Money" app — a pioneering debit card and money management solution for children aged 8–14, the first of its kind from a major Danish bank. Directed UX for the Varier active lifestyle app, which won the Experimental award at the Danish Digital Awards 2016 and was showcased at IFA Berlin — the world's largest consumer tech trade show. Instrumental in growing the agency (then Hello Group) from 20–30 people to 65+ UX experts, culminating in the merger with Great Works and joining The North Alliance consortium of the top Nordic digital agencies.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nodes -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="360">
+            <div class="exp-company-wrap">
+              <span class="exp-company">Nodes</span>
+              <span class="exp-period">May 2013 – Jan 2014</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Digital Advisor</span>
+              <span class="exp-desc">Early career role in digital strategy and UX — global brands, mobile, customer experience.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge">Agency</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img"></div>
+                <div class="exp-expand-img"></div>
+              </div>
+              <p class="exp-expand-text">Worked closely with the CEO and Managing Partner to drive business development and lead major new business pitches. Advised clients on customer experience strategy and mobile app technology. Designed the UX for a platform facilitating the BMW i3 launch in partnership with YouTube. Developed customer support concepts and a child safety app concept for Danish telco TDC. Hello Great Works later invested a 25% stake in Nodes — which led directly to being headhunted into what became NoA Ignite.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="margin-top: 24px;">
+        <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--secondary btn--sm">Download full CV</a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════ FOOTER ════════════════ -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="footer__name will-fade-up" data-delay="0">Mikkel Køster</span>
+      <div style="display:flex; gap:24px; align-items:center;">
+        <a href="mailto:hello@mikkelkoster.com" class="footer__email will-fade-up" data-delay="80">hello@mikkelkoster.com</a>
+        <a href="https://www.linkedin.com/in/mikkelkoester/" target="_blank" rel="noopener noreferrer" class="footer__email will-fade-up" data-delay="140" style="display:inline-flex;align-items:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          LinkedIn
+        </a>
+      </div>
+    </div>
+    <div class="container footer__copy">© 2026 Mikkel Køster</div>
+  </footer>
+
+
+  <!-- ═══════════════════════════ SCRIPTS ═══════════════ -->
+  <script>
+    /* ─────────────────────────────────────────────────────
+       Animation engine — butter smooth, Apple-style.
+       Pure setTimeout + manual style interpolation.
+       (WAAPI / rAF not used — some preview envs freeze
+       document.timeline; setTimeout uses OS timers.)
+    ───────────────────────────────────────────────────── */
+
+    /* ── 1. Nav scroll ─────────────────────────────────── */
+    const nav  = document.getElementById('nav');
+    const hero = document.querySelector('.hero');
+
+    function lerpColor(r1,g1,b1,a1, r2,g2,b2,a2, t) {
+      const e = t < 0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+      return `rgba(${Math.round(r1+(r2-r1)*e)},${Math.round(g1+(g2-g1)*e)},${Math.round(b1+(b2-b1)*e)},${+(a1+(a2-a1)*e).toFixed(3)})`;
+    }
+    function updateNav() {
+      const y = window.scrollY;
+      const heroH = hero ? hero.offsetTop + hero.offsetHeight : 790;
+      const fadeStart = heroH - 200, fadeEnd = heroH + 40;
+      let t;
+      if (y <= 20) {
+        nav.style.background = 'transparent';
+        nav.style.backdropFilter = nav.style.webkitBackdropFilter = 'none';
+        nav.style.borderColor = 'transparent';
+        nav.classList.remove('in-dark','in-light');
+        return;
+      } else if (y < fadeStart) { t = 0; }
+        else if (y > fadeEnd)   { t = 1; }
+        else { t = (y - fadeStart) / (fadeEnd - fadeStart); }
+      nav.style.background     = lerpColor(15,23,41,0.82, 250,250,250,0.72, t);
+      nav.style.backdropFilter = nav.style.webkitBackdropFilter = 'blur(14px)';
+      nav.style.borderColor    = lerpColor(255,255,255,0.06, 15,23,41,0.07, t);
+      nav.classList.toggle('in-dark',  t < 0.5);
+      nav.classList.toggle('in-light', t >= 0.5);
+    }
+    window.addEventListener('scroll', updateNav, { passive: true });
+    updateNav();
+
+    /* ── 2. Tween engine ───────────────────────────────── */
+    // Apple-style ease: quart ease-out — smooth glide, silky landing
+    function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+
+    function buildTransform(x, y, s) {
+      let parts = [];
+      if (x !== 0) parts.push(`translateX(${x.toFixed(3)}px)`);
+      if (y !== 0) parts.push(`translateY(${y.toFixed(3)}px)`);
+      if (s !== 1) parts.push(`scale(${s.toFixed(4)})`);
+      return parts.length ? parts.join(' ') : 'none';
+    }
+
+    function tween(el, {
+      fy = 0, ty = 0,
+      fx = 0, tx = 0,
+      fs = 1, ts = 1,   // scale from → to
+      fo = 0, to = 1,
+      dur = 750, delay = 0
+    }) {
+      setTimeout(() => {
+        el.style.opacity   = fo;
+        el.style.transform = buildTransform(fx, fy, fs);
+        const t0 = performance.now();
+        function frame() {
+          const p = Math.min((performance.now() - t0) / dur, 1);
+          const e = easeOutQuart(p);
+          el.style.opacity   = fo + (to - fo) * e;
+          el.style.transform = buildTransform(
+            fx + (tx - fx) * e,
+            fy + (ty - fy) * e,
+            fs + (ts - fs) * e
+          );
+          if (p < 1) setTimeout(frame, 13);
+        }
+        frame();
+      }, delay);
+    }
+
+    /* ── 3. Hero entrance ──────────────────────────────── */
+    // Set hidden state first, then animate in sequence
+    ['#hero-kicker','#hl1','#hl2','#hl3','#hero-tagline','#hero-photo'].forEach(s => {
+      const el = document.querySelector(s);
+      if (el) { el.style.opacity = '0'; el.style.transform = 'none'; }
+    });
+    tween(document.querySelector('#hero-kicker'),  { fy: 22, dur: 700,  delay: 80  });
+    tween(document.querySelector('#hl1'),          { fy: 52, dur: 1000, delay: 200 });
+    tween(document.querySelector('#hl2'),          { fy: 52, dur: 1000, delay: 330 });
+    tween(document.querySelector('#hl3'),          { fy: 52, dur: 1000, delay: 460 });
+    tween(document.querySelector('#hero-tagline'), { fy: 22, dur: 800,  delay: 680 });
+    tween(document.querySelector('#hero-photo'),   { fx: 60, fs: 0.97, ts: 1, dur: 1100, delay: 240 });
+
+    /* ── 4. Scroll observer factory ────────────────────── */
+    function makeObserver(handler, options = {}) {
+      return new IntersectionObserver(handler, {
+        rootMargin: '-48px 0px',
+        threshold: 0.07,
+        ...options
+      });
+    }
+
+    /* ── 5. .will-fade-up — smooth upward fade (text, rows) */
+    document.querySelectorAll('.will-fade-up').forEach(el => {
+      el.style.opacity   = '0';
+      el.style.transform = 'translateY(36px)';
+    });
+    const ioUp = makeObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const delay = parseInt(e.target.dataset.delay || '0', 10);
+        tween(e.target, { fy: 36, dur: 800, delay });
+        ioUp.unobserve(e.target);
+      });
+    });
+    document.querySelectorAll('.will-fade-up').forEach(el => ioUp.observe(el));
+
+    /* ── 6. .will-fade-scale — rise + gentle scale (cards) */
+    document.querySelectorAll('.will-fade-scale').forEach(el => {
+      el.style.opacity   = '0';
+      el.style.transform = 'translateY(48px) scale(0.96)';
+    });
+    const ioScale = makeObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const delay = parseInt(e.target.dataset.delay || '0', 10);
+        tween(e.target, { fy: 48, fs: 0.96, ts: 1, dur: 900, delay });
+        ioScale.unobserve(e.target);
+      });
+    }, { rootMargin: '-32px 0px', threshold: 0.05 });
+    document.querySelectorAll('.will-fade-scale').forEach(el => ioScale.observe(el));
+
+    /* ── 7. .will-fade — generic fade (legacy support) ── */
+    document.querySelectorAll('.will-fade').forEach(el => {
+      el.style.opacity   = '0';
+      el.style.transform = 'translateY(28px)';
+    });
+    const ioFade = makeObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const delay = parseInt(e.target.dataset.delay || '0', 10);
+        tween(e.target, { fy: 28, dur: 750, delay });
+        ioFade.unobserve(e.target);
+      });
+    });
+    document.querySelectorAll('.will-fade').forEach(el => ioFade.observe(el));
+
+    /* ── 8. .will-fade-left — label slide from left ───── */
+    document.querySelectorAll('.will-fade-left').forEach(el => {
+      el.style.opacity   = '0';
+      el.style.transform = 'translateX(-18px)';
+    });
+    const ioLeft = makeObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        tween(e.target, { fx: -18, dur: 650, delay: 0 });
+        ioLeft.unobserve(e.target);
+      });
+    }, { rootMargin: '-32px 0px', threshold: 0.1 });
+    document.querySelectorAll('.will-fade-left').forEach(el => ioLeft.observe(el));
+
+    /* ── 9. Stat counter ───────────────────────────────── */
+    let statsDone = false;
+    new IntersectionObserver((entries) => {
+      if (!entries[0].isIntersecting || statsDone) return;
+      statsDone = true;
+      document.querySelectorAll('[data-count]').forEach((el, i) => {
+        const target = parseInt(el.dataset.count, 10);
+        const dur = 1600;
+        setTimeout(() => {
+          const t0 = performance.now();
+          function frame() {
+            const p = Math.min((performance.now() - t0) / dur, 1);
+            el.textContent = Math.round(easeOutQuart(p) * target) + '+';
+            if (p < 1) setTimeout(frame, 16);
+          }
+          frame();
+        }, 200 + i * 80);
+      });
+    }, { rootMargin: '-60px 0px', threshold: 0.3 })
+    .observe(document.getElementById('stats-row'));
+
+    /* ── 10. Carousel ──────────────────────────────────── */
+    (function () {
+      const track      = document.getElementById('carousel-track');
+      const btnPrev    = document.getElementById('carousel-prev');
+      const btnNext    = document.getElementById('carousel-next');
+      const dotsWrap   = document.getElementById('carousel-dots');
+      const cols       = Array.from(track.querySelectorAll('.carousel-col'));
+      const total      = cols.length;
+      let current      = 0;
+      let animating    = false;
+      let offsetX      = 0;
+
+      // Build dots
+      for (let i = 0; i < total; i++) {
+        const d = document.createElement('span');
+        d.className = 'carousel-dot';
+        dotsWrap.appendChild(d);
+      }
+      const dots = Array.from(dotsWrap.querySelectorAll('.carousel-dot'));
+
+      function colWidth() {
+        return cols[0].offsetWidth + 16; // col + gap
+      }
+
+      function visibleCount() {
+        return Math.max(1, Math.floor(track.parentElement.offsetWidth / colWidth()));
+      }
+
+      function goTo(index) {
+        if (animating) return;
+        animating = true;
+        const from = offsetX, to = -(index * colWidth());
+        const dur = 600, t0 = performance.now();
+        function frame() {
+          const p = Math.min((performance.now() - t0) / dur, 1);
+          offsetX = from + (to - from) * easeOutQuart(p);
+          track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
+          if (p < 1) { setTimeout(frame, 13); }
+          else { offsetX = to; track.style.transform = `translateX(${to}px)`; animating = false; }
+        }
+        frame();
+        updateVisibility(index);
+      }
+
+      function updateVisibility(idx) {
+        const visible = visibleCount();
+        cols.forEach((col, i) => {
+          const offset = i - idx;
+          if (offset === -1 || offset === visible) {
+            col.classList.add('is-peek');
+            col.classList.remove('is-hidden');
+          } else if (offset >= 0 && offset < visible) {
+            col.classList.remove('is-peek', 'is-hidden');
+          } else {
+            col.classList.add('is-hidden');
+            col.classList.remove('is-peek');
+          }
+        });
+        const maxIdx = total - visibleCount();
+        btnPrev.disabled = idx === 0;
+        btnNext.disabled = idx >= maxIdx;
+        current = idx;
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('is-active', i >= idx && i < idx + visibleCount());
+        });
+      }
+
+      // Init
+      updateVisibility(0);
+
+      btnPrev.addEventListener('click', () => { if (current > 0) goTo(Math.max(0, current - visibleCount())); });
+      btnNext.addEventListener('click', () => { if (current < total - visibleCount()) goTo(Math.min(total - visibleCount(), current + visibleCount())); });
+
+      // Swipe / drag support
+      let touchStartX = 0, touchStartOffset = 0, isDragging = false;
+      track.addEventListener('mousedown', e => {
+        isDragging = true; touchStartX = e.clientX; touchStartOffset = offsetX;
+        track.style.transition = 'none';
+      });
+      window.addEventListener('mouseup', e => {
+        if (!isDragging) return;
+        isDragging = false;
+        const delta = e.clientX - touchStartX;
+        if (Math.abs(delta) > 60) { goTo(delta < 0 ? Math.min(current + visibleCount(), total - visibleCount()) : Math.max(current - visibleCount(), 0)); }
+        else { goTo(current); }
+      });
+      window.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        offsetX = touchStartOffset + (e.clientX - touchStartX);
+        track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
+      });
+
+      // Touch support
+      track.addEventListener('touchstart', e => {
+        touchStartX = e.touches[0].clientX; touchStartOffset = offsetX;
+      }, { passive: true });
+      track.addEventListener('touchend', e => {
+        const delta = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(delta) > 50) { goTo(delta < 0 ? Math.min(current + visibleCount(), total - visibleCount()) : Math.max(current - visibleCount(), 0)); }
+        else { goTo(current); }
+      });
+    })();
+
+    /* ── 11. Experience accordion ──────────────────────── */
+    function openExpItem(item) {
+      const expand = item.querySelector('.exp-expand');
+      item.classList.add('is-open');
+      // Measure natural height
+      expand.style.height = 'auto';
+      expand.style.opacity = '1';
+      const h = expand.offsetHeight;
+      // Snap back to 0 without transition, then animate to h
+      expand.style.transition = 'none';
+      expand.style.height = '0';
+      expand.style.opacity = '0';
+      expand.offsetHeight; // force reflow
+      expand.style.transition = '';
+      expand.style.height = h + 'px';
+      expand.style.opacity = '1';
+      // After transition, let height go auto so content can reflow freely
+      expand.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName === 'height' && item.classList.contains('is-open')) {
+          expand.style.height = 'auto';
+        }
+        expand.removeEventListener('transitionend', handler);
+      });
+    }
+    function closeExpItem(item) {
+      const expand = item.querySelector('.exp-expand');
+      // Freeze current height, then animate to 0
+      expand.style.height = expand.offsetHeight + 'px';
+      expand.offsetHeight; // force reflow
+      expand.style.height = '0';
+      expand.style.opacity = '0';
+      item.classList.remove('is-open');
+    }
+    document.querySelectorAll('.exp-toggle').forEach(row => {
+      row.addEventListener('click', () => {
+        const item = row.closest('.exp-item');
+        const isOpen = item.classList.contains('is-open');
+        document.querySelectorAll('.exp-item.is-open').forEach(el => closeExpItem(el));
+        if (!isOpen) openExpItem(item);
+      });
+    });
+
+    /* ── 12. Parallax on work card images ──────────────── */
+    document.querySelectorAll('.case__image').forEach(el => {
+      const inner = el.querySelector('.case__image-inner');
+      if (!inner) return;
+      const update = () => {
+        const rect = el.getBoundingClientRect();
+        const p = 1 - rect.bottom / (window.innerHeight + rect.height);
+        const y = (Math.max(0, Math.min(1, p)) - 0.5) * 28;
+        // Only apply parallax — don't override the entry animation scale
+        // so we track the base transform only after the entry animation ends
+        if (parseFloat(inner.style.opacity || 1) > 0.98) {
+          inner.style.transform = `translateY(${y.toFixed(2)}px)`;
+        }
+      };
+      window.addEventListener('scroll', update, { passive: true });
+      update();
+    });
+  </script>
+
+</body>
+</html>
