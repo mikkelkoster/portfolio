@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maersk — Mikkel Køster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+  <style>
+    /* ── RESET ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; background: #0F1729; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #FAFAFA;
+      color: #0F1729;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { display: block; max-width: 100%; }
+
+    /* ── DESIGN TOKENS ──────────────────────────────────── */
+    :root {
+      --dark:       #0F1729;
+      --bg:         #FAFAFA;
+      --card:       #FFFFFF;
+      --text:       #0F1729;
+      --body:       #475569;
+      --muted:      #64748B;
+      --faint:      #94A3B8;
+      --blue:       #2563EB;
+      --blue-dk:    #1D4ED8;
+      --blue-50:    #EFF6FF;
+      --slate-50:   #F8FAFC;
+      --slate-100:  #F1F5F9;
+      --slate-200:  #E2E8F0;
+      --slate-300:  #CBD5E1;
+      --maersk:     #B5E0F5;
+      --maersk-dk:  #0E9DE0;
+      --px:         80px;
+      --max-w:      1200px;
+    }
+
+    .wrap {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 var(--px);
+    }
+
+    /* ── NAV ─────────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 999;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      background: rgba(15,23,41,0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 0 var(--px);
+    }
+    .nav__back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      transition: color 0.2s ease;
+    }
+    .nav__back:hover { color: #fff; }
+    .nav__back i { font-size: 16px; }
+    .nav__logo {
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .nav__cta {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.55);
+      transition: color 0.2s ease;
+    }
+    .nav__cta:hover { color: #fff; }
+
+    /* ── HERO ─────────────────────────────────────────────── */
+    .hero {
+      background: var(--dark);
+      padding: 140px var(--px) 0;
+      max-width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .hero__label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--maersk-dk);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero__label::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--maersk-dk);
+    }
+    .hero__title {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: clamp(56px, 7vw, 96px);
+      line-height: 1.0;
+      letter-spacing: -3px;
+      color: #fff;
+      margin-bottom: 32px;
+      max-width: 800px;
+    }
+    .hero__sub {
+      font-size: 19px;
+      font-weight: 400;
+      line-height: 1.65;
+      color: rgba(255,255,255,0.55);
+      max-width: 640px;
+      margin-bottom: 64px;
+    }
+    .hero__meta {
+      display: flex;
+      gap: 0;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 0;
+    }
+    .hero__meta-item {
+      padding: 28px 48px 28px 0;
+      border-right: 1px solid rgba(255,255,255,0.08);
+      margin-right: 48px;
+    }
+    .hero__meta-item:last-child { border-right: none; margin-right: 0; }
+    .hero__meta-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 6px;
+    }
+    .hero__meta-value {
+      font-size: 15px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.85);
+    }
+    .hero__image {
+      margin-top: 64px;
+      border-radius: 20px 20px 0 0;
+      overflow: hidden;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 -24px 80px rgba(0,0,0,0.4);
+    }
+    .hero__image img {
+      width: 100%;
+      display: block;
+    }
+
+    /* ── SECTION LABEL ───────────────────────────────────── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: var(--blue);
+    }
+
+    /* ── DIVIDER ─────────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--slate-200);
+    }
+
+    /* ── CONTEXT ─────────────────────────────────────────── */
+    .context {
+      padding: 100px var(--px);
+      max-width: 100%;
+      background: #fff;
+    }
+    .context__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+    .context__left {}
+    .context__headline {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: clamp(36px, 3.5vw, 52px);
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+    .context__body {
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--body);
+      margin-bottom: 20px;
+    }
+    .context__right {}
+    .context__quote {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-size: 22px;
+      line-height: 1.55;
+      color: var(--text);
+      border-left: 3px solid var(--maersk-dk);
+      padding-left: 28px;
+      margin-bottom: 16px;
+    }
+    .context__quote-attr {
+      font-size: 12px;
+      color: var(--muted);
+      padding-left: 28px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* ── STATS ROW ───────────────────────────────────────── */
+    .stats-band {
+      background: var(--dark);
+      padding: 64px var(--px);
+    }
+    .stats-band__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    .stat-item {
+      padding: 0 40px;
+      border-right: 1px solid rgba(255,255,255,0.08);
+    }
+    .stat-item:first-child { padding-left: 0; }
+    .stat-item:last-child { border-right: none; }
+    .stat-item__value {
+      font-family: 'Fraunces', serif;
+      font-size: 52px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .stat-item__value span {
+      color: var(--maersk-dk);
+    }
+    .stat-item__label {
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.5;
+    }
+
+    /* ── PROBLEMS ────────────────────────────────────────── */
+    .problems {
+      background: var(--bg);
+      padding: 100px var(--px);
+    }
+    .problems__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .problems__header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      margin-bottom: 64px;
+      align-items: end;
+    }
+    .problems__headline {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: clamp(36px, 3.5vw, 52px);
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      color: var(--text);
+    }
+    .problems__intro {
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--body);
+    }
+    .problems__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--slate-200);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .problem-card {
+      background: #fff;
+      padding: 32px;
+    }
+    .problem-card__num {
+      font-family: 'Fraunces', serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--maersk-dk);
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+    }
+    .problem-card__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .problem-card__body {
+      font-size: 13px;
+      color: var(--body);
+      line-height: 1.6;
+    }
+
+    /* ── APPROACH ────────────────────────────────────────── */
+    .approach {
+      background: #fff;
+      padding: 100px var(--px);
+    }
+    .approach__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .approach__header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      margin-bottom: 72px;
+      align-items: end;
+    }
+    .approach__headline {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: clamp(36px, 3.5vw, 52px);
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      color: var(--text);
+    }
+    .approach__intro {
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--body);
+    }
+    /* ── ORG SHIFT DIAGRAM ───────────────────────────────── */
+    .approach__shift {
+      background: var(--dark);
+      border-radius: 20px;
+      padding: 56px 64px;
+      margin-bottom: 64px;
+      display: grid;
+      grid-template-columns: 1fr 80px 1fr;
+      gap: 0;
+      align-items: center;
+    }
+    .org-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .org-diagram__state {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      margin-bottom: 28px;
+      align-self: flex-start;
+    }
+    /* Org nodes */
+    .org-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      width: 100%;
+    }
+    .org-node__box {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.55);
+      position: relative;
+      z-index: 1;
+      white-space: nowrap;
+    }
+    .org-node__box i { font-size: 14px; }
+    .org-node__box--ceo   { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.4); }
+    .org-node__box--tech  { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.35); border-style: dashed; }
+    .org-node__box--eng   { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.25); border-style: dashed; }
+    .org-node__box--product { background: rgba(14,157,224,0.12); border-color: rgba(14,157,224,0.3); color: rgba(255,255,255,0.7); }
+    .org-node__box--design-buried {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.2);
+      font-size: 11px;
+      padding: 7px 14px;
+    }
+    .org-node__box--design-elevated {
+      background: rgba(14,157,224,0.22);
+      border-color: var(--maersk-dk);
+      color: #fff;
+      box-shadow: 0 0 24px rgba(14,157,224,0.25);
+    }
+    /* Vertical connector line */
+    .org-line {
+      width: 1.5px;
+      height: 28px;
+      background: rgba(255,255,255,0.1);
+      margin: 0 auto;
+    }
+    .org-line--dashed {
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.1) 0px,
+        rgba(255,255,255,0.1) 4px,
+        transparent 4px,
+        transparent 8px
+      );
+    }
+    /* Horizontal branch for "after" side children */
+    .org-branch {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 32px;
+      position: relative;
+      width: 100%;
+    }
+    .org-branch::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(50% + 16px);
+      height: 1.5px;
+      background: rgba(255,255,255,0.1);
+    }
+    .org-branch__child {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .org-branch__child .org-line {
+      height: 20px;
+    }
+    /* Center arrow between before/after */
+    .shift-center-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .shift-center-arrow i { font-size: 28px; color: var(--maersk-dk); }
+    .shift-center-arrow span {
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+      text-align: center;
+      line-height: 1.4;
+    }
+    /* Label below diagrams */
+    .org-caption {
+      margin-top: 20px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      line-height: 1.6;
+      text-align: center;
+      max-width: 280px;
+      align-self: center;
+    }
+    .approach__pillars {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+    .pillar {
+      background: var(--slate-100);
+      border-radius: 16px;
+      padding: 28px 24px;
+    }
+    .pillar__icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--blue-50);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .pillar__icon i { font-size: 20px; color: var(--blue); }
+    .pillar__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .pillar__body {
+      font-size: 13px;
+      color: var(--body);
+      line-height: 1.6;
+    }
+
+    /* ── IMAGE BREAK ─────────────────────────────────────── */
+    .image-break {
+      width: 100%;
+      aspect-ratio: 21/9;
+      overflow: hidden;
+      position: relative;
+      background: var(--dark);
+    }
+    .image-break img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      opacity: 0.85;
+    }
+    .image-break__caption {
+      position: absolute;
+      bottom: 24px;
+      left: 48px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* ── TESTIMONIAL ─────────────────────────────────────── */
+    .testimonial-strip {
+      background: #fff;
+      padding: 80px var(--px);
+      border-top: 1px solid var(--slate-200);
+      border-bottom: 1px solid var(--slate-200);
+    }
+    .testimonial-strip__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 56px;
+      align-items: center;
+    }
+    .testimonial-strip__avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .testimonial-strip__avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center top;
+    }
+    .testimonial-strip__quote {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-size: clamp(18px, 2vw, 24px);
+      line-height: 1.55;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+    .testimonial-strip__attr {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .testimonial-strip__attr strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── GRAND CENTRAL ───────────────────────────────────── */
+    .grand-central {
+      background: var(--maersk);
+      padding: 100px var(--px);
+    }
+    .grand-central__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .grand-central__header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      margin-bottom: 64px;
+      align-items: end;
+    }
+    .grand-central__label { color: #0E6A9A; }
+    .grand-central__label::before { background: #0E6A9A; }
+    .grand-central__headline {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: clamp(36px, 3.5vw, 52px);
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      color: #0A3A52;
+    }
+    .grand-central__intro {
+      font-size: 16px;
+      line-height: 1.75;
+      color: #1B5470;
+    }
+    .grand-central__image {
+      border-radius: 20px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.4);
+    }
+    .grand-central__image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .grand-central__principles {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 32px;
+    }
+    .gcp {
+      background: rgba(255,255,255,0.5);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .gcp__num {
+      font-family: 'Fraunces', serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--maersk-dk);
+      line-height: 1;
+      margin-bottom: 8px;
+      letter-spacing: -1px;
+    }
+    .gcp__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0A3A52;
+      margin-bottom: 6px;
+    }
+    .gcp__body {
+      font-size: 13px;
+      color: #1B5470;
+      line-height: 1.6;
+    }
+
+    /* ── DESIGN SYSTEM ───────────────────────────────────── */
+    .design-system {
+      background: var(--bg);
+      padding: 100px var(--px);
+    }
+    .design-system__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .design-system__header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      margin-bottom: 64px;
+      align-items: end;
+    }
+    .design-system__headline {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: clamp(36px, 3.5vw, 52px);
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      color: var(--text);
+    }
+    .design-system__intro {
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--body);
+    }
+    .ds-components {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+    .ds-component {
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .ds-component__icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--blue-50);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+    }
+    .ds-component__icon i { font-size: 18px; color: var(--blue); }
+    .ds-component__name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    .ds-impact {
+      background: var(--dark);
+      border-radius: 20px;
+      padding: 48px 56px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 40px;
+    }
+    .ds-impact__item {}
+    .ds-impact__value {
+      font-family: 'Fraunces', serif;
+      font-size: 44px;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .ds-impact__value span { color: var(--maersk-dk); }
+    .ds-impact__label {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.5;
+    }
+
+    /* ── TEAM ────────────────────────────────────────────── */
+    .team {
+      background: #fff;
+      padding: 100px var(--px);
+    }
+    .team__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .team__header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      margin-bottom: 64px;
+      align-items: end;
+    }
+    .team__headline {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: clamp(36px, 3.5vw, 52px);
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      color: var(--text);
+    }
+    .team__intro {
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--body);
+    }
+    .team__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .team-card {
+      background: var(--slate-100);
+      border-radius: 20px;
+      padding: 40px;
+    }
+    .team-card--dark {
+      background: var(--dark);
+    }
+    .team-card--accent {
+      background: var(--maersk);
+    }
+    .team-card__value {
+      font-family: 'Fraunces', serif;
+      font-size: 64px;
+      font-weight: 700;
+      letter-spacing: -3px;
+      line-height: 1;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .team-card--dark .team-card__value { color: #fff; }
+    .team-card--accent .team-card__value { color: #0A3A52; }
+    .team-card__value span { color: var(--blue); }
+    .team-card--accent .team-card__value span { color: var(--maersk-dk); }
+    .team-card__label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .team-card--dark .team-card__label { color: #fff; }
+    .team-card--accent .team-card__label { color: #0A3A52; }
+    .team-card__body {
+      font-size: 13px;
+      color: var(--body);
+      line-height: 1.6;
+    }
+    .team-card--dark .team-card__body { color: rgba(255,255,255,0.45); }
+    .team-card--accent .team-card__body { color: #1B5470; }
+    .engagement {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+    }
+    .engagement-card {
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      border-radius: 16px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .engagement-card__score {
+      font-family: 'Fraunces', serif;
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      color: var(--text);
+      line-height: 1;
+    }
+    .engagement-card__score span { color: var(--blue); }
+    .engagement-card__label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-top: 8px;
+    }
+    .engagement-card__sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .engagement-bar {
+      margin-top: 12px;
+      height: 4px;
+      background: var(--slate-200);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .engagement-bar__fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--blue);
+    }
+
+    /* ── OUTCOMES ────────────────────────────────────────── */
+    .outcomes {
+      background: var(--dark);
+      padding: 100px var(--px);
+      position: relative;
+      overflow: hidden;
+    }
+    .outcomes::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(14,157,224,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .outcomes__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      position: relative;
+    }
+    .outcomes__label { color: var(--maersk-dk); }
+    .outcomes__label::before { background: var(--maersk-dk); }
+    .outcomes__headline {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: clamp(40px, 4vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -2px;
+      color: #fff;
+      margin-bottom: 64px;
+      max-width: 700px;
+    }
+    .outcomes__headline em {
+      font-style: italic;
+      color: var(--maersk-dk);
+    }
+    .outcomes__list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 64px;
+    }
+    .outcome-item {
+      background: rgba(255,255,255,0.04);
+      padding: 36px 40px;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .outcome-item__icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(14,157,224,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .outcome-item__icon i { font-size: 18px; color: var(--maersk-dk); }
+    .outcome-item__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .outcome-item__body {
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.6;
+    }
+    .outcomes__reflection {
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .outcomes__reflection-quote {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-size: 24px;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 20px;
+    }
+    .outcomes__reflection-attr {
+      font-size: 12px;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── NEXT CASE ───────────────────────────────────────── */
+    .next {
+      background: var(--bg);
+      padding: 80px var(--px);
+      border-top: 1px solid var(--slate-200);
+    }
+    .next__inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .next__label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .next__title {
+      font-family: 'Fraunces', serif;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: var(--text);
+      transition: color 0.2s ease;
+    }
+    .next__link:hover .next__title { color: var(--blue); }
+    .next__arrow {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 1.5px solid var(--slate-300);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .next__link:hover .next__arrow {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .next__arrow i { font-size: 20px; color: var(--muted); }
+    .next__link:hover .next__arrow i { color: #fff; }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: color 0.2s ease;
+    }
+    .back-link:hover { color: var(--blue); }
+    .back-link i { font-size: 16px; }
+
+    /* ── TAGS ────────────────────────────────────────────── */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 32px;
+    }
+    .tag {
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--slate-100);
+      color: #334155;
+      border: none;
+      border-radius: 16px;
+      padding: 2px 8px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    /* ── ANIMATIONS ──────────────────────────────────────── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .fade-up.is-visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── RESPONSIVE ──────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      :root { --px: 48px; }
+      .context__inner,
+      .problems__header,
+      .approach__header,
+      .grand-central__header,
+      .design-system__header,
+      .team__header { grid-template-columns: 1fr; gap: 32px; }
+      .approach__shift { grid-template-columns: 1fr; gap: 16px; }
+      .shift-arrow { flex-direction: row; }
+      .stats-band__inner { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+      .stat-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 0 0 32px; }
+      .stat-item:nth-child(2n) { border-bottom: 1px solid rgba(255,255,255,0.08); }
+      .stat-item:last-child { border-bottom: none; }
+      .approach__pillars { grid-template-columns: repeat(2, 1fr); }
+      .problems__grid { grid-template-columns: repeat(2, 1fr); }
+      .ds-components { grid-template-columns: repeat(3, 1fr); }
+      .grand-central__principles { grid-template-columns: 1fr 1fr; }
+      .outcomes__list { grid-template-columns: 1fr; }
+      .team__grid { grid-template-columns: 1fr; }
+      .engagement { grid-template-columns: 1fr; }
+      .ds-impact { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      :root { --px: 20px; }
+      .hero { padding: 110px 20px 0; }
+      .hero__meta { flex-wrap: wrap; }
+      .hero__meta-item { flex: 0 0 50%; border-right: none; margin-right: 0; }
+      .problems__grid { grid-template-columns: 1fr; }
+      .approach__pillars { grid-template-columns: 1fr; }
+      .approach__shift { padding: 32px 24px; }
+      .grand-central__principles { grid-template-columns: 1fr; }
+      .ds-components { grid-template-columns: repeat(2, 1fr); }
+      .ds-impact { padding: 32px 28px; }
+      .engagement { grid-template-columns: 1fr; }
+      .next__inner { flex-direction: column; align-items: flex-start; gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__back">
+        <i class="ph-fill ph-arrow-left"></i>
+        Back to portfolio
+      </a>
+      <span class="nav__logo">Mikkel Køster</span>
+      <a href="index.html#contact" class="nav__cta">Get in touch</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero__inner">
+      <p class="hero__label">Case study · 2021–2023</p>
+      <h1 class="hero__title">Maersk</h1>
+      <p class="hero__sub">Taking design from an afterthought to a strategic function — across one of the world's largest and most complex logistics platforms.</p>
+      <div class="hero__meta">
+        <div class="hero__meta-item">
+          <p class="hero__meta-label">Role</p>
+          <p class="hero__meta-value">Head of UX & Design</p>
+        </div>
+        <div class="hero__meta-item">
+          <p class="hero__meta-label">Scope</p>
+          <p class="hero__meta-value">Design leadership, Strategy, Product</p>
+        </div>
+        <div class="hero__meta-item">
+          <p class="hero__meta-label">Team</p>
+          <p class="hero__meta-value">14 designers, 6 nationalities</p>
+        </div>
+        <div class="hero__meta-item">
+          <p class="hero__meta-label">Platform</p>
+          <p class="hero__meta-value">260 engineers · 20+ product teams</p>
+        </div>
+      </div>
+      <div class="hero__image">
+        <img src="public/images/maersk.svg" alt="Maersk platform">
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTEXT -->
+  <section class="context">
+    <div class="context__inner">
+      <div class="context__left">
+        <p class="section-label">The challenge</p>
+        <h2 class="context__headline">A business in transformation, a platform left behind</h2>
+        <p class="context__body">Maersk was undergoing one of the most ambitious strategic pivots in its 100-year history — shifting from a pure shipping company to a fully integrated, end-to-end supply chain operator. New products. New customers. New complexity.</p>
+        <p class="context__body">The platform hadn't kept pace. Nine years of reactive feature additions, siloed product teams, and no shared design language had left operators navigating a system built around the company's internal logic — not their actual jobs.</p>
+        <p class="context__body">Design was buried inside Technology. Designers were embedded in squads, reactive to engineering priorities, with no seat at the strategic table. The work was good. The positioning wasn't.</p>
+        <div class="tags">
+          <span class="tag">Design leadership</span>
+          <span class="tag">Enterprise UX</span>
+          <span class="tag">Org design</span>
+          <span class="tag">Design system</span>
+          <span class="tag">Data-heavy UI</span>
+          <span class="tag">Platform strategy</span>
+        </div>
+      </div>
+      <div class="context__right">
+        <blockquote class="context__quote">"Supply chain management is a complex relay race, marked by numerous baton handovers — and an opportunity for human error at every single one."</blockquote>
+        <p class="context__quote-attr">The brief, in one sentence</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS BAND -->
+  <div class="stats-band">
+    <div class="stats-band__inner">
+      <div class="stat-item">
+        <div class="stat-item__value">6<span>→12</span></div>
+        <div class="stat-item__label">Designers in the team<br>when I joined → at six months</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-item__value">20<span>+</span></div>
+        <div class="stat-item__label">Product teams aligned to<br>the new design standards</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-item__value">260</div>
+        <div class="stat-item__label">Engineers in the platform<br>org we worked across</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-item__value">4.25<span>/5</span></div>
+        <div class="stat-item__label">Gallup engagement score<br>vs. 3.90 platform average</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROBLEMS -->
+  <section class="problems">
+    <div class="problems__inner">
+      <div class="problems__header">
+        <div>
+          <p class="section-label">Diagnosis</p>
+          <h2 class="problems__headline">Nine things broken at once</h2>
+        </div>
+        <p class="problems__intro">Before any redesign work began, I ran a cross-platform audit with the team. We mapped every user journey across the platform and identified nine recurring systemic failure patterns — not isolated bugs, but structural UX debt baked into the product's foundations.</p>
+      </div>
+      <div class="problems__grid">
+        <div class="problem-card">
+          <p class="problem-card__num">01</p>
+          <p class="problem-card__title">Inconsistent interface design</p>
+          <p class="problem-card__body">Each product team had built its own patterns. Operators switching between flows faced a new visual language with every context switch.</p>
+        </div>
+        <div class="problem-card">
+          <p class="problem-card__num">02</p>
+          <p class="problem-card__title">Unclear task flows</p>
+          <p class="problem-card__body">Users couldn't reliably navigate from task start to completion. Entry points were ambiguous and progress felt invisible.</p>
+        </div>
+        <div class="problem-card">
+          <p class="problem-card__num">03</p>
+          <p class="problem-card__title">Linear operations, non-linear UI</p>
+          <p class="problem-card__body">Supply chain work happens in sequence. The platform's information architecture reflected none of that — it followed the org structure, not the work.</p>
+        </div>
+        <div class="problem-card">
+          <p class="problem-card__num">04</p>
+          <p class="problem-card__title">Information overload</p>
+          <p class="problem-card__body">Operators were shown everything all at once. No prioritisation, no progressive disclosure — just dense tables of data with no clear hierarchy.</p>
+        </div>
+        <div class="problem-card">
+          <p class="problem-card__num">05</p>
+          <p class="problem-card__title">Reactive feature additions</p>
+          <p class="problem-card__body">Every new request got bolted on. There was no strategic framework for evaluating where new capability belonged or what it would displace.</p>
+        </div>
+        <div class="problem-card">
+          <p class="problem-card__num">06</p>
+          <p class="problem-card__title">Incomplete workflow integration</p>
+          <p class="problem-card__body">Operators regularly had to leave the platform to use email, spreadsheets, and phone calls to complete tasks the system should have handled.</p>
+        </div>
+        <div class="problem-card">
+          <p class="problem-card__num">07</p>
+          <p class="problem-card__title">One-size-fits-all approach</p>
+          <p class="problem-card__body">Shippers, operators, and agents all had different jobs — but saw the same interface. No persona-specific tailoring meant no one was well served.</p>
+        </div>
+        <div class="problem-card">
+          <p class="problem-card__num">08</p>
+          <p class="problem-card__title">No proactive user controls</p>
+          <p class="problem-card__body">The platform was reactive. Users found out about problems only when they became crises. No early-warning signals, no actionable alerts.</p>
+        </div>
+        <div class="problem-card">
+          <p class="problem-card__num">09</p>
+          <p class="problem-card__title">External channel dependency</p>
+          <p class="problem-card__body">Critical coordination happened outside the platform — in email threads and phone calls. The system had no shared communication layer.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APPROACH -->
+  <section class="approach">
+    <div class="approach__inner">
+      <div class="approach__header">
+        <div>
+          <p class="section-label">The approach</p>
+          <h2 class="approach__headline">Structural shift first, design work second</h2>
+        </div>
+        <p class="approach__intro">Fixing the interface without fixing design's position in the organisation would have been wasted effort. The first work wasn't on a screen — it was on the org chart. We needed design in discovery before engineering, not after.</p>
+      </div>
+
+      <!-- The shift — org chart diagram -->
+      <div class="approach__shift">
+
+        <!-- BEFORE -->
+        <div class="org-diagram">
+          <p class="org-diagram__state">Before</p>
+          <!-- CEO -->
+          <div class="org-node">
+            <div class="org-node__box org-node__box--ceo">
+              <i class="ph-fill ph-buildings"></i> CEO
+            </div>
+          </div>
+          <div class="org-line"></div>
+          <!-- CTO -->
+          <div class="org-node">
+            <div class="org-node__box org-node__box--tech">
+              <i class="ph-fill ph-cpu"></i> Chief Technology Officer
+            </div>
+          </div>
+          <div class="org-line org-line--dashed"></div>
+          <!-- Engineering -->
+          <div class="org-node">
+            <div class="org-node__box org-node__box--eng">
+              <i class="ph-fill ph-code"></i> Engineering
+            </div>
+          </div>
+          <div class="org-line org-line--dashed"></div>
+          <!-- Design — buried -->
+          <div class="org-node">
+            <div class="org-node__box org-node__box--design-buried">
+              <i class="ph-fill ph-pen-nib"></i> Design
+            </div>
+          </div>
+          <p class="org-caption">Design buried 4 levels deep — reactive, tactical, late to every conversation.</p>
+        </div>
+
+        <!-- CENTER ARROW -->
+        <div class="shift-center-arrow">
+          <i class="ph-fill ph-arrow-right"></i>
+          <span>Structural<br>shift</span>
+        </div>
+
+        <!-- AFTER -->
+        <div class="org-diagram">
+          <p class="org-diagram__state">After</p>
+          <!-- CEO -->
+          <div class="org-node">
+            <div class="org-node__box org-node__box--ceo">
+              <i class="ph-fill ph-buildings"></i> CEO
+            </div>
+          </div>
+          <div class="org-line"></div>
+          <!-- CPO -->
+          <div class="org-node">
+            <div class="org-node__box org-node__box--product">
+              <i class="ph-fill ph-package"></i> Chief Product Officer
+            </div>
+          </div>
+          <div class="org-line"></div>
+          <!-- Branch: Design + Engineering side by side -->
+          <div class="org-branch">
+            <div class="org-branch__child">
+              <div class="org-line" style="height:20px;"></div>
+              <div class="org-node__box org-node__box--design-elevated">
+                <i class="ph-fill ph-pen-nib"></i> Design
+              </div>
+            </div>
+            <div class="org-branch__child">
+              <div class="org-line" style="height:20px;"></div>
+              <div class="org-node__box org-node__box--eng">
+                <i class="ph-fill ph-code"></i> Engineering
+              </div>
+            </div>
+          </div>
+          <p class="org-caption">Design elevated to Product — an equal peer, shaping decisions from day one.</p>
+        </div>
+
+      </div>
+
+      <!-- Pillars -->
+      <div class="approach__pillars">
+        <div class="pillar">
+          <div class="pillar__icon"><i class="ph-fill ph-users-three"></i></div>
+          <p class="pillar__title">Team restructuring</p>
+          <p class="pillar__body">Reorganised into three focused functions: Product Design, Design System, and Research — each with a clear mandate and dedicated leadership.</p>
+        </div>
+        <div class="pillar">
+          <div class="pillar__icon"><i class="ph-fill ph-compass"></i></div>
+          <p class="pillar__title">Design standards</p>
+          <p class="pillar__body">Established baseline experience principles across all 20+ product teams, giving engineers and PMs a shared quality bar to work to.</p>
+        </div>
+        <div class="pillar">
+          <div class="pillar__icon"><i class="ph-fill ph-lightning"></i></div>
+          <p class="pillar__title">Discovery integration</p>
+          <p class="pillar__body">Embedded research and design into the earliest stages of product work — shifting from deliverable-focused to insight-driven ways of working.</p>
+        </div>
+        <div class="pillar">
+          <div class="pillar__icon"><i class="ph-fill ph-chart-line-up"></i></div>
+          <p class="pillar__title">Visibility & advocacy</p>
+          <p class="pillar__body">Brought design quality and team progress into leadership conversations — making design impact legible at the VP and C-suite level.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FULL-BLEED IMAGE BREAK -->
+  <div class="image-break">
+    <img src="public/images/maersk.svg" alt="Maersk platform — operator flows">
+    <span class="image-break__caption">Maersk platform · Operator personas & flows</span>
+  </div>
+
+  <!-- TESTIMONIAL STRIP -->
+  <div class="testimonial-strip">
+    <div class="testimonial-strip__inner">
+      <div class="testimonial-strip__avatar">
+        <img src="public/images/tarun.jpeg" alt="Tarun Sharma">
+      </div>
+      <div>
+        <p class="testimonial-strip__quote">"Mikkel brings something rare — he's both a strong creative leader and a strategic partner who genuinely understands business context. He came in, took ownership of the full design function, and built something that punched well above its weight."</p>
+        <p class="testimonial-strip__attr"><strong>Tarun Sharma</strong> · Chief Product & Technology Officer, Foundit · formerly Head of Product Management, Maersk</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRAND CENTRAL STATION -->
+  <section class="grand-central">
+    <div class="grand-central__inner">
+      <div class="grand-central__header">
+        <div>
+          <p class="section-label grand-central__label">Hero project</p>
+          <h2 class="grand-central__headline">Grand Central Station</h2>
+        </div>
+        <p class="grand-central__intro">The platform's navigation had been built around the system's logic — product names, internal team boundaries, engineering modules. Grand Central Station was a complete rethink, built entirely around the operator's job. What do they need to do today? What's blocking them? What needs their attention first?</p>
+      </div>
+
+      <!-- Platform image -->
+      <div class="grand-central__image">
+        <img src="public/images/maersk.png" alt="Grand Central Station — Maersk platform">
+      </div>
+
+      <!-- Principles -->
+      <div class="grand-central__principles">
+        <div class="gcp">
+          <p class="gcp__num">01</p>
+          <p class="gcp__title">Dynamic entry point</p>
+          <p class="gcp__body">A personalised task and to-do overview tailored per user role — operators, shippers, and agents each land in a context built for their job, not a generic dashboard.</p>
+        </div>
+        <div class="gcp">
+          <p class="gcp__num">02</p>
+          <p class="gcp__title">Seamless journey</p>
+          <p class="gcp__body">Linear flow across all applications — for the first time, operators could follow a shipment from booking to delivery without losing their place or switching context.</p>
+        </div>
+        <div class="gcp">
+          <p class="gcp__num">03</p>
+          <p class="gcp__title">Guided experience</p>
+          <p class="gcp__body">Clear workflow start and endpoints, with proactive alerts surfacing issues before they became crises — turning the platform from reactive to genuinely useful.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DESIGN SYSTEM -->
+  <section class="design-system">
+    <div class="design-system__inner">
+      <div class="design-system__header">
+        <div>
+          <p class="section-label">Foundation work</p>
+          <h2 class="design-system__headline">Project Flea Market</h2>
+        </div>
+        <p class="design-system__intro">A design system isn't a component library — it's a shared language. Project Flea Market gave 260 engineers and 20+ product teams a common visual foundation, reducing duplicated decisions and giving designers more time to spend on hard problems.</p>
+      </div>
+
+      <!-- Visual: platform screenshot contextualising the DS -->
+      <div style="border-radius:20px; overflow:hidden; margin-bottom:48px; background:var(--slate-100);">
+        <img src="public/images/maersk.svg" alt="Maersk design system in context" style="width:100%; height:auto; display:block;">
+      </div>
+
+      <div class="ds-components">
+        <div class="ds-component">
+          <div class="ds-component__icon"><i class="ph-fill ph-cards"></i></div>
+          <p class="ds-component__name">Info Cards</p>
+        </div>
+        <div class="ds-component">
+          <div class="ds-component__icon"><i class="ph-fill ph-table"></i></div>
+          <p class="ds-component__name">Tables</p>
+        </div>
+        <div class="ds-component">
+          <div class="ds-component__icon"><i class="ph-fill ph-text-h"></i></div>
+          <p class="ds-component__name">Headers</p>
+        </div>
+        <div class="ds-component">
+          <div class="ds-component__icon"><i class="ph-fill ph-navigation-arrow"></i></div>
+          <p class="ds-component__name">Navigation</p>
+        </div>
+        <div class="ds-component">
+          <div class="ds-component__icon"><i class="ph-fill ph-sidebar"></i></div>
+          <p class="ds-component__name">Panels</p>
+        </div>
+        <div class="ds-component">
+          <div class="ds-component__icon"><i class="ph-fill ph-funnel"></i></div>
+          <p class="ds-component__name">Filters</p>
+        </div>
+      </div>
+
+      <div class="ds-impact">
+        <div class="ds-impact__item">
+          <p class="ds-impact__value">20<span>+</span></p>
+          <p class="ds-impact__label">Product teams sharing a single<br>component library</p>
+        </div>
+        <div class="ds-impact__item">
+          <p class="ds-impact__value">3</p>
+          <p class="ds-impact__label">Dedicated functions: Product Design,<br>Design System, Research</p>
+        </div>
+        <div class="ds-impact__item">
+          <p class="ds-impact__value">1<span>st</span></p>
+          <p class="ds-impact__label">Design system ever built<br>for the Maersk platform</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section class="team">
+    <div class="team__inner">
+      <div class="team__header">
+        <div>
+          <p class="section-label">Team & culture</p>
+          <h2 class="team__headline">Built to last, not just to ship</h2>
+        </div>
+        <p class="team__intro">Scaling a design team in a large enterprise isn't just about headcount. It's about building trust, creating the conditions for great work, and developing people who grow beyond what the role requires. I hired deliberately, mentored closely, and stayed in the work.</p>
+      </div>
+
+      <div class="team__grid">
+        <div class="team-card team-card--dark">
+          <p class="team-card__value">6<span>→14</span></p>
+          <p class="team-card__label">Team growth in 12 months</p>
+          <p class="team-card__body">Doubled the team through deliberate hiring — prioritising craft, curiosity, and communication in equal measure. Every hire was a bet on someone who could grow into more than the role asked for.</p>
+        </div>
+        <div class="team-card team-card--accent">
+          <p class="team-card__value">6<span> nat.</span></p>
+          <p class="team-card__label">Across 4 time zones</p>
+          <p class="team-card__body">Built a genuinely international team — designers from Denmark, India, the UK, Germany, Portugal, and the Netherlands — and created the rituals and trust that made the distance irrelevant.</p>
+        </div>
+      </div>
+
+      <div class="engagement">
+        <div class="engagement-card">
+          <p class="engagement-card__score">4.25<span>/5</span></p>
+          <p class="engagement-card__label">UX team Gallup score</p>
+          <p class="engagement-card__sub">Annual engagement survey, 2022</p>
+          <div class="engagement-bar">
+            <div class="engagement-bar__fill" style="width: 85%;"></div>
+          </div>
+        </div>
+        <div class="engagement-card">
+          <p class="engagement-card__score">3.90<span>/5</span></p>
+          <p class="engagement-card__label">Platform average</p>
+          <p class="engagement-card__sub">All teams across the platform</p>
+          <div class="engagement-bar">
+            <div class="engagement-bar__fill" style="width: 78%; background: var(--slate-300);"></div>
+          </div>
+        </div>
+        <div class="engagement-card">
+          <p class="engagement-card__score">+<span>0.35</span></p>
+          <p class="engagement-card__label">Above platform benchmark</p>
+          <p class="engagement-card__sub">Highest-scoring function in the org</p>
+          <div class="engagement-bar">
+            <div class="engagement-bar__fill" style="width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OUTCOMES -->
+  <section class="outcomes">
+    <div class="outcomes__inner">
+      <p class="section-label outcomes__label">What changed</p>
+      <h2 class="outcomes__headline">From <em>useful</em> to <em>desirable</em> — and a design function that earned its seat</h2>
+
+      <div class="outcomes__list">
+        <div class="outcome-item">
+          <div class="outcome-item__icon"><i class="ph-fill ph-arrow-up-right"></i></div>
+          <div>
+            <p class="outcome-item__title">Design repositioned inside Product</p>
+            <p class="outcome-item__body">For the first time in Maersk's platform history, design had a direct line to product strategy — influencing decisions at the inception of new initiatives, not the end.</p>
+          </div>
+        </div>
+        <div class="outcome-item">
+          <div class="outcome-item__icon"><i class="ph-fill ph-stack"></i></div>
+          <div>
+            <p class="outcome-item__title">First shared design language</p>
+            <p class="outcome-item__body">Project Flea Market established baseline components and standards across all 20+ product teams — reducing inconsistency and giving engineers a reliable foundation to build on.</p>
+          </div>
+        </div>
+        <div class="outcome-item">
+          <div class="outcome-item__icon"><i class="ph-fill ph-path"></i></div>
+          <div>
+            <p class="outcome-item__title">Grand Central Station shipped</p>
+            <p class="outcome-item__body">The platform's core navigation, rebuilt around operator jobs rather than system architecture — the most significant UX change the platform had seen in years.</p>
+          </div>
+        </div>
+        <div class="outcome-item">
+          <div class="outcome-item__icon"><i class="ph-fill ph-trophy"></i></div>
+          <div>
+            <p class="outcome-item__title">Highest engagement in the org</p>
+            <p class="outcome-item__body">The UX team scored 4.25/5 on the Gallup engagement survey — above the platform average of 3.90, and the highest of any function in our division.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="outcomes__reflection">
+        <p class="outcomes__reflection-quote">"The most important design decision I made at Maersk wasn't about a screen. It was about where design sat in the conversation — and making sure it got there before the decisions were already made."</p>
+        <p class="outcomes__reflection-attr">— Mikkel Køster, Head of UX & Design</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEXT / BACK -->
+  <section class="next">
+    <div class="next__inner">
+      <a href="index.html" class="back-link">
+        <i class="ph-fill ph-arrow-left"></i>
+        Back to portfolio
+      </a>
+      <a href="index.html#work" class="next__link" style="display:flex; align-items:center; gap:24px;">
+        <div>
+          <p class="next__label">Next case</p>
+          <p class="next__title">Finansforbundet</p>
+        </div>
+        <div class="next__arrow">
+          <i class="ph-fill ph-arrow-right"></i>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <script>
+    // Fade-up on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // Add fade-up to key sections dynamically
+    document.querySelectorAll('.context__inner, .problems__header, .problems__grid, .approach__header, .approach__shift, .approach__pillars, .grand-central__header, .grand-central__image, .grand-central__principles, .design-system__header, .ds-components, .ds-impact, .team__header, .team__grid, .engagement, .outcomes__headline, .outcomes__list, .outcomes__reflection, .next__inner').forEach((el, i) => {
+      el.classList.add('fade-up');
+      el.style.transitionDelay = `${i * 0.04}s`;
+      observer.observe(el);
+    });
+  </script>
+
+</body>
+</html>
