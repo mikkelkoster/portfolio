@@ -353,6 +353,11 @@
       .hero__kicker     { font-size: 20px; }
       .hero__text       { max-width: none; }
     }
+    @media (min-width: 1800px) {
+      .hero__line-inner { font-size: 120px; letter-spacing: -5px; }
+      .hero__tagline    { font-size: 22px; max-width: 720px; }
+      .hero__kicker     { font-size: 22px; }
+    }
     .hero__photo {
       position: absolute;
       top: 0;
@@ -1171,7 +1176,7 @@
 
     /* ── Mobile: 2 visible + ~24px peek                                        */
     /* card = (100vw − 20px_padding − 12px_gap − 24px_peek) / 2               */
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       .carousel-wrap    { padding-left: 20px; padding-bottom: 48px; }
       .carousel-footer  { padding-right: 20px; }
       .carousel-track   { gap: 12px; }
@@ -1395,11 +1400,12 @@
       display: flex;
       gap: 16px;
       will-change: transform;
+      align-items: flex-start;
     }
     .t-col {
       flex: 0 0 min(calc(100vw - 240px), 1150px);
       flex-shrink: 0;
-      height: 380px;
+      height: auto;
       transition: opacity 0.45s ease;
     }
     .t-col.is-peek { opacity: 0.3; }
@@ -1415,8 +1421,7 @@
       border-radius: 24px;
       padding: 64px;
       position: relative;
-      overflow: hidden;
-      height: 100%;
+      height: auto;
     }
     .t-footer {
       display: flex;
@@ -1457,7 +1462,7 @@
     .testimonial-quote {
       font-family: 'Poppins', sans-serif;
       font-style: normal;
-      font-size: 19px;
+      font-size: 18px;
       font-weight: 400;
       line-height: 1.65;
       color: rgba(255,255,255,0.88);
@@ -4090,42 +4095,6 @@
           </div>
         </div>
 
-        <!-- Anders Tolborg -->
-        <div class="t-col">
-          <div class="t-card">
-            <div class="testimonial-mark">&ldquo;</div>
-            <p class="testimonial-quote">Mikkel hired me at Formalize and set the bar high from day one — not through pressure, but through example. He's deeply invested in the people he leads, stays close to the actual work, and creates the kind of environment where you genuinely want to do your best.</p>
-            <div class="testimonial-author">
-              <div class="testimonial-avatar"><img src="public/images/anders.jpeg" alt="Anders Tolborg"></div>
-              <div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                  <p class="testimonial-name">Anders Tolborg</p>
-                  <span class="testimonial-tag">Direct report at Formalize</span>
-                </div>
-                <p class="testimonial-role">Principal Product Designer, Formalize</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Thomas Høgild -->
-        <div class="t-col">
-          <div class="t-card">
-            <div class="testimonial-mark">&ldquo;</div>
-            <p class="testimonial-quote">Placeholder — quote coming soon.</p>
-            <div class="testimonial-author">
-              <div class="testimonial-avatar"><img src="public/images/thomas.jpeg" alt="Thomas Høgild"></div>
-              <div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                  <p class="testimonial-name">Thomas Høgild</p>
-                  <span class="testimonial-tag">Direct report at Formalize</span>
-                </div>
-                <p class="testimonial-role">Principal Product Designer, Formalize</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Patrick Rischel -->
         <div class="t-col">
           <div class="t-card">
@@ -4807,6 +4776,7 @@
       const html    = document.documentElement;
       const btn     = document.getElementById('theme-toggle');
       const icon    = document.getElementById('theme-icon');
+      if (!btn || !icon) return; // toggle is hidden — skip
 
       function applyTheme(theme) {
         html.setAttribute('data-theme', theme);
@@ -4883,7 +4853,6 @@
         btnNext.disabled = idx >= total - 1;
       }
 
-      // Init
       updateState(0);
 
       btnPrev.addEventListener('click', () => goTo(current - 1));
@@ -5867,7 +5836,7 @@
         <!-- ══════════════════════════════════════════════
              A · MANTRA
         ══════════════════════════════════════════════ -->
-        <div style="background:#080751;padding:80px;text-align:center;overflow:hidden;">
+        <div class="cm-section--dark" style="background:#080751;padding:80px;text-align:center;overflow:hidden;">
           <div style="width:50px;height:50px;margin:0 auto 24px;"><img src="public/images/formalize-quote.svg" alt="" style="width:100%;height:100%;display:block;"></div>
           <p style="font-family:'Fraunces',serif;font-size:clamp(28px,4vw,52px);font-weight:400;color:#ffffff;line-height:1.18;max-width:820px;margin:0 auto 24px;">If you&rsquo;re not investing in UX,<br>you&rsquo;re investing in luck.</p>
           <p style="font-size:14px;color:rgba(255,255,255,0.4);">The mantra I brought to Formalize.</p>
@@ -5959,11 +5928,11 @@
         <!-- ══════════════════════════════════════════════
              PHOTOS (dark)
         ══════════════════════════════════════════════ -->
-        <div style="background:#080751;padding:80px;overflow:hidden;">
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;height:400px;">
-            <img src="public/images/formalize-image01.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;">
-            <img src="public/images/formalize-image02.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;">
-            <img src="public/images/formalize-image03.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;">
+        <div class="cm-section--dark" style="background:#080751;padding:80px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+            <img src="public/images/formalize-image01.png" alt="" style="width:100%;height:400px;object-fit:cover;border-radius:10px;display:block;">
+            <img src="public/images/formalize-image02.png" alt="" style="width:100%;height:400px;object-fit:cover;border-radius:10px;display:block;">
+            <img src="public/images/formalize-image03.png" alt="" style="width:100%;height:400px;object-fit:cover;border-radius:10px;display:block;">
           </div>
         </div>
 
@@ -5978,103 +5947,73 @@
           <div class="cm-car__track" id="cm-c6-track">
 
             <!-- Card 01 -->
-            <div class="cm-car__col" style="width:360px;flex-shrink:0;">
-              <div style="border:1px solid #e0e6ee;border-radius:16px;overflow:hidden;">
-                <div style="height:240px;overflow:hidden;">
-                  <img src="public/images/formalize-the journey 01.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
-                </div>
-                <div style="background:#e0e6ee;height:1px;"></div>
-                <div style="background:#ffffff;padding:24px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-                    <span style="font-size:11px;font-weight:700;color:#2563eb;letter-spacing:0.05em;">01</span>
-                  </div>
-                  <p style="font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:#0f1729;margin-bottom:10px;line-height:1.2;">Built the design function from zero</p>
-                  <p style="font-size:13px;color:#475569;line-height:1.5;">Established design as a core function that sits with engineering and shapes features from the start — where there'd been no full-time team and a failed first attempt.</p>
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize-the journey 01.png" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">01</p>
+                  <p class="cm-car__card-title">Built the design function from zero</p>
+                  <p class="cm-car__card-body">Established design as a core function that sits with engineering and shapes features from the start — where there'd been no full-time team and a failed first attempt.</p>
                 </div>
               </div>
             </div>
 
             <!-- Card 02 -->
-            <div class="cm-car__col" style="width:360px;flex-shrink:0;">
-              <div style="border:1px solid #e0e6ee;border-radius:16px;overflow:hidden;">
-                <div style="height:240px;overflow:hidden;">
-                  <img src="public/images/formalize-the journey 02.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
-                </div>
-                <div style="background:#e0e6ee;height:1px;"></div>
-                <div style="background:#ffffff;padding:24px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-                    <span style="font-size:11px;font-weight:700;color:#2563eb;letter-spacing:0.05em;">02</span>
-                  </div>
-                  <p style="font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:#0f1729;margin-bottom:10px;line-height:1.2;">Hired a standout team of four</p>
-                  <p style="font-size:13px;color:#475569;line-height:1.5;">A Principal and a Student Designer in the first six months, growing to two Principals, a Staff and a Senior — each embedded in a product team.</p>
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize-the journey 02.png" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">02</p>
+                  <p class="cm-car__card-title">Hired a standout team of four</p>
+                  <p class="cm-car__card-body">A Principal and a Student Designer in the first six months, growing to two Principals, a Staff and a Senior — each embedded in a product team.</p>
                 </div>
               </div>
             </div>
 
             <!-- Card 03 -->
-            <div class="cm-car__col" style="width:360px;flex-shrink:0;">
-              <div style="border:1px solid #e0e6ee;border-radius:16px;overflow:hidden;">
-                <div style="height:240px;overflow:hidden;">
-                  <img src="public/images/formalize-the journey 03.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
-                </div>
-                <div style="background:#e0e6ee;height:1px;"></div>
-                <div style="background:#ffffff;padding:24px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-                    <span style="font-size:11px;font-weight:700;color:#2563eb;letter-spacing:0.05em;">03</span>
-                  </div>
-                  <p style="font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:#0f1729;margin-bottom:10px;line-height:1.2;">Triads in every product team</p>
-                  <p style="font-size:13px;color:#475569;line-height:1.5;">Engineering Lead + PM + Designer, with focus and autonomy. I instigated the PM function, which didn't exist when I joined.</p>
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize-the journey 03.png" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">03</p>
+                  <p class="cm-car__card-title">Triads in every product team</p>
+                  <p class="cm-car__card-body">Engineering Lead + PM + Designer, with focus and autonomy. I instigated the PM function, which didn't exist when I joined.</p>
                 </div>
               </div>
             </div>
 
             <!-- Card 04 -->
-            <div class="cm-car__col" style="width:360px;flex-shrink:0;">
-              <div style="border:1px solid #e0e6ee;border-radius:16px;overflow:hidden;">
-                <div style="background:#eff6ff;height:240px;overflow:hidden;">
-                  <img src="public/images/formalize-the journey 04.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
-                </div>
-                <div style="background:#e0e6ee;height:1px;"></div>
-                <div style="background:#ffffff;padding:24px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-                    <span style="font-size:11px;font-weight:700;color:#2563eb;letter-spacing:0.05em;">04</span>
-                  </div>
-                  <p style="font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:#0f1729;margin-bottom:10px;line-height:1.2;">Won buy-in for a design refresh</p>
-                  <p style="font-size:13px;color:#475569;line-height:1.5;">Pitched the CTO on business value — consistency, trust, conversion — and kicked off a refresh of the whole design language.</p>
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize-the journey 04.png" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">04</p>
+                  <p class="cm-car__card-title">Won buy-in for a design refresh</p>
+                  <p class="cm-car__card-body">Pitched the CTO on business value — consistency, trust, conversion — and kicked off a refresh of the whole design language.</p>
                 </div>
               </div>
             </div>
 
             <!-- Card 05 -->
-            <div class="cm-car__col" style="width:360px;flex-shrink:0;">
-              <div style="border:1px solid #e0e6ee;border-radius:16px;overflow:hidden;">
-                <div style="height:240px;overflow:hidden;">
-                  <img src="public/images/formalize-the journey 05.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
-                </div>
-                <div style="background:#e0e6ee;height:1px;"></div>
-                <div style="background:#ffffff;padding:24px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-                    <span style="font-size:11px;font-weight:700;color:#2563eb;letter-spacing:0.05em;">05</span>
-                  </div>
-                  <p style="font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:#0f1729;margin-bottom:10px;line-height:1.2;">A design system, built with engineering</p>
-                  <p style="font-size:13px;color:#475569;line-height:1.5;">A reusable, scalable component library built hand-in-hand with engineering, plus a Figma clean-up so teams know what's ready to build.</p>
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize-the journey 05.png" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">05</p>
+                  <p class="cm-car__card-title">A design system, built with engineering</p>
+                  <p class="cm-car__card-body">A reusable, scalable component library built hand-in-hand with engineering, plus a Figma clean-up so teams know what's ready to build.</p>
                 </div>
               </div>
             </div>
 
             <!-- Card 06 -->
-            <div class="cm-car__col" style="width:360px;flex-shrink:0;">
-              <div style="border:1px solid #e0e6ee;border-radius:16px;overflow:hidden;">
-                <div style="background:#eff6ff;height:240px;overflow:hidden;">
-                  <img src="public/images/formalize-the journey 06.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
-                </div>
-                <div style="background:#e0e6ee;height:1px;"></div>
-                <div style="background:#ffffff;padding:24px;">
-                  <div style="width:28px;height:28px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-                    <span style="font-size:11px;font-weight:700;color:#2563eb;letter-spacing:0.05em;">06</span>
-                  </div>
-                  <p style="font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:#0f1729;margin-bottom:10px;line-height:1.2;">A clear vision for the platform</p>
-                  <p style="font-size:13px;color:#475569;line-height:1.5;">Defined where Formalize is going — a modern, fast platform that's easy to grasp — and aligned the team behind it.</p>
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize-the journey 06.png" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">06</p>
+                  <p class="cm-car__card-title">A clear vision for the platform</p>
+                  <p class="cm-car__card-body">Defined where Formalize is going — a modern, fast platform that's easy to grasp — and aligned the team behind it.</p>
                 </div>
               </div>
             </div>
@@ -6096,13 +6035,13 @@
         <!-- ══════════════════════════════════════════════
              §8  THE REDESIGN (dark)
         ══════════════════════════════════════════════ -->
-        <div style="background:#080751;padding:80px;overflow:hidden;">
+        <div class="cm-section--dark" style="background:#080751;padding:80px;overflow:hidden;">
           <p style="font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#2563eb;margin-bottom:40px;">THE REDESIGN</p>
           <h3 style="font-family:'Fraunces',serif;font-size:40px;font-weight:400;color:#ffffff;line-height:1.2;max-width:680px;margin-bottom:24px;">A platform redesigned to feel modern, fast, and easy to grasp.</h3>
           <p style="font-size:16px;color:rgba(255,255,255,0.7);line-height:1.65;max-width:680px;margin-bottom:80px;">Beyond the design system, I led a redesign of Formalize — taking the platform from working and functional to something that feels modern, fast, and clear.</p>
 
           <!-- Before/After pair 1 -->
-          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:16px;">
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;margin-bottom:64px;">
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
                 <img src="public/images/formalize-from this icon.svg" alt="" style="width:20px;height:20px;display:block;">
@@ -6112,7 +6051,7 @@
                 <img src="public/images/formalize-from this list page.png" alt="Before redesign" style="width:100%;display:block;">
               </div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:center;padding:0 4px;">
+            <div style="display:flex;align-items:flex-start;justify-content:center;padding:52px 4px 0;">
               <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M0 5 H10 M6 1 L11 5 L6 9" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div>
@@ -6127,7 +6066,7 @@
           </div>
 
           <!-- Before/After pair 2 -->
-          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;">
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;">
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
                 <img src="public/images/formalize-from this icon.svg" alt="" style="width:20px;height:20px;display:block;">
@@ -6137,7 +6076,7 @@
                 <img src="public/images/formalize-from this detail page.png" alt="Before redesign" style="width:100%;display:block;">
               </div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:center;padding:0 4px;">
+            <div style="display:flex;align-items:flex-start;justify-content:center;padding:52px 4px 0;">
               <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M0 5 H10 M6 1 L11 5 L6 9" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div>
@@ -6173,6 +6112,9 @@
               <p style="font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#2563eb;">INTERNAL · 2025</p>
               <p style="font-family:'Fraunces',serif;font-size:22px;font-weight:400;color:#0f1729;line-height:1.25;">The 2025 product strategy deck</p>
               <p style="font-size:14px;color:#3d4554;line-height:1.65;">Built the internal deck that aligned the entire organisation on product direction for the year — one shared picture of where we are headed and why.</p>
+              <div style="border-radius:10px;overflow:hidden;margin-top:8px;">
+                <img src="public/images/formalize-product strategy.png" alt="2025 product strategy deck" style="width:100%;display:block;">
+              </div>
             </div>
           </div>
         </div>
@@ -6180,7 +6122,7 @@
         <!-- ══════════════════════════════════════════════
              §9  THE RESULT (dark close section)
         ══════════════════════════════════════════════ -->
-        <div class="cm-close-section">
+        <div class="cm-close-section" style="background:#080751;">
           <p class="cm-label cm-label--light"><span>THE RESULT</span></p>
           <h3 class="cm-close-headline">In two years, design went from afterthought<br>to embedded in every product team.</h3>
 
@@ -6215,7 +6157,7 @@
                   <div class="testimonial-mark">&ldquo;</div>
                   <p class="testimonial-quote">Mikkel is a rare breed of design leader who doesn't just manage pixels — he scales product vision. He built a comprehensive, cutting-edge design system entirely from scratch, elevating our frontend velocity and aesthetic standards. He has an unparalleled eye for talent, single-handedly recruiting a world-class design team that punched above its weight — and was the ultimate bridge between Product, Design, and Engineering.</p>
                   <div class="testimonial-author">
-                    <div class="testimonial-avatar" style="background:rgba(86,184,224,0.25);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#ffffff;">E</div>
+                    <div class="testimonial-avatar" style="overflow:hidden;"><img src="public/images/emil.jpeg" alt="Emil Holst Petersen" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
                     <div>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                         <p class="testimonial-name">Emil Holst Petersen</p>
@@ -6227,11 +6169,11 @@
                 </div>
               </div>
               <div class="cm-car__col cm-car__col--quote">
-                <div class="t-card" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);opacity:0.4;">
+                <div class="t-card" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);">
                   <div class="testimonial-mark">&ldquo;</div>
                   <p class="testimonial-quote">Mikkel has strong user-focused design thinking and a lot of energy in how he works. He always pushed for high quality in design iterations and made collaboration between product, design and engineering very smooth. What I appreciated most was his ability to create alignment and momentum while the product organisation was still forming.</p>
                   <div class="testimonial-author">
-                    <div class="testimonial-avatar" style="background:rgba(86,184,224,0.25);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#ffffff;">S</div>
+                    <div class="testimonial-avatar" style="overflow:hidden;"><img src="public/images/simon.jpeg" alt="Simon la Fontaine Svenstrup" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
                     <div>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                         <p class="testimonial-name">Simon la Fontaine Svenstrup</p>

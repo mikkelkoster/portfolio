@@ -68,6 +68,7 @@ Every change must be mobile-optimized. Before finishing any task, verify:
 - **1 card at a time** navigation (next/prev moves exactly one card)
 - Active card is full opacity; card peeking at edge is `opacity: 0.35`
 - Drag/swipe supported on touch
+- **Never hardcode `opacity` on inner card elements** — the JS carousel owns opacity exclusively via `.is-peek` / `.is-hidden` classes on the outer `.cm-car__col`. Inline opacity on children will override the JS state silently and break the "active" appearance.
 
 ### Skeleton loading
 - Every carousel image has a `<div class="cm-skeleton">` sibling (z-index 2) before the `<img>` (z-index 1)
