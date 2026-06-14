@@ -1169,14 +1169,14 @@
     .cc--bolius .client-card__name,
     .cc--bolius .client-card__industry { color: #fff; }
 
-    /* ── Mobile: 1 visible + ~44px peek                                        */
-    /* card = 100vw − 20px_padding − 44px_peek − 12px_gap = 100vw − 76px      */
+    /* ── Mobile: 2 visible + ~24px peek                                        */
+    /* card = (100vw − 20px_padding − 12px_gap − 24px_peek) / 2               */
     @media (max-width: 600px) {
       .carousel-wrap    { padding-left: 20px; padding-bottom: 48px; }
       .carousel-footer  { padding-right: 20px; }
       .carousel-track   { gap: 12px; }
-      .carousel-col     { flex: 0 0 calc(100vw - 76px); max-width: none; }
-      .client-card      { height: 300px; border-radius: 16px; }
+      .carousel-col     { flex: 0 0 calc(50vw - 28px); max-width: none; }
+      .client-card      { height: 260px; border-radius: 16px; }
       .carousel-col-cap { padding-top: 12px; }
       .carousel-cap-name     { font-size: 14px; }
       .carousel-cap-industry { gap: 3px; }
@@ -1726,31 +1726,48 @@
     }
 
     @media (max-width: 950px) {
-      /* Hero — stack image below text */
-      .hero { height: auto; min-height: 0; overflow: hidden; }
+      /* Hero — photo as full background, text overlays at bottom */
+      .hero { height: 100svh; min-height: 600px; overflow: hidden; position: relative; }
       .hero__inner {
-        height: auto;
+        height: 100%;
         flex-direction: column;
         align-items: flex-start;
-        justify-content: flex-start;
-        padding-top: 112px;
-        padding-bottom: 0;
+        justify-content: flex-end;
+        padding-top: 0;
+        padding-bottom: 48px;
         gap: 0;
-        height: auto !important;
-        min-height: 0;
-      }
-      .hero__text { max-width: 100%; }
-      .hero__photo {
         position: relative;
-        right: auto;
-        bottom: auto;
-        width: 100%;
-        justify-content: center;
-        pointer-events: auto;
-        overflow: hidden;
-        max-height: 620px;
+        z-index: 1;
       }
-      .hero__photo-img { height: 640px; width: 100%; object-fit: cover; object-position: top center; margin-bottom: -20px; border-radius: 12px 12px 0 0; }
+      /* Gradient overlay sits above the photo but below the text */
+      .hero__inner::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          transparent 25%,
+          rgba(8, 16, 45, 0.4) 48%,
+          rgba(5, 10, 35, 0.9) 62%,
+          var(--dark) 72%
+        );
+        z-index: 1;
+        pointer-events: none;
+      }
+      .hero__text { max-width: 100%; position: relative; z-index: 2; }
+      .hero__photo {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+        max-height: none;
+      }
+      .hero__photo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: top center; border-radius: 0; margin: 0; }
 
       /* Work cards — single column on tablet */
       .case,
@@ -1796,13 +1813,14 @@
       .nav__inner { padding: 0 20px; }
 
       /* Hero */
-      .hero__inner { padding-top: 92px; gap: 0; }
+      .hero__inner { padding-bottom: 40px; gap: 0; }
       .hero__line-inner { font-size: 48px; letter-spacing: -1.5px; white-space: normal; }
       .hero__tagline { font-size: 15px; max-width: 100%; }
       .hero__kicker { font-size: 15px; }
       .hero__headlines { margin-bottom: 16px; }
-      .hero__photo { max-height: 560px; }
-      .hero__photo-img { height: 580px; width: 100%; object-fit: cover; object-position: top center; }
+      /* photo stays full-bleed (rules set in 950px breakpoint) */
+      .hero__photo { max-height: none; }
+      .hero__photo-img { height: 100%; }
       .scroll-hint { display: none; }
 
       /* About */
@@ -1841,7 +1859,7 @@
 
       /* Stacked cards — stack to column on mobile */
       .case--stacked { flex-direction: column; min-height: 0; }
-      .case__image-stacked { flex: none; height: 300px; order: 1; }
+      .case__image-stacked { flex: none; height: auto; padding: 32px 0; order: 1; }
       .case__text-stacked { flex: none; padding: 28px 24px; order: 2; }
       .case--stacked .case__title { font-size: 32px; }
 
@@ -1882,7 +1900,7 @@
       .footer__top      { padding: 40px 0 32px; }
       .footer__top .container { flex-direction: column; align-items: flex-start; gap: 28px; }
       .footer__headline { font-size: 40px; letter-spacing: -1.5px; white-space: normal; }
-      .footer__cta-email { font-size: 18px; }
+      .footer__cta-email { font-size: 18px; align-self: flex-start; }
       .footer__bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
     }
 
@@ -3625,9 +3643,11 @@
     <div class="nav__inner">
       <a href="#" class="nav__logo">Mikkel Køster</a>
       <div class="nav__buttons">
+        <!-- theme-toggle hidden for now — keep for future dark mode work
         <button class="nav__theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
           <i class="ph-fill ph-moon" id="theme-icon"></i>
         </button>
+        -->
         <a href="https://www.linkedin.com/in/mikkelkoester/" target="_blank" rel="noopener noreferrer" class="btn btn--linkedin btn--sm">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0;"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
           LinkedIn
