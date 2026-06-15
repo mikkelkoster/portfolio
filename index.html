@@ -4489,7 +4489,7 @@
             fy + (ty - fy) * e,
             fs + (ts - fs) * e
           );
-          if (p < 1) setTimeout(frame, 13);
+          if (p < 1) requestAnimationFrame(frame);
         }
         frame();
       }, delay);
@@ -4589,7 +4589,7 @@
           function frame() {
             const p = Math.min((performance.now() - t0) / dur, 1);
             el.textContent = Math.round(easeOutQuart(p) * target) + '+';
-            if (p < 1) setTimeout(frame, 16);
+            if (p < 1) requestAnimationFrame(frame);
           }
           frame();
         }, 200 + i * 80);
@@ -4634,7 +4634,7 @@
           const p = Math.min((performance.now() - t0) / dur, 1);
           offsetX = from + (to - from) * easeOutQuart(p);
           track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-          if (p < 1) { setTimeout(frame, 13); }
+          if (p < 1) { requestAnimationFrame(frame); }
           else { offsetX = to; track.style.transform = `translateX(${to}px)`; animating = false; }
         }
         frame();
@@ -4823,7 +4823,7 @@
           const p = Math.min((performance.now() - t0) / dur, 1);
           offsetX = from + (to - from) * easeOutQuart(p);
           track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-          if (p < 1) { setTimeout(frame, 13); }
+          if (p < 1) { requestAnimationFrame(frame); }
           else { offsetX = to; track.style.transform = `translateX(${to}px)`; animating = false; }
         })();
         updateState(index);
@@ -6339,7 +6339,7 @@
             const e = 1 - Math.pow(1 - p, 4);
             offsetX = from + (to - from) * e;
             track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-            if (p < 1) { setTimeout(frame, 13); }
+            if (p < 1) { requestAnimationFrame(frame); }
             else { offsetX = to; track.style.transform = `translateX(${to}px)`; animating = false; }
           }
           frame();
