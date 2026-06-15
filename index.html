@@ -3602,8 +3602,13 @@
       [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
       [style*="padding:16px 80px"] { padding: 16px 24px !important; }
 
-      /* ── Formalize: inline padding:80px sections ── */
-      [style*="padding:80px"] { padding: 40px 24px !important; }
+      /* ── Formalize: inline padding sections with 80px horizontal ── */
+      [style*="padding:80px"]      { padding: 40px 24px !important; }
+      [style*="padding:72px 80px"] { padding: 40px 24px !important; }
+      [style*="padding:72px 80px 0"] { padding: 40px 24px 0 !important; }
+      [style*="padding:100px 80px"] { padding: 60px 24px !important; }
+      [style*="padding:0 80px 80px"] { padding: 0 24px 40px !important; }
+      [style*="padding:40px 0 72px 80px"] { padding: 40px 0 40px 24px !important; }
     }
 
     @media (max-width: 480px) {
@@ -3813,7 +3818,7 @@
                 <span class="tag">Team Leadership</span>
               </div>
               <button class="btn btn--primary btn--sm" data-case="formalize">
-                Read case study
+                See case study
                 <svg style="margin-left:4px" width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
             </div>
@@ -3839,7 +3844,7 @@
                 <span class="tag">Design system</span>
               </div>
               <button class="btn btn--primary btn--sm" data-case="maersk">
-                Read case study
+                See case study
                 <svg style="margin-left:4px" width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
             </div>
