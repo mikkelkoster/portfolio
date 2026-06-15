@@ -21,7 +21,10 @@
     html { scroll-behavior: smooth; background: var(--dark); overflow-x: hidden; }
     body {
       font-family: 'Poppins', system-ui, sans-serif;
-      background: var(--bg);
+      background:
+        linear-gradient(to bottom, var(--dark) 0px, var(--dark) 80px, transparent 80px) no-repeat top / 100% 80px,
+        linear-gradient(to top, var(--dark) 0px, var(--dark) 80px, transparent 80px) no-repeat bottom / 100% 80px,
+        var(--bg);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
