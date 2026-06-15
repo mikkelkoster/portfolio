@@ -4522,6 +4522,7 @@
     }
 
     /* ── 3. Hero entrance ──────────────────────────────── */
+    const isMobile = window.innerWidth <= 768;
     // Set hidden state first, then animate in sequence
     ['#hero-kicker','#hl1','#hl2','#hl3','#hero-tagline','#hero-photo'].forEach(s => {
       const el = document.querySelector(s);
@@ -4532,7 +4533,12 @@
     tween(document.querySelector('#hl2'),          { fy: 52, dur: 1000, delay: 330 });
     tween(document.querySelector('#hl3'),          { fy: 52, dur: 1000, delay: 460 });
     tween(document.querySelector('#hero-tagline'), { fy: 22, dur: 800,  delay: 680 });
-    tween(document.querySelector('#hero-photo'),   { fx: 60, fs: 0.97, ts: 1, dur: 1100, delay: 240 });
+    // On mobile the photo is stacked below text — fade up instead of slide from right
+    if (isMobile) {
+      tween(document.querySelector('#hero-photo'), { fy: 32, fs: 0.97, ts: 1, dur: 1000, delay: 560 });
+    } else {
+      tween(document.querySelector('#hero-photo'), { fx: 60, fs: 0.97, ts: 1, dur: 1100, delay: 240 });
+    }
 
     /* ── 4. Scroll observer factory ────────────────────── */
     function makeObserver(handler, options = {}) {
@@ -4588,15 +4594,19 @@
     });
     document.querySelectorAll('.will-fade').forEach(el => ioFade.observe(el));
 
-    /* ── 8. .will-fade-left — label slide from left ───── */
+    /* ── 8. .will-fade-left — label slide from left (fade up on mobile) ── */
     document.querySelectorAll('.will-fade-left').forEach(el => {
       el.style.opacity   = '0';
-      el.style.transform = 'translateX(-18px)';
+      el.style.transform = isMobile ? 'translateY(16px)' : 'translateX(-18px)';
     });
     const ioLeft = makeObserver((entries) => {
       entries.forEach(e => {
         if (!e.isIntersecting) return;
-        tween(e.target, { fx: -18, dur: 650, delay: 0 });
+        if (isMobile) {
+          tween(e.target, { fy: 16, dur: 600, delay: 0 });
+        } else {
+          tween(e.target, { fx: -18, dur: 650, delay: 0 });
+        }
         ioLeft.unobserve(e.target);
       });
     }, { rootMargin: '-32px 0px', threshold: 0.1 });
