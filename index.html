@@ -160,11 +160,13 @@
       border-radius: 100px;
     }
     @media (max-width: 768px) {
-      /* Always show pill nav on mobile — hide regular nav */
+      /* Always show pill nav on mobile at bottom — hide regular nav */
       .nav { display: none !important; }
       .pill-nav {
-        opacity: 1 !important;
+        top: auto !important;
+        bottom: calc(16px + env(safe-area-inset-bottom)) !important;
         transform: translateX(-50%) translateY(0) !important;
+        opacity: 1 !important;
         pointer-events: auto !important;
       }
       .pill-nav__linkedin,
@@ -6257,9 +6259,6 @@
               <p style="font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#2563eb;">INTERNAL · 2025</p>
               <p style="font-family:'Fraunces',serif;font-size:22px;font-weight:400;color:#0f1729;line-height:1.25;">The 2025 product strategy deck</p>
               <p style="font-size:14px;color:#3d4554;line-height:1.65;">Built the internal deck that aligned the entire organisation on product direction for the year — one shared picture of where we are headed and why.</p>
-              <div style="border-radius:10px;overflow:hidden;margin-top:8px;">
-                <img src="public/images/formalize/formalize-product-strategy.png" alt="2025 product strategy deck" style="width:100%;display:block;">
-              </div>
             </div>
           </div>
         </div>
