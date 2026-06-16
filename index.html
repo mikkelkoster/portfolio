@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Mikkel Køster — Design Leader</title>
   <!-- Prevent flash: set theme before first paint -->
   <script>
@@ -19,12 +19,17 @@
     /* ── RESET ──────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; background: var(--dark); overflow-x: hidden; }
+    /* iOS Safari overscroll: body background-color drives the rubber-band color */
     body {
       font-family: 'Poppins', system-ui, sans-serif;
-      background:
-        linear-gradient(to bottom, var(--dark) 0px, var(--dark) 80px, transparent 80px) no-repeat top / 100% 80px,
-        linear-gradient(to top, var(--dark) 0px, var(--dark) 80px, transparent 80px) no-repeat bottom / 100% 80px,
-        var(--bg);
+      background-color: var(--dark);
+      background-image:
+        linear-gradient(to bottom, var(--dark) 0px, var(--dark) 80px, transparent 80px),
+        linear-gradient(to top, var(--dark) 0px, var(--dark) 80px, transparent 80px),
+        linear-gradient(var(--bg), var(--bg));
+      background-repeat: no-repeat, no-repeat, no-repeat;
+      background-size: 100% 80px, 100% 80px, 100% 100%;
+      background-position: top, bottom, center;
       color: var(--text);
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
@@ -104,15 +109,82 @@
     /* ════════════════════════════════════════════════════
        NAV
     ════════════════════════════════════════════════════ */
+    /* ── Floating pill nav (Apple-style) ───────────────── */
+    .pill-nav {
+      position: fixed;
+      top: calc(8px + env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      /* backdrop-filter on the same element as transform — required for Safari */
+      background: rgba(15, 23, 41, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 100px;
+      backdrop-filter: blur(120px) saturate(2.5);
+      -webkit-backdrop-filter: blur(120px) saturate(2.5);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .pill-nav.is-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+    .pill-nav__inner {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 7px 10px 7px 20px;
+      white-space: nowrap;
+    }
+    .pill-nav__logo {
+      font-family: 'Fraunces', serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.2px;
+    }
+    .pill-nav__buttons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pill-nav__linkedin { color: rgba(255,255,255,0.65); }
+    .pill-nav__linkedin:hover { color: #fff; background: rgba(255,255,255,0.10); }
+    .pill-nav__buttons .btn--ghost:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.30); box-shadow: none; }
+    .pill-nav .btn--sm {
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 100px;
+    }
+    @media (max-width: 768px) {
+      /* Always show pill nav on mobile — hide regular nav */
+      .nav { display: none !important; }
+      .pill-nav {
+        opacity: 1 !important;
+        transform: translateX(-50%) translateY(0) !important;
+        pointer-events: auto !important;
+      }
+      .pill-nav__linkedin,
+      .pill-nav__buttons .btn--ghost { display: none; }
+      .pill-nav__logo { font-size: 12px; }
+      .pill-nav__inner { gap: 10px; padding: 4px 5px 4px 12px; }
+      .pill-nav .btn--sm { font-size: 11px; padding: 5px 10px; }
+    }
+
     .nav {
       position: fixed;
       inset: 0 0 auto;
       z-index: 999;
-      height: 56px;
+      height: calc(56px + env(safe-area-inset-top));
+      padding-top: env(safe-area-inset-top);
       display: flex;
       align-items: center;
       /* All colour/blur props transition together */
-      transition: background 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+      transition: opacity 0.35s ease,
+                  background 0.55s cubic-bezier(0.4, 0, 0.2, 1),
                   border-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
                   backdrop-filter 0.55s cubic-bezier(0.4, 0, 0.2, 1);
       border-bottom: 1px solid transparent;
@@ -184,8 +256,8 @@
     }
     /* Smaller variant for nav */
     .btn--sm {
-      font-size: 12px;
-      padding: 4px 12px;
+      font-size: 13px;
+      padding: 8px 12px;
       border-radius: 6px;
     }
     .btn--primary {
@@ -198,6 +270,12 @@
       border-color: var(--blue-dk);
       box-shadow: 0 4px 16px rgba(37,99,235,0.35);
     }
+    .btn-arrow {
+      display: inline-flex;
+      align-items: center;
+      transition: transform 0.2s ease;
+    }
+    .btn:hover .btn-arrow { transform: translateX(3px); }
     .btn--secondary {
       background: #fff;
       border-color: #CBD5E1;
@@ -1338,7 +1416,7 @@
       transition: background 0.18s ease;
     }
     .exp-item:hover { background: var(--slate-100); }
-    .exp-item:hover .exp-badge { border-color: var(--slate-300); }
+    .exp-item:hover .exp-badge { border-color: var(--slate-300); background: var(--slate-200); }
     .exp-item:last-child {
       border-bottom: 1px solid var(--slate-200);
     }
@@ -1359,7 +1437,7 @@
       margin-top: 2px;
     }
     .exp-item.is-open { background: var(--slate-100); }
-    .exp-item.is-open .exp-badge { border-color: var(--slate-300); }
+    .exp-item.is-open .exp-badge { border-color: var(--slate-300); background: var(--slate-200); }
     .exp-item.is-open .exp-chevron { transform: rotate(180deg); }
     .exp-expand {
       height: 0;
@@ -1789,7 +1867,8 @@
 
       /* Stacked cards — stack to column on tablet */
       .case--stacked { flex-direction: column; min-height: 0; }
-      .case__image-stacked { flex: none; height: 420px; order: 1; }
+      .case__image-stacked { flex: none; height: auto; padding: 28px 20px; order: 1; overflow: visible; }
+      .case__image-stacked .case__image-inner { transform: none !important; width: 100% !important; }
       .case__text-stacked { flex: none; padding: 36px 40px; order: 2; }
 
       /* Skills */
@@ -1827,7 +1906,8 @@
       .hero__line-inner { font-size: 48px; letter-spacing: -1.5px; white-space: normal; }
       .hero__tagline { font-size: 15px; max-width: 100%; }
       .hero__kicker { font-size: 15px; }
-      .hero__headlines { margin-bottom: 16px; }
+      .hero__headlines { margin-bottom: 16px; gap: 0; }
+      .hero__line { padding-bottom: 2px; }
       /* photo stays full-bleed (rules set in 950px breakpoint) */
       .hero__photo { max-height: none; }
       .hero__photo-img { height: 100%; }
@@ -1869,9 +1949,10 @@
 
       /* Stacked cards — stack to column on mobile */
       .case--stacked { flex-direction: column; min-height: 0; }
-      .case__image-stacked { flex: none; height: auto; padding: 32px 0; order: 1; }
+      .case__image-stacked { flex: none; height: auto; padding: 28px 20px; order: 1; overflow: visible; }
       .case__text-stacked { flex: none; padding: 28px 24px; order: 2; }
       .case--stacked .case__title { font-size: 32px; }
+      .case__image-stacked .case__image-inner { transform: none !important; width: 100% !important; }
 
       /* Carousel mobile override handled in carousel CSS block */
 
@@ -1960,9 +2041,9 @@
       position: absolute;
       inset: 0;
       padding-top: 56px;
-      padding-bottom: 56px;
+      padding-bottom: 0;
       overflow-y: auto;
-      overscroll-behavior: contain;
+      overscroll-behavior: none;
       -webkit-overflow-scrolling: touch;
       display: flex;
       justify-content: center;
@@ -1976,6 +2057,7 @@
     .case-modal__panel {
       width: min(1280px, calc(100vw - 32px));
       min-height: calc(100vh - 112px);
+      margin-bottom: 56px;
       background: #FAFAFA;
       border-radius: 20px;
       overflow: hidden; /* clips child content to rounded corners */
@@ -2610,6 +2692,14 @@
       transition: background 0.18s ease, border-color 0.18s ease;
     }
     .cm-approach-item:hover { background: #F8FAFC; border-color: #cbd5e1; }
+    .cm-approach-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 32px;
+      transition: background 0.18s ease, border-color 0.18s ease;
+    }
+    .cm-approach-card:hover { background: #F8FAFC; border-color: #cbd5e1; }
     .cm-approach-item__num { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--brand-600); }
     .cm-approach-item__icon { color: #0F1729; margin: 4px 0; }
     .cm-approach-item__title { font-size: 14px; font-weight: 600; color: #0F1729; line-height: 1.35; }
@@ -3684,6 +3774,21 @@
 </head>
 <body>
 
+  <!-- ═══════════════ FLOATING PILL NAV ════════════════ -->
+  <nav class="pill-nav" id="pill-nav" aria-hidden="true">
+    <div class="pill-nav__inner">
+      <a href="#" class="pill-nav__logo">Mikkel Køster</a>
+      <div class="pill-nav__buttons">
+        <a href="https://www.linkedin.com/in/mikkelkoester/" target="_blank" rel="noopener noreferrer" class="btn btn--linkedin btn--sm pill-nav__linkedin">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0;"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          LinkedIn
+        </a>
+        <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--ghost btn--sm">Download CV</a>
+        <a href="mailto:hello@mikkelkoster.com" class="btn btn--primary btn--sm">Get in touch</a>
+      </div>
+    </div>
+  </nav>
+
   <!-- ═══════════════════════════ NAV ═══════════════════ -->
   <nav class="nav" id="nav">
     <div class="nav__inner">
@@ -3844,7 +3949,7 @@
               </div>
               <button class="btn btn--primary btn--sm" data-case="formalize">
                 See case study
-                <svg style="margin-left:4px" width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="btn-arrow"><svg style="margin-left:4px" width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               </button>
             </div>
           </div>
@@ -3870,7 +3975,7 @@
               </div>
               <button class="btn btn--primary btn--sm" data-case="maersk">
                 See case study
-                <svg style="margin-left:4px" width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="btn-arrow"><svg style="margin-left:4px" width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               </button>
             </div>
           </div>
@@ -4488,6 +4593,19 @@
     }
     window.addEventListener('scroll', updateNav, { passive: true });
     updateNav();
+
+    /* ── 1b. Pill nav show/hide ─────────────────────────── */
+    const pillNav = document.getElementById('pill-nav');
+    function updatePillNav() {
+      const heroBottom = hero ? hero.offsetTop + hero.offsetHeight : 700;
+      const show = window.scrollY > heroBottom - 120;
+      pillNav.classList.toggle('is-visible', show);
+      pillNav.setAttribute('aria-hidden', String(!show));
+      nav.style.opacity = show ? '0' : '';
+      nav.style.pointerEvents = show ? 'none' : '';
+    }
+    window.addEventListener('scroll', updatePillNav, { passive: true });
+    updatePillNav();
 
     /* ── 2. Tween engine ───────────────────────────────── */
     // Apple-style ease: quart ease-out — smooth glide, silky landing
@@ -5404,7 +5522,7 @@
         <!-- ══════════════════════════════════════════════
              §8c  THE TEAM PHOTO
         ══════════════════════════════════════════════ -->
-        <div class="cm-section--light" style="padding:0 80px 80px;">
+        <div class="cm-section--light" style="padding:0 80px 40px;">
           <div style="border-radius:16px;overflow:hidden;">
             <img src="public/images/maersk/maersk-team.jpeg" alt="The Maersk design team" style="width:100%;display:block;">
           </div>
@@ -5945,17 +6063,17 @@
           <p class="cm-body" style="max-width:640px;margin-bottom:48px;color:#3d4554;line-height:1.65;">The principles behind how I built design into the company — not from a distance, but inside the work.</p>
 
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;">
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:32px;">
+            <div class="cm-approach-card">
               <div style="width:40px;height:40px;margin-bottom:14px;"><i class="ph ph-hand" style="font-size:28px;color:#2563eb;"></i></div>
               <p style="font-family:'Fraunces',serif;font-size:21px;font-weight:400;color:#0f1729;margin-bottom:12px;line-height:1.2;">Hands-on, not hands-off</p>
               <p style="font-size:14px;color:#3d4554;line-height:1.6;">I designed inside a product team while setting direction — close to the craft, not managing it from a distance.</p>
             </div>
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:32px;">
+            <div class="cm-approach-card">
               <div style="width:40px;height:40px;margin-bottom:14px;"><i class="ph ph-magnifying-glass" style="font-size:28px;color:#2563eb;"></i></div>
               <p style="font-family:'Fraunces',serif;font-size:21px;font-weight:400;color:#0f1729;margin-bottom:12px;line-height:1.2;">Research before pixels</p>
               <p style="font-size:14px;color:#3d4554;line-height:1.6;">Decisions start with evidence. The design refresh was pitched on what customers told us and what good design returns — not on taste.</p>
             </div>
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:32px;">
+            <div class="cm-approach-card">
               <div style="width:40px;height:40px;margin-bottom:14px;"><i class="ph ph-code" style="font-size:28px;color:#2563eb;"></i></div>
               <p style="font-family:'Fraunces',serif;font-size:21px;font-weight:400;color:#0f1729;margin-bottom:12px;line-height:1.2;">Built with engineering</p>
               <p style="font-size:14px;color:#3d4554;line-height:1.6;">Design and engineering co-created the system and components — so what we designed is what actually shipped.</p>
@@ -6162,7 +6280,7 @@
         ══════════════════════════════════════════════ -->
         <div class="cm-close-section" style="background:#080751;">
           <p class="cm-label cm-label--light"><span>THE RESULT</span></p>
-          <h3 class="cm-close-headline">In two years, design went from afterthought<br>to embedded in every product team.</h3>
+          <h3 class="cm-close-headline">In two years, design went from afterthought to embedded in every product team.</h3>
 
           <div class="cm-close-stats" style="grid-template-columns:repeat(5,1fr);margin-bottom:48px;">
             <div class="cm-close-stat">
@@ -6298,6 +6416,12 @@
 
       scroller.addEventListener('scroll', updateCloseTheme, { passive: true });
       window.addEventListener('resize', updateCloseTheme, { passive: true });
+
+      /* Prevent scrolling the panel out of view at the bottom */
+      scroller.addEventListener('scroll', function() {
+        const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+        if (scroller.scrollTop > maxScroll) scroller.scrollTop = maxScroll;
+      }, { passive: true });
 
       function openModal(caseKey) {
         document.body.style.overflow = 'hidden';
