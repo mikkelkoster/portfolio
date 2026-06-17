@@ -4974,7 +4974,8 @@
       });
 
       function colWidth() {
-        return cols[0].offsetWidth + 16; // col width + gap
+        const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 0;
+        return cols[0].offsetWidth + gap;
       }
 
       function goTo(index) {
