@@ -1300,7 +1300,7 @@
       background: var(--card);
       border-radius: 20px;
       border: 1px solid var(--slate-200);
-      padding: 28px;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       gap: 0;
@@ -1312,24 +1312,26 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.06);
       transform: translateY(-2px);
     }
-    .beyond-card:hover .beyond-card__illus { background: var(--slate-200); }
-    .beyond-card__illus {
-      margin-bottom: 20px;
+    .beyond-card__media {
+      width: 100%;
+      aspect-ratio: 3 / 2;
       flex-shrink: 0;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
+      overflow: hidden;
       background: var(--slate-100);
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
-    .beyond-card__illus svg { display: block; }
-    .beyond-card__illus i {
-      font-size: 24px;
-      color: var(--brand-600);
+    .beyond-card__media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
-      line-height: 1;
+      transform: scale(1);
+      transition: transform 0.4s ease;
+    }
+    .beyond-card:hover .beyond-card__media img { transform: scale(1.04); }
+    .beyond-card__content {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
     }
     .beyond-card__title {
       font-family: 'Fraunces', serif;
@@ -1967,7 +1969,7 @@
       .beyond { padding: 40px var(--px) 48px; }
       .beyond__label { margin-bottom: 28px; }
       .beyond__grid { grid-template-columns: 1fr; gap: 8px; }
-      .beyond-card { padding: 24px; }
+      .beyond-card__content { padding: 24px; }
       .beyond-card:hover { transform: none; }
 
       /* Experience */
@@ -4174,29 +4176,35 @@
       <div class="beyond__grid">
         <!-- Card 1: No assholes -->
         <div class="beyond-card will-fade-scale" data-delay="0">
-          <div class="beyond-card__illus">
-            <i class="ph-fill ph-heart"></i>
+          <div class="beyond-card__media">
+            <img src="public/images/main/main-beyond-the-work-1.png" alt="An open door with coats hanging beside it">
           </div>
-          <h4 class="beyond-card__title">No assholes</h4>
-          <p class="beyond-card__body">Work takes up too much of your life to spend it with people who make it miserable. The culture I care about building is one where we bring a bit of ourselves to work. Where we tell stories, form real relationships, and show up for each other. Vulnerability creates safety. Safety creates the conditions for genuinely great work.</p>
+          <div class="beyond-card__content">
+            <h4 class="beyond-card__title">No assholes</h4>
+            <p class="beyond-card__body">Work takes up too much of your life to spend it with people who make it miserable. The culture I care about building is one where we bring a bit of ourselves to work. Where we tell stories, form real relationships, and show up for each other. Vulnerability creates safety. Safety creates the conditions for genuinely great work.</p>
+          </div>
         </div>
 
         <!-- Card 2: Guardian of positivism -->
         <div class="beyond-card will-fade-scale" data-delay="80">
-          <div class="beyond-card__illus">
-            <i class="ph-fill ph-sun-dim"></i>
+          <div class="beyond-card__media">
+            <img src="public/images/main/main-beyond-the-work-2.png" alt="A light switch turned on">
           </div>
-          <h4 class="beyond-card__title">Guardian of positivism</h4>
-          <p class="beyond-card__body">Someone once called me a guardian of positivism — I'll take it. I genuinely believe that energy is contagious, and that a team with the right attitude consistently outperforms one without it. "Yes, and..." over "no." I've finished three Ironmans and race competitively in Master A. The "never, ever give up" attitude that gets you across that finish line is the same one that keeps a team moving when things get hard.</p>
+          <div class="beyond-card__content">
+            <h4 class="beyond-card__title">Guardian of positivism</h4>
+            <p class="beyond-card__body">Someone once called me a guardian of positivism — I'll take it. I genuinely believe that energy is contagious, and that a team with the right attitude consistently outperforms one without it. "Yes, and..." over "no." I've finished three Ironmans and race competitively in Master A. The "never, ever give up" attitude that gets you across that finish line is the same one that keeps a team moving when things get hard.</p>
+          </div>
         </div>
 
         <!-- Card 3: No shortcuts on quality -->
         <div class="beyond-card will-fade-scale" data-delay="160">
-          <div class="beyond-card__illus">
-            <i class="ph-fill ph-sketch-logo"></i>
+          <div class="beyond-card__media">
+            <img src="public/images/main/main-beyond-the-work-3.png" alt="An origami crane on a pedestal">
           </div>
-          <h4 class="beyond-card__title">Craft and care</h4>
-          <p class="beyond-card__body">I'm fascinated by things that are excessively well made — in the digital and physical world. When you can feel that someone truly cared about making an experience as good as it could possibly be. That's what I want to build. Not for the sense of accomplishment — but because users choose you over the competition when you genuinely solve something in their lives.</p>
+          <div class="beyond-card__content">
+            <h4 class="beyond-card__title">Craft and care</h4>
+            <p class="beyond-card__body">I'm fascinated by things that are excessively well made — in the digital and physical world. When you can feel that someone truly cared about making an experience as good as it could possibly be. That's what I want to build. Not for the sense of accomplishment — but because users choose you over the competition when you genuinely solve something in their lives.</p>
+          </div>
         </div>
       </div>
 
