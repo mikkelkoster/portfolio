@@ -4781,7 +4781,8 @@
       const dots = Array.from(dotsWrap.querySelectorAll('.carousel-dot'));
 
       function colWidth() {
-        return cols[0].offsetWidth + 16; // col + gap
+        const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 0;
+        return cols[0].offsetWidth + gap;
       }
 
       function visibleCount() {
