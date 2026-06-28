@@ -1515,7 +1515,6 @@
       flex-shrink: 0;
       min-width: 0;
       height: auto;
-      transition: opacity 0.45s ease;
     }
     .t-col.is-peek { opacity: 0.3; }
     /* Long quotes: shrink font so text fits within the fixed card height */
@@ -5050,21 +5049,50 @@
         if (animating) return;
         index = Math.max(0, Math.min(total - 1, index));
         animating = true;
+        const fromIdx = current;
+        const toIdx   = index;
         const from = offsetX, to = -(index * colWidth());
         const dur = 600, t0 = performance.now();
+
+        // Snapshot starting opacities so we interpolate from whatever they are now
+        const startOpacity = cols.map(col => parseFloat(col.style.opacity) || (col.classList.contains('is-peek') ? 0.3 : 1));
+        const targetOpacity = cols.map((_, i) => (i === toIdx ? 1 : (i === toIdx - 1 || i === toIdx + 1 ? 0.3 : 0.3)));
+
+        // Remove classes so CSS doesn't fight inline styles during animation
+        cols.forEach(col => col.classList.remove('is-peek'));
+
         (function frame() {
-          const p = Math.min((performance.now() - t0) / dur, 1);
-          offsetX = from + (to - from) * easeOutQuart(p);
+          const p  = Math.min((performance.now() - t0) / dur, 1);
+          const ep = easeOutQuart(p);
+          offsetX = from + (to - from) * ep;
           track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-          if (p < 1) { requestAnimationFrame(frame); }
-          else { offsetX = to; track.style.transform = `translateX(${to}px)`; animating = false; }
+
+          // Interpolate each card's opacity in lockstep with the slide
+          cols.forEach((col, i) => {
+            col.style.opacity = (startOpacity[i] + (targetOpacity[i] - startOpacity[i]) * ep).toFixed(3);
+          });
+
+          if (p < 1) {
+            requestAnimationFrame(frame);
+          } else {
+            offsetX = to;
+            track.style.transform = `translateX(${to}px)`;
+            // Hand back to CSS classes
+            cols.forEach(col => col.style.opacity = '');
+            animating = false;
+            updateState(toIdx);
+          }
         })();
-        updateState(index);
+
+        // Update dots and buttons immediately
+        current = toIdx;
+        dots.forEach((dot, i) => dot.classList.toggle('is-active', i === toIdx));
+        btnPrev.disabled = toIdx === 0;
+        btnNext.disabled = toIdx >= total - 1;
       }
 
       function updateState(idx) {
         current = idx;
-        // Next card peeks; all others are hidden off-screen
         cols.forEach((col, i) => {
           col.classList.toggle('is-peek', i === idx + 1 || i === idx - 1);
         });
