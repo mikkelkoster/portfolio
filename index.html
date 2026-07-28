@@ -1477,6 +1477,11 @@
     .fp-grid { display: grid; gap: 20px; }
     .fp-grid--2 { grid-template-columns: 1fr 1fr; }
     .fp-grid--3 { grid-template-columns: 1fr 1fr 1fr; }
+    /* Product screen cards — geometry mirrors Figma (§ Full platform).
+       Card holds the blue-50 bg; the screenshot sits at natural scale and is
+       clipped by the card, exactly as the design frames do. */
+    .fp-card { position: relative; background: #EFF6FF; border-radius: 20px; overflow: hidden; }
+    .fp-card img { position: absolute; height: auto; display: block; }
     .exp-expand-imgs {
       display: flex;
     }
@@ -6349,41 +6354,41 @@
           <p style="font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#2563eb;margin-bottom:16px;">THE FULL PLATFORM</p>
           <h3 style="font-family:'Fraunces',serif;font-size:40px;font-weight:400;color:#ffffff;line-height:1.2;max-width:680px;margin-bottom:64px;">Every workflow. Redesigned.</h3>
 
-          <!-- Row 1: 2 columns — card height 350px matches Figma -->
+          <!-- Row 1: cards 470×350 -->
           <div class="fp-grid fp-grid--2" style="margin-bottom:20px;">
-            <div style="background:#EFF6FF;border-radius:14px;padding:20px 20px 0;overflow:hidden;height:350px;">
-              <img src="public/images/formalize/fp-dora-inner.webp" alt="DORA compliance questionnaire" style="width:100%;display:block;border-radius:8px 8px 0 0;object-fit:cover;object-position:top center;" loading="lazy">
+            <div class="fp-card" style="aspect-ratio:470/350;">
+              <img src="public/images/formalize/fp-dora-inner.webp" alt="DORA compliance questionnaire" style="left:3.191%;top:4.286%;width:96.809%;" loading="lazy">
             </div>
-            <div style="background:#EFF6FF;border-radius:14px;padding:20px 20px 0;overflow:hidden;height:350px;">
-              <img src="public/images/formalize/fp-filters-inner.webp" alt="Search and filter panel" style="width:100%;display:block;border-radius:8px 8px 0 0;object-fit:cover;object-position:top center;" loading="lazy">
+            <div class="fp-card" style="aspect-ratio:470/350;">
+              <img src="public/images/formalize/fp-filters-inner.webp" alt="Search and filter panel" style="left:3.120%;top:4.286%;width:96.880%;" loading="lazy">
             </div>
           </div>
 
-          <!-- Row 2: Full width — card height 500px matches Figma -->
-          <div style="background:#EFF6FF;border-radius:14px;padding:20px 20px 0;overflow:hidden;margin-bottom:20px;height:500px;">
-            <img src="public/images/formalize/fp-tree-inner.webp" alt="System connections tree map" style="width:100%;display:block;border-radius:8px 8px 0 0;object-fit:cover;object-position:top center;" loading="lazy">
+          <!-- Row 2: card 960×500 -->
+          <div class="fp-card" style="aspect-ratio:960/500;margin-bottom:20px;">
+            <img src="public/images/formalize/fp-tree-inner.webp" alt="System connections tree map" style="left:4.167%;top:7.200%;width:91.667%;" loading="lazy">
           </div>
 
-          <!-- Row 3: 2 columns — card height 300px matches Figma -->
+          <!-- Row 3: cards 470×300 -->
           <div class="fp-grid fp-grid--2" style="margin-bottom:20px;">
-            <div style="background:#EFF6FF;border-radius:14px;padding:20px 20px 0;overflow:hidden;height:300px;">
-              <img src="public/images/formalize/fp-risk-matrix-inner.webp" alt="Risk score and matrix" style="width:100%;display:block;border-radius:8px 8px 0 0;object-fit:cover;object-position:top center;" loading="lazy">
+            <div class="fp-card" style="aspect-ratio:470/300;">
+              <img src="public/images/formalize/fp-risk-matrix-inner.webp" alt="Risk score and matrix" style="left:1.277%;top:18.392%;width:95.745%;" loading="lazy">
             </div>
-            <div style="background:#EFF6FF;border-radius:14px;padding:20px 20px 0;overflow:hidden;height:300px;">
-              <img src="public/images/formalize/fp-connections-panel-inner.webp" alt="Connections panel" style="width:100%;display:block;border-radius:8px 8px 0 0;object-fit:cover;object-position:top center;" loading="lazy">
+            <div class="fp-card" style="aspect-ratio:470/300;">
+              <img src="public/images/formalize/fp-connections-panel-inner.webp" alt="Connections panel" style="left:15.319%;top:5.000%;width:59.574%;" loading="lazy">
             </div>
           </div>
 
-          <!-- Row 4: 3 columns — card height 350px matches Figma -->
+          <!-- Row 4: cards 306.67×350 -->
           <div class="fp-grid fp-grid--3">
-            <div style="background:#EFF6FF;border-radius:14px;padding:20px 20px 0;overflow:hidden;height:350px;">
-              <img src="public/images/formalize/fp-nav-inner.webp" alt="Navigation sidebar" style="width:100%;display:block;border-radius:8px 8px 0 0;object-fit:cover;object-position:top center;" loading="lazy">
+            <div class="fp-card" style="aspect-ratio:306.667/350;">
+              <img src="public/images/formalize/fp-nav-inner.webp" alt="Navigation sidebar" style="left:23.478%;top:4.286%;width:48.913%;" loading="lazy">
             </div>
-            <div style="background:#EFF6FF;border-radius:14px;padding:20px 20px 0;overflow:hidden;height:350px;">
-              <img src="public/images/formalize/fp-workflows-inner.webp" alt="Workflows" style="width:100%;display:block;border-radius:8px 8px 0 0;object-fit:cover;object-position:top center;" loading="lazy">
+            <div class="fp-card" style="aspect-ratio:306.667/350;">
+              <img src="public/images/formalize/fp-workflows-inner.webp" alt="Workflows" style="left:4.130%;top:4.286%;width:91.304%;" loading="lazy">
             </div>
-            <div style="background:#EFF6FF;border-radius:14px;padding:20px 20px 0;overflow:hidden;height:350px;">
-              <img src="public/images/formalize/fp-deadline-inner.webp" alt="Deadlines" style="width:100%;display:block;border-radius:8px 8px 0 0;object-fit:cover;object-position:top center;" loading="lazy">
+            <div class="fp-card" style="aspect-ratio:306.667/350;">
+              <img src="public/images/formalize/fp-deadline-inner.webp" alt="Deadlines" style="left:6.087%;top:7.143%;width:88.043%;" loading="lazy">
             </div>
           </div>
         </div>
