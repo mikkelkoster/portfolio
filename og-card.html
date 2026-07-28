@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    position: relative;
+    background:
+      radial-gradient(ellipse 80% 60% at 78% 25%, rgba(37, 99, 235, 0.40) 0%, transparent 65%),
+      radial-gradient(ellipse 55% 65% at 8% 90%, rgba(14, 165, 233, 0.14) 0%, transparent 55%),
+      #0F1729;
+    font-family: 'Poppins', sans-serif;
+  }
+  .photo {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    height: 630px;
+    width: auto;
+    object-fit: contain;
+    object-position: bottom right;
+  }
+  .fade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #0F1729 0%, #0F1729 38%, transparent 72%);
+  }
+  .content {
+    position: relative;
+    z-index: 2;
+    padding: 76px 0 0 72px;
+    max-width: 660px;
+  }
+  .kicker {
+    font-size: 16px;
+    font-weight: 600;
+    color: #5b8def;
+    margin-bottom: 18px;
+    letter-spacing: 0.02em;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 56px;
+    line-height: 1.12;
+    color: #fff;
+    margin-bottom: 24px;
+  }
+  p {
+    font-size: 19px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.65);
+    max-width: 480px;
+  }
+  .name {
+    position: absolute;
+    left: 72px;
+    bottom: 56px;
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    color: #fff;
+    z-index: 2;
+  }
+</style>
+</head>
+<body>
+  <img class="photo" src="public/images/main/main-photo-mikkel.png" alt="">
+  <div class="fade"></div>
+  <div class="content">
+    <p class="kicker">Design Leader</p>
+    <h1>Design at scale.<br>Player-coach.<br>Product strategist.</h1>
+    <p>Strategist. Maker. Design leader. 15 years building teams and products.</p>
+  </div>
+  <div class="name">Mikkel Køster</div>
+</body>
+</html>

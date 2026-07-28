@@ -1474,6 +1474,9 @@
       align-items: start;
       padding: 0 16px 32px 16px;
     }
+    .fp-grid { display: grid; gap: 20px; }
+    .fp-grid--2 { grid-template-columns: 1fr 1fr; }
+    .fp-grid--3 { grid-template-columns: 1fr 1fr 1fr; }
     .exp-expand-imgs {
       display: flex;
     }
@@ -2012,6 +2015,8 @@
       .testimonial-mark { display: none; }
       .t-footer { padding-right: 20px; }
 
+      /* Product screens grid */
+      .fp-grid--2, .fp-grid--3 { grid-template-columns: 1fr; }
       /* Accordion images */
       .exp-expand-inner { grid-template-columns: 1fr; padding: 4px 16px 24px 16px; }
       .exp-expand-imgs { width: 100%; }
@@ -6333,6 +6338,52 @@
               <div style="border-radius:4px;overflow:hidden;">
                 <img src="public/images/formalize/formalize-to-this-detail.webp" alt="After redesign" style="width:100%;display:block;" loading="lazy">
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             PRODUCT SCREENS (dark)
+        ══════════════════════════════════════════════ -->
+        <div class="cm-section--dark" style="background:#080751;padding:80px;overflow:hidden;">
+          <p style="font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#2563eb;margin-bottom:16px;">THE FULL PLATFORM</p>
+          <h3 style="font-family:'Fraunces',serif;font-size:40px;font-weight:400;color:#ffffff;line-height:1.2;max-width:680px;margin-bottom:64px;">Every workflow. Redesigned.</h3>
+
+          <!-- Row 1: 2 columns -->
+          <div class="fp-grid fp-grid--2" style="margin-bottom:20px;">
+            <div style="border-radius:14px;overflow:hidden;">
+              <img src="public/images/formalize/fp-dora.webp" alt="DORA compliance questionnaire" style="width:100%;display:block;" loading="lazy">
+            </div>
+            <div style="border-radius:14px;overflow:hidden;">
+              <img src="public/images/formalize/fp-filters.webp" alt="Search and filter panel" style="width:100%;display:block;" loading="lazy">
+            </div>
+          </div>
+
+          <!-- Row 2: Full width -->
+          <div style="border-radius:14px;overflow:hidden;margin-bottom:20px;">
+            <img src="public/images/formalize/fp-connections-tree.webp" alt="System connections tree map" style="width:100%;display:block;" loading="lazy">
+          </div>
+
+          <!-- Row 3: 2 columns -->
+          <div class="fp-grid fp-grid--2" style="margin-bottom:20px;">
+            <div style="border-radius:14px;overflow:hidden;">
+              <img src="public/images/formalize/fp-risk-matrix.webp" alt="Risk score and matrix" style="width:100%;display:block;" loading="lazy">
+            </div>
+            <div style="border-radius:14px;overflow:hidden;">
+              <img src="public/images/formalize/fp-connections-panel.webp" alt="Connections panel" style="width:100%;display:block;" loading="lazy">
+            </div>
+          </div>
+
+          <!-- Row 4: 3 columns -->
+          <div class="fp-grid fp-grid--3">
+            <div style="border-radius:14px;overflow:hidden;">
+              <img src="public/images/formalize/fp-nav.webp" alt="Navigation sidebar" style="width:100%;display:block;" loading="lazy">
+            </div>
+            <div style="border-radius:14px;overflow:hidden;">
+              <img src="public/images/formalize/fp-workflows.webp" alt="Workflows" style="width:100%;display:block;" loading="lazy">
+            </div>
+            <div style="border-radius:14px;overflow:hidden;">
+              <img src="public/images/formalize/fp-deadline.webp" alt="Deadlines" style="width:100%;display:block;" loading="lazy">
             </div>
           </div>
         </div>
