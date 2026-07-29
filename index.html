@@ -3699,17 +3699,15 @@
       /* ── Challenge grid ── */
       .cm-challenge-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
-      /* ── Formalize before/after (From this → To this) ── */
-      [style*="grid-template-columns:1fr auto 1fr"] {
-        grid-template-columns: 1fr !important;
-      }
-      [style*="grid-template-columns:1fr auto 1fr"] > [style*="padding:52px 4px 0"] {
+      /* ── Formalize before/after (From this → To this) ──
+         Stacks to one column, so the connecting arrow points down. */
+      .cm-fba { grid-template-columns: 1fr !important; }
+      .cm-fba__arrow {
         padding: 8px 0 !important;
+        margin-top: 0 !important;
         justify-content: center;
       }
-      [style*="grid-template-columns:1fr auto 1fr"] > [style*="padding:52px 4px 0"] svg {
-        transform: rotate(90deg);
-      }
+      .cm-fba__arrow svg { transform: rotate(90deg); }
 
       /* ── Transformation before/after ── */
       .cm-transform-ba { flex-direction: column; gap: 16px; align-items: stretch; }
@@ -6297,7 +6295,7 @@
           <p style="font-size:16px;color:rgba(255,255,255,0.7);line-height:1.65;max-width:680px;margin-bottom:80px;">Beyond the design system, I led a redesign of Formalize — taking the platform from working and functional to something that feels modern, fast, and clear.</p>
 
           <!-- Before/After pair 1 -->
-          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;margin-bottom:64px;">
+          <div class="cm-fba" style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;margin-bottom:64px;">
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
                 <img src="public/images/formalize/formalize-from-this-icon.svg" alt="" style="width:20px;height:20px;display:block;" loading="lazy">
@@ -6307,7 +6305,7 @@
                 <img src="public/images/formalize/formalize-from-this-list.webp" alt="Before redesign" style="width:100%;display:block;" loading="lazy">
               </div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:center;padding:0 4px;align-self:center;margin-top:36px;">
+            <div class="cm-fba__arrow" style="display:flex;align-items:center;justify-content:center;padding:0 4px;align-self:center;margin-top:36px;">
               <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M0 5 H10 M6 1 L11 5 L6 9" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div>
@@ -6322,7 +6320,7 @@
           </div>
 
           <!-- Before/After pair 2 -->
-          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;">
+          <div class="cm-fba" style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;">
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
                 <img src="public/images/formalize/formalize-from-this-icon.svg" alt="" style="width:20px;height:20px;display:block;" loading="lazy">
@@ -6332,7 +6330,7 @@
                 <img src="public/images/formalize/formalize-from-this-detail.webp" alt="Before redesign" style="width:100%;display:block;" loading="lazy">
               </div>
             </div>
-            <div style="display:flex;align-items:center;justify-content:center;padding:0 4px;align-self:center;margin-top:36px;">
+            <div class="cm-fba__arrow" style="display:flex;align-items:center;justify-content:center;padding:0 4px;align-self:center;margin-top:36px;">
               <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M0 5 H10 M6 1 L11 5 L6 9" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div>
