@@ -1481,7 +1481,16 @@
        Card holds the blue-50 bg; the screenshot sits at natural scale and is
        clipped by the card, exactly as the design frames do. */
     .fp-card { position: relative; background: #EFF6FF; border-radius: 20px; overflow: hidden; }
-    .fp-card img { position: absolute; height: auto; display: block; }
+    .fp-card img {
+      position: absolute; height: auto; display: block;
+      transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+    }
+    .fp-card:hover img { transform: scale(1.04); }
+    @media (prefers-reduced-motion: reduce) {
+      .fp-card img { transition: none; }
+      .fp-card:hover img { transform: none; }
+    }
     .exp-expand-imgs {
       display: flex;
     }
