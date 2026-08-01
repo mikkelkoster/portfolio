@@ -16,16 +16,16 @@
   <link rel="icon" type="image/png" sizes="192x192" href="public/meta/favicon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="public/meta/apple-touch-icon.png">
   <!-- Open Graph / social share -->
-  <meta name="description" content="Design at scale. Player-coach. Still in the tools. 15 years building teams and products, hands-on with AI.">
+  <meta name="description" content="Design at scale. Player-coach. Maker. 15 years building teams and products, hands-on with AI.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.mikkelkoster.com/">
   <meta property="og:site_name" content="Mikkel Køster">
   <meta property="og:title" content="Mikkel Køster — Design Leader · Portfolio">
-  <meta property="og:description" content="Design at scale. Player-coach. Still in the tools. 15 years building teams and products, hands-on with AI.">
+  <meta property="og:description" content="Design at scale. Player-coach. Maker. 15 years building teams and products, hands-on with AI.">
   <meta property="og:image" content="https://www.mikkelkoster.com/public/meta/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Mikkel Køster — Design Leader">
-  <meta name="twitter:description" content="Design at scale. Player-coach. Still in the tools. 15 years building teams and products, hands-on with AI.">
+  <meta name="twitter:description" content="Design at scale. Player-coach. Maker. 15 years building teams and products, hands-on with AI.">
   <meta name="twitter:image" content="https://www.mikkelkoster.com/public/meta/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -3851,14 +3851,13 @@
     <div class="hero__inner">
 
       <div class="hero__text">
-        <p class="hero__kicker" id="hero-kicker">Design Leader</p>
         <div class="hero__headlines">
           <div class="hero__line"><span class="hero__line-inner" id="hl1">Design at scale.</span></div>
           <div class="hero__line"><span class="hero__line-inner" id="hl2">Player-coach.</span></div>
-          <div class="hero__line"><span class="hero__line-inner" id="hl3">Still in the tools.</span></div>
+          <div class="hero__line"><span class="hero__line-inner" id="hl3">Maker.</span></div>
         </div>
         <p class="hero__tagline" id="hero-tagline">
-          15 years building teams and products. Still hands-on — I design and ship with AI, and I know where its output stops being good enough.
+          15 years building teams and products across agencies, scale-ups and in-house teams. I design and ship with AI, and I'm particular about craft and detail.
         </p>
       </div>
 
@@ -3917,7 +3916,7 @@
   <!-- ═══════════════════════════ CORE SKILLS ═══════════ -->
   <section id="skills">
     <div class="skills">
-      <p class="section-label skills__label will-fade-left">What I do</p>
+      <p class="section-label skills__label will-fade-left">How I work</p>
 
       <div class="skill-row will-fade-up" data-delay="0">
         <div class="skill-row__left">
@@ -3925,7 +3924,7 @@
           <h3 class="skill-title">Design at scale</h3>
         </div>
         <p class="skill-row__right">
-          Design at scale means shaping product direction alongside PMs and engineering leaders — not delivering outputs from a distance. It means user insight driving decisions before a single pixel is placed, and building the systems and standards that hold up as the team and the product grow.
+          Leading design means shaping product direction alongside PMs and engineering leaders — not delivering outputs from a distance. I've built design functions from zero and scaled them, and I care as much about the systems and standards that hold up as a team grows as I do about any single screen.
         </p>
       </div>
 
@@ -3935,17 +3934,17 @@
           <h3 class="skill-title">Player-coach</h3>
         </div>
         <p class="skill-row__right">
-          I'm a player-coach — and it's always been how I lead. I hire for talent density, mentor closely, and stay in the craft myself rather than reviewing it from a distance. I've led 25+ designers across agencies and in-house teams, and I still believe the most powerful thing a design leader can do is help someone grow into a version of themselves they didn't know was possible.
+          I hire for talent density, mentor closely, and stay in the craft myself rather than reviewing it from a distance. I still believe the most powerful thing a design leader can do is help someone grow into a version of themselves they didn't know was possible.
         </p>
       </div>
 
       <div class="skill-row will-fade-up" data-delay="200">
         <div class="skill-row__left">
           <span class="skill-badge">03</span>
-          <h3 class="skill-title">Still in the tools</h3>
+          <h3 class="skill-title">Maker</h3>
         </div>
         <p class="skill-row__right">
-          The best design decisions I've made weren't about how something looked. They were about what to build at all — and that still sits at the centre of how I work. What's changed is how quickly I can get from a decision to something real. I use AI throughout: exploring directions early, pressure-testing them, and directing the build itself. Judging where its output is genuinely good and where it quietly falls short is most of the job now — and it's why craft matters more, not less.
+          Making is where the thinking gets tested. The best design decisions I've made weren't about how something looked — they were about what to build at all, and then actually getting it built. AI has changed how quickly I can close that gap: I use it to explore directions early, pressure-test them, and direct the build itself. Judging where its output is genuinely good and where it quietly falls short is most of the job now — which is why craft matters more, not less.
         </p>
       </div>
     </div>
@@ -4726,15 +4725,14 @@
     /* ── 3. Hero entrance ──────────────────────────────── */
     const isMobile = window.innerWidth <= 768;
     // Set hidden state first, then animate in sequence
-    ['#hero-kicker','#hl1','#hl2','#hl3','#hero-tagline','#hero-photo'].forEach(s => {
+    ['#hl1','#hl2','#hl3','#hero-tagline','#hero-photo'].forEach(s => {
       const el = document.querySelector(s);
       if (el) { el.style.opacity = '0'; el.style.transform = 'none'; }
     });
-    tween(document.querySelector('#hero-kicker'),  { fy: 22, dur: 700,  delay: 80  });
-    tween(document.querySelector('#hl1'),          { fy: 52, dur: 1000, delay: 200 });
-    tween(document.querySelector('#hl2'),          { fy: 52, dur: 1000, delay: 330 });
-    tween(document.querySelector('#hl3'),          { fy: 52, dur: 1000, delay: 460 });
-    tween(document.querySelector('#hero-tagline'), { fy: 22, dur: 800,  delay: 680 });
+    tween(document.querySelector('#hl1'),          { fy: 52, dur: 1000, delay: 120 });
+    tween(document.querySelector('#hl2'),          { fy: 52, dur: 1000, delay: 250 });
+    tween(document.querySelector('#hl3'),          { fy: 52, dur: 1000, delay: 380 });
+    tween(document.querySelector('#hero-tagline'), { fy: 22, dur: 800,  delay: 600 });
     // On mobile the photo is stacked below text — fade up instead of slide from right
     if (isMobile) {
       tween(document.querySelector('#hero-photo'), { fy: 32, fs: 0.97, ts: 1, dur: 1000, delay: 560 });
