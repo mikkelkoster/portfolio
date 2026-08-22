@@ -1107,6 +1107,10 @@
       position: relative;
       width: 100%;
       height: 100%;
+      /* No hover scale here, unlike the flat screenshots on the other cards.
+         Those are still images that benefit from a nudge on hover; this one
+         is already moving, and scaling a live render on top of its own camera
+         move reads as two competing animations rather than as feedback. */
       /* The <video> this replaced carried intrinsic dimensions, so it gave
          the panel a height to work with. A div does not: where the panel's
          own height is indefinite — which is the case at mobile widths —
@@ -1117,13 +1121,7 @@
          effect when the height resolves to auto, so the desktop card, whose
          panel IS a definite height, still fills it edge to edge. */
       aspect-ratio: 1250 / 1175;
-      /* matches the 0.92 -> 0.97 nudge the screenshots get, inverted: the
-         render already fills the frame, so it grows on hover rather than
-         shrinking */
-      transform: scale(1);
-      transition: transform 0.4s ease-in-out;
     }
-    .case__image-stacked--maersk:hover .case__stage { transform: scale(1.03); }
 
     .case__stage-poster,
     .case__stage-canvas {
@@ -1148,8 +1146,6 @@
        still shows — the frame is a still of the same shot, so the card reads
        the same, it just does not move. */
     @media (prefers-reduced-motion: reduce) {
-      .case__stage { transition: none; }
-      .case__image-stacked--maersk:hover .case__stage { transform: scale(1); }
       /* initCaseStage also declines to load anything at all in this case, so
          the poster is what stays on screen */
     }
@@ -7330,120 +7326,6 @@
     })();
   </script>
 
-  <script>
-    // Preload all Maersk modal images in the background after page load
-    // so they're cached before the user opens the modal.
-    (function() {
-      const images = [
-        'public/images/maersk/maersk-dashboard.png',
-        'public/images/maersk/maersk-list.png',
-        'public/images/maersk/maersk-detail.png',
-        'public/images/maersk/maersk-from-this.png',
-        'public/images/maersk/maersk-inconsistent-mess.png',
-        'public/images/maersk/maersk-result-01.png',
-        'public/images/maersk/maersk-result-02.png',
-        'public/images/maersk/maersk-result-03.png',
-        'public/images/maersk/maersk-result-04.png',
-        'public/images/maersk/maersk-result-05.png',
-        'public/images/maersk/maersk-result-06.png',
-        'public/images/maersk/maersk-result-07.png',
-        'public/images/maersk/maersk-result-08.png',
-      ];
-
-      function preload(src) {
-        const img = new Image();
-        img.src = src;
-      }
-
-      // Use requestIdleCallback if available so preloading
-      // doesn't compete with the initial page render.
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => images.forEach(preload), { timeout: 3000 });
-      } else {
-        window.addEventListener('load', () => {
-          setTimeout(() => images.forEach(preload), 300);
-        });
-      }
-    })();
-
-    /**
-     * Case-card stage: a live WebGL product shot, loaded on approach.
-     *
-     * Roughly 2MB of scripts and plates, which is far too much to spend on a
-     * front page most visitors never scroll to the bottom of — so nothing is
-     * requested until the card is within 300px of the viewport. Until then,
-     * and forever if anything below fails, the poster underneath is what the
-     * card shows. It is a real fallback rather than a placeholder: the same
-     * opening frame, so the card looks finished either way.
-     */
-    (function initCaseStage() {
-      const stage = document.querySelector(".case__stage-canvas");
-      if (!stage) return;
-
-      // An explicit request not to see motion. Nothing is fetched, nothing
-      // runs, and the poster stands in permanently.
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-      // No point downloading three.js to find out the device cannot run it.
-      const probe = document.createElement("canvas");
-      const canRender = !!(
-        window.WebGL2RenderingContext && probe.getContext("webgl2")
-      );
-      if (!canRender || !("IntersectionObserver" in window)) return;
-
-      const load = (src) =>
-        new Promise((resolve, reject) => {
-          const el = document.createElement("script");
-          el.src = src;
-          el.async = false; // three must be defined before the scene runs
-          el.onload = resolve;
-          el.onerror = reject;
-          document.body.appendChild(el);
-        });
-
-      let handle = null;
-      let started = false;
-
-      const io = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              if (!started) {
-                started = true;
-                Promise.all([
-                  load("public/js/three.min.js"),
-                  load("public/js/gsap.min.js"),
-                ])
-                  .then(() => load("public/js/softbox-stage.js"))
-                  .then(() => {
-                    handle = window.initSoftboxStage(
-                      stage,
-                      stage.dataset.plates.split(","),
-                    );
-                    // only reveal once there is a frame worth showing
-                    requestAnimationFrame(() =>
-                      requestAnimationFrame(() => stage.classList.add("is-live")),
-                    );
-                  })
-                  .catch(() => {
-                    /* poster stays; nothing to clean up */
-                  });
-              } else if (handle) {
-                handle.resume();
-              }
-            } else if (handle) {
-              handle.pause();
-            }
-          });
-        },
-        // begin fetching a little before it arrives, so the first frame is
-        // ready rather than fading in after the card is already in view
-        { rootMargin: "300px 0px", threshold: 0.01 },
-      );
-
-      io.observe(stage);
-    })();
-  </script>
 
 
 </body>
