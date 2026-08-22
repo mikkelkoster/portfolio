@@ -1093,6 +1093,67 @@
       box-shadow: none;
     }
 
+    /* ── Maersk card carries a film, not a screenshot ─────────────────────
+       It fills the panel edge to edge rather than sitting inset at 90% with a
+       drop shadow like the flat screenshots do. The composition renders its own
+       #D4EEF7 backdrop and its own contact shadow, so insetting it would put a
+       pale panel inside a pale panel and a fake shadow under a real one.
+
+       The panel is 612x574 and the film is 1250x1175 — the same aspect to
+       within half a percent — so `cover` crops essentially nothing and the card
+       keeps the exact height of its neighbours. */
+    .case__image-stacked--maersk { padding: 0; }
+    .case__stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      /* The <video> this replaced carried intrinsic dimensions, so it gave
+         the panel a height to work with. A div does not: where the panel's
+         own height is indefinite — which is the case at mobile widths —
+         `height: 100%` has nothing to resolve against, computes to auto, and
+         the stage collapses to zero.
+
+         aspect-ratio restores exactly what the video provided. It only takes
+         effect when the height resolves to auto, so the desktop card, whose
+         panel IS a definite height, still fills it edge to edge. */
+      aspect-ratio: 1250 / 1175;
+      /* matches the 0.92 -> 0.97 nudge the screenshots get, inverted: the
+         render already fills the frame, so it grows on hover rather than
+         shrinking */
+      transform: scale(1);
+      transition: transform 0.4s ease-in-out;
+    }
+    .case__image-stacked--maersk:hover .case__stage { transform: scale(1.03); }
+
+    .case__stage-poster,
+    .case__stage-canvas {
+      position: absolute;
+      inset: 0;
+      display: block;
+      /* Explicit, and load-bearing on the canvas. A canvas is a REPLACED
+         element, so `inset: 0` with an auto width resolves to its intrinsic
+         size — the drawing buffer — rather than stretching to its parent. */
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .case__stage-canvas {
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    /* the canvas only takes over once it has something to show, so the card
+       never flashes an empty box over the poster */
+    .case__stage-canvas.is-live { opacity: 1; }
+    /* Never animate for anyone who has asked not to see motion. The poster
+       still shows — the frame is a still of the same shot, so the card reads
+       the same, it just does not move. */
+    @media (prefers-reduced-motion: reduce) {
+      .case__stage { transition: none; }
+      .case__image-stacked--maersk:hover .case__stage { transform: scale(1); }
+      /* initCaseStage also declines to load anything at all in this case, so
+         the poster is what stays on screen */
+    }
+
     /* Grid overrides for stacked cards — let stacked CSS take full control */
     .case-list--grid .case--stacked {
       flex-direction: column;
@@ -1912,6 +1973,12 @@
       /* Stacked cards — stack to column on tablet */
       .case--stacked { flex-direction: column; min-height: 0; }
       .case__image-stacked { flex: none; height: auto; padding: 28px 20px; order: 1; overflow: visible; }
+      /* The Maersk panel is an exception at every width: its render carries
+         its own backdrop and its own contact shadow, so insetting it would
+         put a pale panel inside a pale panel. The base rule that zeroes this
+         padding sits outside the media queries and loses to them on
+         specificity, so it has to be restated here. */
+      .case__image-stacked--maersk { padding: 0; overflow: hidden; }
       .case__image-stacked .case__image-inner { transform: none !important; width: 100% !important; }
       .case__text-stacked { flex: none; padding: 36px 40px; order: 2; }
 
@@ -1994,6 +2061,12 @@
       /* Stacked cards — stack to column on mobile */
       .case--stacked { flex-direction: column; min-height: 0; }
       .case__image-stacked { flex: none; height: auto; padding: 28px 20px; order: 1; overflow: visible; }
+      /* The Maersk panel is an exception at every width: its render carries
+         its own backdrop and its own contact shadow, so insetting it would
+         put a pale panel inside a pale panel. The base rule that zeroes this
+         padding sits outside the media queries and loses to them on
+         specificity, so it has to be restated here. */
+      .case__image-stacked--maersk { padding: 0; overflow: hidden; }
       .case__text-stacked { flex: none; padding: 28px 24px; order: 2; }
       .case--stacked .case__title { font-size: 32px; }
       .case__image-stacked .case__image-inner { transform: none !important; width: 100% !important; }
@@ -2234,6 +2307,45 @@
       gap: 4px;
     }
     #modal-content-maersk .cm-meta-item { background: #E9F6FC; }
+    /* ── Matas: no blue. The case runs entirely on the rose palette. ──
+       #E11D48 = accent on light  ·  #FDAFBF = accent on navy  ·  #FFF1F2 = tint  */
+    #modal-content-matas .cm-section--light { background: #FFF9FA; }
+    #modal-content-matas .cm-meta-item { background: #FFF1F2; }
+    #modal-content-matas .cm-hero__label,
+    #modal-content-matas .cm-hook,
+    #modal-content-matas .cm-label span { color: #E11D48; }
+    #modal-content-matas .cm-hero__label::before { background: #E11D48; }
+    #modal-content-matas .cm-label--light span,
+    #modal-content-matas .cm-ba-dark__col--after .cm-ba-dark__label { color: #FDAFBF; }
+    #modal-content-matas .cm-ba-dark__col--after {
+      background: rgba(253,175,191,0.10);
+      border-color: rgba(253,175,191,0.40);
+    }
+    #modal-content-matas .cm-challenge-icon,
+    #modal-content-matas .cm-challenge-icon i { color: #E11D48; }
+    #modal-content-matas .cm-car__card-num { color: #E11D48; background: #FFF1F2; }
+    #modal-content-matas .cm-car__dot.is-active { background: #E11D48; }
+    #modal-content-matas .cm-close-stat__val,
+    #modal-content-matas .cm-close-stat__val span { color: #FDAFBF; }
+
+    /* Brief before/after — art breaks out above the card (variation 5).
+       320px art at top:-180px ends 140px into the card; the card starts its
+       text at 156px, leaving 16px clearance. Change them together. */
+    #modal-content-matas .cm-ba-dark { align-items: end; margin-top: 260px; }
+    #modal-content-matas .cm-ba-dark__col { position: relative; padding-top: 156px; }
+    #modal-content-matas .cm-ba-dark__art {
+      position: absolute;
+      top: -180px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 320px;
+      width: auto;
+      margin: 0;
+      filter: drop-shadow(0 24px 40px rgba(0,0,0,0.45));
+    }
+    #modal-content-matas .cm-ba-dark__arrow { padding-bottom: 56px; }
+    #modal-content-matas .cm-section--dark,
+    #modal-content-matas .cm-close-section { background: #012743; }
     .cm-meta-label {
       font-size: 10px;
       font-weight: 600;
@@ -2415,33 +2527,311 @@
       line-height: 1.6;
     }
 
-    /* Research voices */
-    .cm-voices {
+    /* Before/After artwork (Matas: transactional -> relationship) */
+    .cm-ba-dark__art { display: block; height: 120px; width: auto; margin-bottom: 20px; }
+
+    /* Breaker image — inset to the same gutter as the content */
+    .cm-breaker { line-height: 0; padding: 80px; }
+    .cm-breaker figure { position: relative; margin: 0; border-radius: 12px; overflow: hidden; }
+    .cm-breaker img { width: 100%; display: block; }
+    .cm-breaker__stat {
+      position: absolute;
+      right: 8%;
+      top: 50%;
+      transform: translateY(-50%);
+      text-align: center;
+      line-height: 1.05;
+    }
+    .cm-breaker__num {
+      display: block;
+      font-family: 'Fraunces', serif;
+      font-weight: 400;
+      font-size: clamp(48px, 7vw, 96px);
+      color: #E11D48;
+      letter-spacing: -0.02em;
+    }
+    .cm-breaker__lbl {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 4px;
+      font-size: clamp(14px, 1.7vw, 24px);
+      font-weight: 500;
+      color: rgba(225,29,72,0.78);
+      text-transform: lowercase;
+    }
+
+    /* Research findings grid */
+    .cm-findings {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
       margin-top: 48px;
     }
-    .cm-voice {
-      background: #fff;
-      border: 1px solid #E2E8F0;
+    .cm-finding:hover { background: #FFE4E6; }
+    .cm-finding {
+      background: #FFF1F2;
+      transition: background-color 0.25s ease;
       border-radius: 12px;
-      padding: 28px;
+      padding: 32px 28px;
+      min-height: 168px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 20px;
     }
-    .cm-voice__text {
+    .cm-finding__icon { font-size: 44px; line-height: 1; color: #E11D48; }
+    .cm-finding__text {
+      font-size: 15px;
+      color: #012743;
+      line-height: 1.5;
+      max-width: 24ch;
+    }
+
+    /* Spend distribution chart */
+    .cm-spend {
+      background: #012743;
+      border-radius: 16px;
+      padding: 48px 40px;
+      margin-bottom: 48px;
+    }
+    .cm-spend__title {
       font-family: 'Fraunces', serif;
-      font-style: italic;
-      font-size: 14px;
-      color: #334155;
-      line-height: 1.7;
-      margin-bottom: 14px;
+      font-size: 24px;
+      color: #F8FAFC;
+      text-align: center;
+      margin-bottom: 12px;
     }
-    .cm-voice__src {
-      font-size: 10px;
+    .cm-spend__sub {
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(248,250,252,0.65);
+      text-align: center;
+      max-width: 460px;
+      margin: 0 auto 48px;
+    }
+    .cm-spend__chart {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 24px;
+      align-items: center;
+      max-width: 620px;
+      margin: 0 auto;
+    }
+    .cm-spend__col { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .cm-spend__track {
+      width: 100%;
+      max-width: 150px;
+      height: 220px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .cm-spend__track--bottom { justify-content: flex-end; }
+    .cm-spend__track--top    { justify-content: flex-start; }
+    .cm-spend__fill {
+      width: 100%;
+      background: #FDAFBF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
       font-weight: 600;
-      color: #94A3B8;
+      color: #012743;
+    }
+    .cm-spend__fill--half   { height: 50%; }
+    .cm-spend__fill--sliver { height: 28px; }
+    .cm-spend__label {
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(248,250,252,0.75);
+      text-align: center;
+    }
+    .cm-spend__label strong { color: #FDAFBF; font-weight: 600; }
+    .cm-spend__equal {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      color: #012743;
+      background: #FDAFBF;
+      border-radius: 999px;
+      padding: 10px 16px;
+      white-space: nowrap;
+    }
+    .cm-spend__equal-short { display: none; }
+
+    /* Frequency model — a comparison matrix, not a chart.
+       Rows are dimensions, columns are tiers, so any row reads straight
+       across. The two mechanic bands span their real coverage: Points
+       across all three tiers, Rewards under the top one only. */
+    .cm-freq {
+      background: #012743;
+      border-radius: 16px;
+      padding: 48px 44px 44px;
+      margin-bottom: 48px;
+    }
+    .cm-freq__title {
+      font-family: 'Fraunces', serif;
+      font-size: 24px;
+      color: #F8FAFC;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .cm-freq__sub {
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(248,250,252,0.62);
+      text-align: center;
+      max-width: 520px;
+      margin: 0 auto 46px;
+    }
+    .cm-freq__tbl { display: grid; grid-template-columns: 136px repeat(3, 1fr); }
+    .cm-freq__tbl > * { padding: 18px 16px; border-bottom: 1px solid rgba(255,255,255,0.09); }
+    .cm-freq__rlab {
+      padding-left: 0;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: rgba(248,250,252,0.40);
+    }
+    .cm-freq__head {
+      font-size: 15px;
+      font-weight: 600;
+      color: #F8FAFC;
+      border-bottom: 1px solid rgba(253,175,191,0.32);
+    }
+    .cm-freq__cell { font-size: 13px; line-height: 1.8; color: rgba(248,250,252,0.68); }
+    .cm-freq__dots { display: flex; gap: 5px; align-items: center; }
+    .cm-freq__dots i { width: 9px; height: 9px; border-radius: 50%; background: #FDAFBF; display: block; }
+    .cm-freq__dots i.is-off { background: rgba(253,175,191,0.20); }
+    /* coverage bands — tinted and square-ish so they read as a range,
+       not a control. A solid pill with dark text reads as a button. */
+    .cm-freq__band {
+      border-bottom: none;
+      margin: 12px 8px 12px 0;
+      padding: 14px 16px;
+      border-radius: 4px;
+      border: 1px solid rgba(253,175,191,0.28);
+      border-left: 3px solid #FDAFBF;
+      background: rgba(253,175,191,0.08);
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(248,250,252,0.75);
+      display: block;
+    }
+    /* label reads as a heading for the band, description beneath */
+    .cm-freq__band b {
+      display: block;
+      font-weight: 600;
+      font-size: 13.5px;
+      color: #FDAFBF;
+      margin-bottom: 4px;
+    }
+    .cm-freq__band--points  { grid-column: 2 / 5; }
+    /* only the fill differs — the stroke is identical on both */
+    .cm-freq__band--rewards { grid-column: 4 / 5; background: rgba(253,175,191,0.17); }
+    .cm-freq__norule { border-bottom: none; }
+
+    /* Mechanic cards — two parallel mechanisms, not a before/after.
+       Screen sits left, its signature UI badge beside it, text below on
+       the same left edge. */
+    #modal-content-matas .cm-ba-cards { grid-template-columns: 1fr 1fr; align-items: stretch; }
+    #modal-content-matas .cm-ba-card { text-align: center; }
+    /* lists stay left-ragged but sit in a centred block */
+    #modal-content-matas .cm-ba-card__list { display: inline-block; text-align: left; }
+    .cm-mech__visual {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      margin-top: 30px;
+    }
+    .cm-mech__badge { width: 190px; height: auto; }
+    .cm-mech__shot {
+      width: 200px;
+      border-radius: 14px;
+      box-shadow: 0 18px 44px rgba(1,39,67,0.20);
+    }
+
+    /* ── The turn: problem gives way to solution ──
+       Solid rose ground + white raised cards, the inverse of every
+       section before it, so the shift is unmissable. */
+    #modal-content-matas .cm-themes-section {
+      background: #FFE4E6;
+      padding: 104px 80px;
+      text-align: center;
+    }
+    #modal-content-matas .cm-themes-section .cm-label { justify-content: center; }
+    #modal-content-matas .cm-themes-section .cm-headline {
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #modal-content-matas .cm-themes-section .cm-body {
+      max-width: 560px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .cm-themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
+    .cm-theme {
+      background: #fff;
+      border-radius: 14px;
+      padding: 40px 28px 36px;
+      text-align: center;
+      box-shadow: 0 4px 18px rgba(1,39,67,0.06);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .cm-theme:hover { transform: translateY(-5px); box-shadow: 0 14px 34px rgba(1,39,67,0.14); }
+    .cm-theme img { display: block; height: 130px; width: auto; margin: 0 auto 26px; }
+    .cm-theme__text { font-size: 15px; line-height: 1.5; color: #012743; }
+
+    /* Old vs new — a real before/after, so it gets the arrow and a dark stage */
+    .cm-vs {
+      background: #012743;
+      border-radius: 16px;
+      margin-top: 48px;
+      padding: 60px 48px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 36px;
+      align-items: center;
+      justify-items: center;
+    }
+    .cm-vs__col { text-align: center; width: 100%; max-width: 290px; }
+    .cm-vs__tag {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      color: #FDAFBF; margin-bottom: 18px;
+    }
+    .cm-vs img {
+      display: block;
+      width: 100%;
+      border-radius: 14px;
+      box-shadow: 0 26px 54px rgba(0,0,0,0.42);
+    }
+    .cm-vs__arrow { display: flex; align-items: center; color: rgba(253,175,191,0.55); padding-top: 28px; }
+
+    /* Screen map */
+    .cm-map { margin-top: 40px; border-radius: 12px; overflow: hidden; background: #fff; }
+    .cm-map img { display: block; width: 100%; }
+
+    /* Carousel image placeholders — awaiting exports */
+    .cm-car__card-img--ph {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      border: 1px dashed #FDA4AF;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: #9F1239;
+      text-align: center;
     }
 
     /* Approach step cards */
@@ -2716,6 +3106,7 @@
     .cm-ba-card__tag { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #94A3B8; margin-bottom: 8px; }
     .cm-ba-card--after .cm-ba-card__tag { color: var(--brand-600); }
     .cm-ba-card__title { font-family: 'Fraunces', Georgia, serif; font-size: 20px; color: #0F1729; margin-bottom: 20px; }
+    #modal-content-matas .cm-ba-card__title { margin-bottom: 0; }
     .cm-ba-card__list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     .cm-ba-card__list li { font-size: 13px; color: #475569; line-height: 1.5; padding-left: 16px; position: relative; }
     .cm-ba-card__list li::before { content: '·'; position: absolute; left: 0; color: #94A3B8; }
@@ -3755,6 +4146,74 @@
       /* 2-col wrap: first item of each row gets no divider */
       .cm-close-stat:nth-child(odd) { border-left: none !important; padding-left: 0; }
 
+      /* ── Matas: breaker images ── */
+      .cm-breaker { padding: 40px 24px; }
+      .cm-breaker__stat { right: 6%; }
+
+      /* ── Matas: before/after artwork ── */
+      #modal-content-matas .cm-ba-dark { margin-top: 0; }
+      #modal-content-matas .cm-ba-dark__col { padding-top: 24px; }
+      #modal-content-matas .cm-ba-dark__art {
+        position: static;
+        transform: none;
+        height: 150px;
+        margin: 0 auto 16px;
+        filter: none;
+      }
+      #modal-content-matas .cm-ba-dark__arrow { padding-bottom: 0; }
+
+      /* ── Matas: findings grid stacks, icon beside text ── */
+      .cm-findings { grid-template-columns: 1fr; gap: 12px; }
+      .cm-finding {
+        min-height: 0;
+        flex-direction: row;
+        align-items: center;
+        text-align: left;
+        gap: 16px;
+        padding: 20px 24px;
+      }
+      .cm-finding__icon { font-size: 32px; flex-shrink: 0; }
+      .cm-finding__text { max-width: none; font-size: 14px; }
+
+      /* ── Matas: themes + old/new stack ── */
+      #modal-content-matas .cm-themes-section { padding: 56px 24px; }
+      .cm-themes { grid-template-columns: 1fr; gap: 14px; margin-top: 36px; }
+      .cm-theme { padding: 28px 24px; }
+      .cm-theme img { height: 100px; margin-bottom: 18px; }
+      .cm-vs { grid-template-columns: 1fr; gap: 24px; padding: 36px 24px; }
+      .cm-vs__arrow { transform: rotate(90deg); padding-top: 0; justify-content: center; }
+      .cm-ba-card__shot { max-width: 180px; }
+
+      /* ── Matas: frequency ladder stacks; ramp becomes a widening bar ── */
+      .cm-freq { padding: 32px 20px; }
+      .cm-freq__title { font-size: 20px; }
+      .cm-freq__sub { margin-bottom: 28px; font-size: 13px; }
+      .cm-freq__tbl { grid-template-columns: 1fr; }
+      .cm-freq__tbl > * { padding: 12px 0; }
+      .cm-freq__head { margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(253,175,191,0.28); }
+      .cm-freq__rlab { padding-top: 14px; }
+      .cm-freq__band { margin-right: 0; }
+      .cm-freq__band--points,
+      .cm-freq__band--rewards { grid-column: 1 / 2; }
+
+      /* ── Matas: spend chart ── */
+      .cm-spend { padding: 32px 20px; }
+      .cm-spend__title { font-size: 20px; }
+      .cm-spend__sub { margin-bottom: 32px; font-size: 13px; }
+      .cm-spend__chart { gap: 12px; }
+      .cm-spend__track { height: 170px; }
+      .cm-spend__equal { padding: 8px 12px; font-size: 14px; letter-spacing: 0; }
+      .cm-spend__equal-full  { display: none; }
+      .cm-spend__equal-short { display: inline; }
+
+      /* ── Matas: points vs rewards cards stack ── */
+      .cm-ba-cards { grid-template-columns: 1fr; gap: 20px; }
+      .cm-ba-card { padding: 24px; }
+      #modal-content-matas .cm-ba-cards { grid-template-columns: 1fr; }
+      .cm-mech__visual { gap: 14px; margin-top: 24px; }
+      .cm-mech__shot { width: 170px; }
+      .cm-mech__badge { width: 150px; }
+
       /* ── Matas: inline grid and padding overrides ── */
       [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
       [style*="padding:16px 80px"] { padding: 16px 24px !important; }
@@ -3787,7 +4246,7 @@
     .carousel-cap-name, .beyond-card__title, .exp-company,
     .footer__headline, .footer__name,
     .cm-hero__title, .cm-headline,
-    .cm-problem__num, .cm-voice__text, .cm-testimonial__quote,
+    .cm-problem__num, .cm-spend__title, .cm-testimonial__quote,
     .cm-challenge-item__num, .cm-impact-num__val,
     .cm-car__card-title, .cm-car__cap-title,
     .cm-transform-title, .cm-close-headline,
@@ -3810,7 +4269,6 @@
   <link rel="preload" as="image" href="public/images/maersk/maersk-dashboard.webp" fetchpriority="high">
   <link rel="preload" as="image" href="public/images/maersk/maersk-from-this.webp">
   <link rel="preload" as="image" href="public/images/maersk/maersk-inconsistent-mess.webp">
-  <link rel="preload" as="image" href="public/images/maersk/maersk-hero.webp">
   <link rel="preload" as="image" href="public/images/maersk/maersk-list.webp">
   <link rel="preload" as="image" href="public/images/maersk/maersk-detail.webp">
   <link rel="preload" as="image" href="public/images/maersk/maersk-list-pages.svg">
@@ -4003,7 +4461,17 @@
         <!-- Maersk -->
         <div class="case case--stacked case--maersk will-fade-scale" data-delay="120">
           <div class="case__image-stacked case__image-stacked--maersk">
-            <img src="public/images/maersk/maersk-hero.webp" alt="Maersk" class="case__image-inner" loading="lazy">
+            <!-- A live WebGL product shot rather than a video file.
+                 Nothing is fetched until the card is near the viewport, and
+                 the poster underneath is a real fallback, not a placeholder:
+                 it is what stays if WebGL is unavailable, if the scripts fail,
+                 or if the visitor has asked for reduced motion. Decorative —
+                 the card's heading and copy carry the meaning. -->
+            <div class="case__stage" aria-hidden="true">
+              <img class="case__stage-poster" src="public/videos/maersk-stage-poster.jpg" alt="" loading="lazy">
+              <canvas class="case__stage-canvas"
+                      data-plates="public/images/maersk/plates/plate-1.png,public/images/maersk/plates/plate-2.png,public/images/maersk/plates/plate-3.png"></canvas>
+            </div>
           </div>
           <div class="case__text-stacked">
             <div>
@@ -4051,7 +4519,7 @@
         </div>
         <div class="carousel-col-cap">
           <p class="carousel-cap-name">Matas</p>
-          <p class="carousel-cap-desc">Redesigned Denmark's leading loyalty app for 1.3M members — from transactional points to a relationship-led experience rated 4.6 on the App Store.</p>
+          <p class="carousel-cap-desc">Redesigned Denmark's leading loyalty app for 1.5M members — from transactional points to a relationship-led experience rated 4.6 on the App Store.</p>
           <div class="carousel-cap-industry"><span class="tag">Consumer app</span><span class="tag">Loyalty</span></div>
         </div>
       </div>
@@ -4508,7 +4976,7 @@
               <div class="exp-expand-imgs">
                 <div class="exp-expand-img"><img src="public/images/main/main-exp-1508.webp" alt="1508" style="object-position: top center;"></div>
               </div>
-              <p class="exp-expand-text">Led UX and strategy across 1508's most prominent accounts. Led UX for Club Matas' new customer-facing app and loyalty programme — now Denmark's largest loyalty club with 1.3M members and a 4.6 App Store rating (32,193 reviews). Drove Finansforbundet's full digital transformation — conceptualising, designing, and optimising 5+ new digital products and thinking them into a coherent ecosystem for 50,000 members. Designed the Dansk Metal job-finding app — used weekly by 66% of all unemployed members, with an iOS rating of 4.0.</p>
+              <p class="exp-expand-text">Led UX and strategy across 1508's most prominent accounts. Led UX for Club Matas' new customer-facing app and loyalty programme — now Denmark's largest loyalty club with 1.5M members and a 4.6 App Store rating (32,193 reviews). Drove Finansforbundet's full digital transformation — conceptualising, designing, and optimising 5+ new digital products and thinking them into a coherent ecosystem for 50,000 members. Designed the Dansk Metal job-finding app — used weekly by 66% of all unemployed members, with an iOS rating of 4.0.</p>
             </div>
           </div>
         </div>
@@ -5737,32 +6205,32 @@
         <div style="background:linear-gradient(180deg,#ffffff 0%,#FFF1F2 100%);">
 
         <div class="cm-section--light" style="background:transparent;">
-          <p class="cm-hero__label">Case study · 2022–2023</p>
+          <p class="cm-hero__label">Case study · 2018–2021</p>
           <h2 class="cm-hero__title">Matas</h2>
-          <p class="cm-hook" style="max-width:680px;margin-bottom:40px;">How do you transform Club Matas into Denmark's leading customer loyalty programme — along with a complete redesign of the app experience?</p>
+          <p class="cm-hook" style="max-width:680px;margin-bottom:40px;">How do you turn Club Matas into Denmark's leading loyalty programme, and rebuild the app around it?</p>
 
           <div class="cm-hero__meta" style="margin-bottom:40px;">
             <div class="cm-meta-item"><p class="cm-meta-label">Role</p><p class="cm-meta-value">Lead UX Designer</p></div>
             <div class="cm-meta-item"><p class="cm-meta-label">Scope</p><p class="cm-meta-value">App redesign · Loyalty programme</p></div>
-            <div class="cm-meta-item"><p class="cm-meta-label">Team</p><p class="cm-meta-value">2 designers · 2 UX'ers</p></div>
+            <div class="cm-meta-item"><p class="cm-meta-label">Team</p><p class="cm-meta-value">2 designers · 2 UX'ers · Account Director</p></div>
             <div class="cm-meta-item"><p class="cm-meta-label">Industry</p><p class="cm-meta-value">Beauty · Retail</p></div>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:8px;">
             <div>
               <p style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#E11D48;margin-bottom:10px;">The Brand</p>
-              <p style="font-size:14px;color:var(--body);line-height:1.65;">Matas is Denmark's leading beauty retailer — 1.5 million Club Matas members across all tiers. The loyalty programme had become purely transactional, with half of members receiving little perceived value and many unable to articulate why they were even a member.</p>
+              <p style="font-size:14px;color:var(--body);line-height:1.65;">Matas is Denmark's largest beauty retailer, with 1.5 million Club Matas members. The loyalty programme had turned purely transactional. Half of members got little out of it, and many couldn't say why they had joined.</p>
             </div>
             <div>
               <p style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#E11D48;margin-bottom:10px;">My Role</p>
-              <p style="font-size:14px;color:var(--body);line-height:1.65;">Lead UX Designer end-to-end: concept exploration across multiple directions, prototyping and high-fidelity UI, facilitating 5 rounds of user testing, and presenting programme concepts and design decisions directly to the CEO and C-level steering committee at Matas.</p>
+              <p style="font-size:14px;color:var(--body);line-height:1.65;">Lead UX Designer. I explored several programme directions, built the prototypes and high-fidelity screens, ran 5 rounds of user testing, and took the concepts and design decisions to the CEO and the steering committee.</p>
             </div>
           </div>
         </div>
 
         <!-- Hero image — the full app spread -->
         <div style="padding:16px 80px 80px 80px;overflow:hidden;">
-          <img src="public/images/main/main-work-matas.webp" alt="Matas Club app redesign" style="width:100%;display:block;border-radius:0;" loading="lazy">
+          <img src="public/images/matas/matas-breaker-01.jpg" alt="Club Matas app — points balance and personalised offers" style="width:100%;display:block;border-radius:0;" loading="lazy">
         </div>
         </div><!-- end pink gradient wrapper -->
 
@@ -5771,23 +6239,24 @@
         ══════════════════════════════════════════════ -->
         <div class="cm-section--dark">
           <p class="cm-label cm-label--light" data-n="01"><span>The Brief</span></p>
-          <h3 class="cm-headline cm-headline--light" style="max-width:680px;">Club Matas must become the leading loyalty programme with clear value for customers, the market, and Matas.</h3>
-          <p class="cm-body cm-body--muted" style="max-width:680px;">That was the strategic goal set by the steering committee. The challenge: the existing programme was built on a simple earn-and-burn model that had stopped working. Members weren't engaged, the tiers felt arbitrary, and the app experience had fallen behind.</p>
-          <p class="cm-body cm-body--muted" style="max-width:680px;margin-bottom:48px;">The project scope covered both the redesign of the loyalty programme mechanics and the full end-to-end app experience — 150 unique screens across all member journeys.</p>
+          <h3 class="cm-headline cm-headline--light" style="max-width:680px;">From transactional to relationship.</h3>
+          <p class="cm-body cm-body--muted" style="max-width:680px;margin-bottom:48px;">Club Matas had to become Denmark's leading loyalty programme, with clear value for customers, the market, and Matas. That was the goal the steering committee set.</p>
 
           <div class="cm-ba-dark">
             <div class="cm-ba-dark__col cm-ba-dark__col--before">
+              <img src="public/images/matas/matas-transactional.svg" alt="" aria-hidden="true" class="cm-ba-dark__art">
               <p class="cm-ba-dark__label">Before</p>
               <p class="cm-ba-dark__title">Transactional earn-and-burn</p>
-              <p class="cm-ba-dark__body">Collect points at checkout, redeem for discounts. No personalisation, no emotional connection, no clear reason to care about your tier. 50% of members received little perceived value and didn't know why they were a member.</p>
+              <p class="cm-ba-dark__body">Collect points at checkout, redeem for discounts. No personalisation, and no reason to care which tier you were in.</p>
             </div>
             <div class="cm-ba-dark__arrow">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
             <div class="cm-ba-dark__col cm-ba-dark__col--after">
+              <img src="public/images/matas/matas-relationship.svg" alt="" aria-hidden="true" class="cm-ba-dark__art">
               <p class="cm-ba-dark__label">After</p>
               <p class="cm-ba-dark__title">Relationship-focused loyalty</p>
-              <p class="cm-ba-dark__body">A programme built around frequency and personalisation. High-tier members get choice-based rewards and status. Low-tier members get clear point value. Everyone gets personalised inspiration and offers — moving Club Matas from transactional to relational.</p>
+              <p class="cm-ba-dark__body">Rewards and status for high-tier members, clear point value for everyone else, and offers matched to what people actually buy.</p>
             </div>
           </div>
         </div>
@@ -5797,75 +6266,137 @@
         ══════════════════════════════════════════════ -->
         <div class="cm-section--light">
           <p class="cm-label" data-n="02"><span>What Research Revealed</span></p>
-          <h3 class="cm-headline" style="max-width:680px;">Members were honest. The programme had fundamental problems that went beyond the app.</h3>
-          <p class="cm-body" style="max-width:680px;margin-bottom:40px;">Research across member segments surfaced uncomfortable truths about what Club Matas had become — and what it needed to be.</p>
+          <h3 class="cm-headline" style="max-width:680px;">Members told us the problems went deeper than the app.</h3>
+          <p class="cm-body" style="max-width:680px;margin-bottom:40px;">Nine findings came out of research across member segments.</p>
 
-          <div class="cm-voices">
-            <div class="cm-voice">
-              <p class="cm-voice__text">"Personalised services create loyalty"</p>
-              <p class="cm-voice__src">Member research · Multiple segments</p>
+          <div class="cm-findings">
+            <div class="cm-finding">
+              <div class="cm-finding__icon"><i class="ph ph-question"></i></div>
+              <p class="cm-finding__text">Many don't know why they are a member</p>
             </div>
-            <div class="cm-voice">
-              <p class="cm-voice__text">"Club Matas needs to be simplified — it's too complicated to understand"</p>
-              <p class="cm-voice__src">Member research · Low-frequency shoppers</p>
+            <div class="cm-finding">
+              <div class="cm-finding__icon"><i class="ph ph-chart-donut"></i></div>
+              <p class="cm-finding__text">50% receive little value from the reward programme</p>
             </div>
-            <div class="cm-voice">
-              <p class="cm-voice__text">"Many don't know why they are a member"</p>
-              <p class="cm-voice__src">Member research · Cross-segment finding</p>
+            <div class="cm-finding">
+              <div class="cm-finding__icon"><i class="ph ph-heart-break"></i></div>
+              <p class="cm-finding__text">Several of the club's elements don't work today</p>
             </div>
-            <div class="cm-voice">
-              <p class="cm-voice__text">"50% receive little value from the reward programme"</p>
-              <p class="cm-voice__src">Strategic insight · Steering committee</p>
+            <div class="cm-finding">
+              <div class="cm-finding__icon"><i class="ph ph-arrows-in-simple"></i></div>
+              <p class="cm-finding__text">Club Matas needs to be simplified</p>
             </div>
-            <div class="cm-voice">
-              <p class="cm-voice__text">"Major inequalities at the top and bottom of the hierarchy — the top 1% drives enormous turnover"</p>
-              <p class="cm-voice__src">Strategic insight · Business analysis</p>
+            <div class="cm-finding">
+              <div class="cm-finding__icon"><i class="ph ph-chats-circle"></i></div>
+              <p class="cm-finding__text">Different perceptions of what being in a &ldquo;club&rdquo; means</p>
             </div>
-            <div class="cm-voice">
-              <p class="cm-voice__text">"Focus on experiences, not just discounts"</p>
-              <p class="cm-voice__src">Member research · High-frequency shoppers</p>
+            <div class="cm-finding">
+              <div class="cm-finding__icon"><i class="ph ph-chart-bar"></i></div>
+              <p class="cm-finding__text">Major inequalities at the top and bottom of the hierarchy</p>
+            </div>
+            <div class="cm-finding">
+              <div class="cm-finding__icon"><i class="ph ph-hand-heart"></i></div>
+              <p class="cm-finding__text">Personal service creates loyalty</p>
+            </div>
+            <div class="cm-finding">
+              <div class="cm-finding__icon"><i class="ph ph-sparkle"></i></div>
+              <p class="cm-finding__text">Focus on the experiences</p>
+            </div>
+            <div class="cm-finding">
+              <div class="cm-finding__icon"><i class="ph ph-eyeglasses"></i></div>
+              <p class="cm-finding__text">Customers are also experts</p>
             </div>
           </div>
+        </div>
+
+        <div class="cm-section--light cm-themes-section">
+          <p class="cm-label"><span>The turn</span></p>
+          <h3 class="cm-headline">So what should the new club be like?</h3>
+          <p class="cm-body">Members had told us what was broken. The same research told us what they wanted instead, and those three answers set the brief for the whole redesign.</p>
+          <div class="cm-themes">
+            <div class="cm-theme">
+              <img src="public/images/matas/matas-club-value.svg" alt="" aria-hidden="true">
+              <p class="cm-theme__text">More for my money, and rewards that suit me</p>
+            </div>
+            <div class="cm-theme">
+              <img src="public/images/matas/matas-club-easy.svg" alt="" aria-hidden="true">
+              <p class="cm-theme__text">Quick and easy to shop, and to re-shop what I bought before</p>
+            </div>
+            <div class="cm-theme">
+              <img src="public/images/matas/matas-club-inspiration.svg" alt="" aria-hidden="true">
+              <p class="cm-theme__text">Lots of inspiration and personal advice</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="cm-breaker">
+          <figure>
+            <img src="public/images/matas/matas-breaker-02.jpg" alt="Two Club Matas members" loading="lazy">
+            <figcaption class="cm-breaker__stat">
+              <span class="cm-breaker__num">1.5M</span>
+              <span class="cm-breaker__lbl" aria-label="members"><span aria-hidden="true">m</span><span aria-hidden="true">e</span><span aria-hidden="true">m</span><span aria-hidden="true">b</span><span aria-hidden="true">e</span><span aria-hidden="true">r</span><span aria-hidden="true">s</span></span>
+            </figcaption>
+          </figure>
         </div>
 
         <!-- ══════════════════════════════════════════════
              §4  THE CHALLENGE  (light)
         ══════════════════════════════════════════════ -->
-        <div class="cm-section--light" style="padding-top:0;">
+        <div class="cm-section--light">
           <p class="cm-label" data-n="03"><span>The Challenge</span></p>
-          <h3 class="cm-headline" style="max-width:760px;">One programme. Two fundamentally different member realities.</h3>
-          <p class="cm-body" style="max-width:680px;margin-bottom:40px;">Frequency is the key loyalty driver — but it creates split needs. Designing for both ends of the spectrum, within a single coherent programme and app, was the central design challenge.</p>
+          <h3 class="cm-headline" style="max-width:760px;">One programme had to work for two very different kinds of member.</h3>
+          <p class="cm-body" style="max-width:680px;margin-bottom:40px;">Frequency splits members into groups that want opposite things. Serving both inside one programme was the hard part.</p>
+
+          <div class="cm-spend">
+            <p class="cm-spend__title">Focus on the bottom and the top</p>
+            <p class="cm-spend__sub">The bottom 50% of members and the top 1% spend the same amount. Getting the top 1% right moves turnover as much as everything below it.</p>
+            <div class="cm-spend__chart">
+              <div class="cm-spend__col">
+                <div class="cm-spend__track cm-spend__track--bottom">
+                  <div class="cm-spend__fill cm-spend__fill--half">50%</div>
+                </div>
+                <p class="cm-spend__label">The bottom <strong>50%</strong><br>lowest spenders</p>
+              </div>
+              <div class="cm-spend__equal"><span class="cm-spend__equal-full">Equal spend</span><span class="cm-spend__equal-short">=</span></div>
+              <div class="cm-spend__col">
+                <div class="cm-spend__track cm-spend__track--top">
+                  <div class="cm-spend__fill cm-spend__fill--sliver">1%</div>
+                </div>
+                <p class="cm-spend__label">The top <strong>1%</strong><br>biggest spenders</p>
+              </div>
+            </div>
+          </div>
 
           <div class="cm-challenge-grid">
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-users-three"></i></div>
               <p class="cm-challenge-title">1.5 million members</p>
-              <p class="cm-challenge-body">Diverse needs across casual to obsessive shoppers — one programme and one app experience had to resonate across all of them</p>
+              <p class="cm-challenge-body">Needs ran from casual shoppers to people buying every week, and one programme had to work for all of them</p>
             </div>
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-scales"></i></div>
               <p class="cm-challenge-title">Points vs rewards</p>
-              <p class="cm-challenge-body">Designing two parallel loyalty mechanics — simple points for lower tiers and a choice-based reward model for high-frequency members</p>
+              <p class="cm-challenge-body">Two parallel loyalty mechanics: simple points for lower tiers, choice-based rewards for high-frequency members</p>
             </div>
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-device-mobile"></i></div>
               <p class="cm-challenge-title">150 unique screens</p>
-              <p class="cm-challenge-body">End-to-end redesign covering shopping, loyalty mechanics, personalised inspiration, scan & go, and member profile</p>
+              <p class="cm-challenge-body">A full redesign: shopping, loyalty mechanics, inspiration, scan & go, and member profile</p>
             </div>
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-presentation-chart"></i></div>
               <p class="cm-challenge-title">C-level alignment</p>
-              <p class="cm-challenge-body">Presenting programme concepts and design decisions directly to the CEO and the full steering committee — design had to be business-fluent</p>
+              <p class="cm-challenge-body">Concepts and design decisions went straight to the CEO and the steering committee, so the work had to hold up in business terms</p>
             </div>
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-flask"></i></div>
               <p class="cm-challenge-title">5 rounds of user testing</p>
-              <p class="cm-challenge-body">Iterative concept validation across multiple directions and fidelity levels — research was built into the process, not bolted on</p>
+              <p class="cm-challenge-body">Concepts tested at several fidelities, with research running alongside the design rather than after it</p>
             </div>
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-heart"></i></div>
               <p class="cm-challenge-title">Transactional → relational</p>
-              <p class="cm-challenge-body">Shifting from a discount programme to a relationship-focused experience meant changing the fundamental value proposition of membership</p>
+              <p class="cm-challenge-body">Going from a discount programme to a relationship-led one meant changing what membership was actually worth</p>
             </div>
           </div>
         </div>
@@ -5873,38 +6404,63 @@
         <!-- ══════════════════════════════════════════════
              §5  THE LOYALTY DESIGN  (off-white)
         ══════════════════════════════════════════════ -->
-        <div class="cm-section--light" style="background:#FFF8F9;padding-top:0;">
+        <div class="cm-section--light" style="padding-top:100px;padding-bottom:0;">
           <p class="cm-label" data-n="04"><span>The Loyalty Design</span></p>
-          <h3 class="cm-headline" style="max-width:680px;">Two parallel mechanisms. One coherent programme.</h3>
-          <p class="cm-body" style="max-width:680px;margin-bottom:40px;">Frequency drives fundamentally different needs. Instead of a single mechanism that served neither group well, we designed distinct but complementary systems for each end of the spectrum.</p>
+          <h3 class="cm-headline" style="max-width:680px;">Different frequencies need different value.</h3>
+          <p class="cm-body" style="max-width:680px;margin-bottom:40px;">How often someone shops changes what the club is worth to them. We mapped what each level of buyer actually wants, then built the programme to pay out accordingly.</p>
 
-          <div class="cm-ba-cards">
-            <div class="cm-ba-card cm-ba-card--before" style="border-color:#FFE4E6;background:#FFF1F2;">
-              <p class="cm-ba-card__tag" style="color:#E11D48;">Low-frequency members</p>
-              <p class="cm-ba-card__title">Points — clear &amp; simple</p>
-              <ul class="cm-ba-card__list">
-                <li>Points earned on every purchase</li>
-                <li>Usable on all products in the range</li>
-                <li>Special discounts on selected products</li>
-                <li>Transparent: 1 point = 1 kr in value</li>
-                <li>Easy to understand, easy to redeem</li>
-              </ul>
-            </div>
-            <div class="cm-ba-card__arrow">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </div>
-            <div class="cm-ba-card cm-ba-card--after" style="border-color:#FECDD3;background:#FFF1F2;">
-              <p class="cm-ba-card__tag" style="color:#E11D48;">High-frequency members</p>
-              <p class="cm-ba-card__title">Rewards — choice &amp; status</p>
-              <ul class="cm-ba-card__list">
-                <li>Spend 1,000 DKK → unlock a reward</li>
-                <li>All purchases count toward the threshold</li>
-                <li>Choose from 4 reward categories</li>
-                <li>Better benefits the more you spend</li>
-                <li>Status recognition beyond points</li>
-              </ul>
+          <div class="cm-freq">
+            <p class="cm-freq__title">Frequency = different needs</p>
+            <p class="cm-freq__sub">How often someone shops changes what the club is worth to them &mdash; so the programme pays out differently along the scale.</p>
+
+            <div class="cm-freq__tbl">
+              <div class="cm-freq__rlab cm-freq__norule" style="border-bottom:1px solid rgba(253,175,191,0.32);"></div>
+              <div class="cm-freq__head">Low frequency</div>
+              <div class="cm-freq__head">Medium frequency</div>
+              <div class="cm-freq__head">High frequency</div>
+
+              <div class="cm-freq__rlab">Spend</div>
+              <div class="cm-freq__cell cm-freq__dots"><i></i><i class="is-off"></i><i class="is-off"></i></div>
+              <div class="cm-freq__cell cm-freq__dots"><i></i><i></i><i class="is-off"></i></div>
+              <div class="cm-freq__cell cm-freq__dots"><i></i><i></i><i></i></div>
+
+              <div class="cm-freq__rlab">What they want</div>
+              <div class="cm-freq__cell">Convenience<br>Price<br>Inspiration</div>
+              <div class="cm-freq__cell">Practical driven<br>Good guides for using products<br>Targeted product inspiration</div>
+              <div class="cm-freq__cell">Personal service and recommendations<br>Close brand relationship<br>Deeply committed</div>
+
+              <div class="cm-freq__rlab cm-freq__norule" style="padding-top:26px;">What we offered</div>
+              <div class="cm-freq__band cm-freq__band--points"><b>Points</b><span>Earned on every purchase. 1&nbsp;point = 1&nbsp;kr, for everyone.</span></div>
+              <div class="cm-freq__band cm-freq__band--rewards"><b>Rewards</b><span>A choice of benefit past 1,000&nbsp;kr.</span></div>
             </div>
           </div>
+
+          <p class="cm-body" style="max-width:680px;margin:56px 0 32px;">That paid out as two mechanics running in parallel: points underneath the whole programme, rewards layered on top for the members who shop most.</p>
+
+          <div class="cm-ba-cards">
+            <div class="cm-ba-card" style="border-color:#FFE4E6;background:#FFF1F2;">
+              <p class="cm-ba-card__tag" style="color:#E11D48;">Low-frequency members</p>
+              <p class="cm-ba-card__title">Points</p>
+              <div class="cm-mech__visual">
+                <img src="public/images/matas/matas-points-badge.png" alt="" aria-hidden="true" class="cm-mech__badge" loading="lazy">
+                <img src="public/images/matas/matas-points-ui.jpg" alt="Point deals screen" class="cm-mech__shot" loading="lazy">
+              </div>
+            </div>
+            <div class="cm-ba-card" style="border-color:#FFE4E6;background:#FFF1F2;">
+              <p class="cm-ba-card__tag" style="color:#E11D48;">High-frequency members</p>
+              <p class="cm-ba-card__title">Rewards</p>
+              <div class="cm-mech__visual">
+                <img src="public/images/matas/matas-rewards-badge.png" alt="" aria-hidden="true" class="cm-mech__badge" loading="lazy">
+                <img src="public/images/matas/matas-rewards-ui.jpg" alt="Mit Plus rewards screen" class="cm-mech__shot" loading="lazy">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cm-breaker">
+          <figure>
+            <img src="public/images/matas/matas-breaker-03.jpg" alt="Club Matas app — points, offers and product inspiration" loading="lazy">
+          </figure>
         </div>
 
         <!-- ══════════════════════════════════════════════
@@ -5912,8 +6468,26 @@
         ══════════════════════════════════════════════ -->
         <div class="cm-section--light" style="padding-bottom:0;">
           <p class="cm-label" data-n="05"><span>The Work</span></p>
-          <h3 class="cm-headline" style="max-width:680px;margin-bottom:8px;">150 unique screens. One coherent app experience.</h3>
-          <p class="cm-body" style="max-width:680px;margin-bottom:0;">From onboarding and loyalty dashboard to scan &amp; go and personalised inspiration — we redesigned every member journey end-to-end.</p>
+          <h3 class="cm-headline" style="max-width:680px;margin-bottom:8px;">150 unique screens across every member flow.</h3>
+          <p class="cm-body" style="max-width:680px;margin-bottom:0;">We redesigned every flow: onboarding, the loyalty dashboard, scan &amp; go, and personalised inspiration.</p>
+
+          <div class="cm-vs">
+            <div class="cm-vs__col">
+              <p class="cm-vs__tag">Old</p>
+              <img src="public/images/matas/matas-app-old.jpg" alt="The Club Matas app before the redesign" loading="lazy">
+            </div>
+            <div class="cm-vs__arrow">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="cm-vs__col">
+              <p class="cm-vs__tag">New</p>
+              <img src="public/images/matas/matas-app-new.jpg" alt="The Club Matas app after the redesign" loading="lazy">
+            </div>
+          </div>
+
+          <div class="cm-map">
+            <img src="public/images/matas/matas-screens-map.jpg" alt="All 150 screens laid out across every member flow" loading="lazy">
+          </div>
         </div>
 
         <!-- App features carousel -->
@@ -5921,61 +6495,61 @@
           <div class="cm-car__track" id="cm-c3-track" style="padding-bottom:4px;">
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;background:#FFE4E6;"></div>
+                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-01-dashboard.webp</div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">01</p>
                   <p class="cm-car__card-title">Loyalty dashboard</p>
-                  <p class="cm-car__card-body">At-a-glance view of tier, points balance, progress to next reward, and personalised offers — built for instant comprehension.</p>
+                  <p class="cm-car__card-body">Tier, points balance, progress to the next reward, and personalised offers on one screen.</p>
                 </div>
               </div>
             </div>
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;background:#FFE4E6;"></div>
+                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-02-rewards.webp</div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">02</p>
                   <p class="cm-car__card-title">Reward selection</p>
-                  <p class="cm-car__card-body">When high-tier members hit their spend threshold, they choose from 4 reward categories — giving agency and tangible perceived value.</p>
+                  <p class="cm-car__card-body">When high-tier members hit their spend threshold, they pick from 4 reward categories instead of being assigned one.</p>
                 </div>
               </div>
             </div>
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;background:#FFE4E6;"></div>
+                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-03-inspiration.webp</div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">03</p>
                   <p class="cm-car__card-title">Personalised inspiration</p>
-                  <p class="cm-car__card-body">Curated articles, new products, and offers tuned to "My Brands" — shifting the app from transactional utility to daily destination.</p>
+                  <p class="cm-car__card-body">Articles, new products, and offers tuned to the brands a member follows.</p>
                 </div>
               </div>
             </div>
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;background:#FFE4E6;"></div>
+                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-04-scan-go.webp</div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">04</p>
                   <p class="cm-car__card-title">Scan &amp; Go</p>
-                  <p class="cm-car__card-body">In-store mobile scanning woven directly into the loyalty flow — connecting physical and digital and making checkout frictionless.</p>
+                  <p class="cm-car__card-body">Scan products in-store from the app, with points applied as you go.</p>
                 </div>
               </div>
             </div>
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;background:#FFE4E6;"></div>
+                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-05-skin-test.webp</div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">05</p>
                   <p class="cm-car__card-title">Skin test &amp; advice</p>
-                  <p class="cm-car__card-body">Personalised product guidance based on skin profile — positioning Matas as a trusted advisor, not just a retailer.</p>
+                  <p class="cm-car__card-body">Product recommendations based on the member's skin profile.</p>
                 </div>
               </div>
             </div>
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;background:#FFE4E6;"></div>
+                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-06-reorder.webp</div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">06</p>
                   <p class="cm-car__card-title">Easy reorder</p>
-                  <p class="cm-car__card-body">One-tap reorder of previously purchased products — reducing friction for the routine beauty shopping that high-frequency members do weekly.</p>
+                  <p class="cm-car__card-body">One-tap reorder for the products members already buy every week.</p>
                 </div>
               </div>
             </div>
@@ -5998,7 +6572,7 @@
         ══════════════════════════════════════════════ -->
         <div class="cm-close-section">
           <p class="cm-label cm-label--light" data-n="06"><span>The Result</span></p>
-          <h3 class="cm-close-headline">An app that went from outdated to #4 in the App Store — and a programme that finally gave members a reason to care.</h3>
+          <h3 class="cm-close-headline">The app went from outdated to <span style="color:#FDAFBF;">#4</span> in the App Store, and the programme gave members a reason to stay.</h3>
 
           <div class="cm-close-stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:48px;">
             <div class="cm-close-stat">
@@ -6017,14 +6591,6 @@
               <p class="cm-close-stat__val">150</p>
               <p class="cm-close-stat__label">Unique screens designed across all member journeys</p>
             </div>
-          </div>
-
-          <div class="cm-close-quote-box">
-            <div class="cm-close-quote-mark">"</div>
-            <div class="cm-close-quote-text">
-              <p>The redesign of Club Matas represented one of the most strategically significant product investments in the company's recent history. Mikkel and the team delivered a programme and app experience that truly put the member first — moving us from a purely transactional model to one built on relationship and personalisation. The work was grounded in research, validated through multiple rounds of user testing, and delivered with a level of craft and strategic clarity that made the case at board level. The results speak for themselves.</p>
-            </div>
-            <p class="cm-close-attr-line" style="margin-top:24px;font-size:13px;color:rgba(248,250,252,0.45);">Credit for visual production: <strong style="color:rgba(248,250,252,0.6);">1508 Copenhagen</strong></p>
           </div>
         </div>
 
@@ -6798,6 +7364,84 @@
           setTimeout(() => images.forEach(preload), 300);
         });
       }
+    })();
+
+    /**
+     * Case-card stage: a live WebGL product shot, loaded on approach.
+     *
+     * Roughly 2MB of scripts and plates, which is far too much to spend on a
+     * front page most visitors never scroll to the bottom of — so nothing is
+     * requested until the card is within 300px of the viewport. Until then,
+     * and forever if anything below fails, the poster underneath is what the
+     * card shows. It is a real fallback rather than a placeholder: the same
+     * opening frame, so the card looks finished either way.
+     */
+    (function initCaseStage() {
+      const stage = document.querySelector(".case__stage-canvas");
+      if (!stage) return;
+
+      // An explicit request not to see motion. Nothing is fetched, nothing
+      // runs, and the poster stands in permanently.
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      // No point downloading three.js to find out the device cannot run it.
+      const probe = document.createElement("canvas");
+      const canRender = !!(
+        window.WebGL2RenderingContext && probe.getContext("webgl2")
+      );
+      if (!canRender || !("IntersectionObserver" in window)) return;
+
+      const load = (src) =>
+        new Promise((resolve, reject) => {
+          const el = document.createElement("script");
+          el.src = src;
+          el.async = false; // three must be defined before the scene runs
+          el.onload = resolve;
+          el.onerror = reject;
+          document.body.appendChild(el);
+        });
+
+      let handle = null;
+      let started = false;
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              if (!started) {
+                started = true;
+                Promise.all([
+                  load("public/js/three.min.js"),
+                  load("public/js/gsap.min.js"),
+                ])
+                  .then(() => load("public/js/softbox-stage.js"))
+                  .then(() => {
+                    handle = window.initSoftboxStage(
+                      stage,
+                      stage.dataset.plates.split(","),
+                    );
+                    // only reveal once there is a frame worth showing
+                    requestAnimationFrame(() =>
+                      requestAnimationFrame(() => stage.classList.add("is-live")),
+                    );
+                  })
+                  .catch(() => {
+                    /* poster stays; nothing to clean up */
+                  });
+              } else if (handle) {
+                handle.resume();
+              }
+            } else if (handle) {
+              handle.pause();
+            }
+          });
+        },
+        // begin fetching a little before it arrives, so the first frame is
+        // ready rather than fading in after the card is already in view
+        { rootMargin: "300px 0px", threshold: 0.01 },
+      );
+
+      io.observe(stage);
     })();
   </script>
 

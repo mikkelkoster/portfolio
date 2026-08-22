@@ -31,6 +31,22 @@ Every change must be mobile-optimized. Before finishing any task, verify:
 | Blue-100 | `#DBEAFE` | Skeleton shimmer base |
 | Blue-200 | `#BFDBFE` | Skeleton shimmer highlight |
 | Section light bg | `#FAFAFA` | Light section backgrounds |
+| **Matas rose (light)** | `#E11D48` | The accent on any light ground: hero label, hook, section labels, card tags, finding + challenge icons, carousel dots |
+| **Matas rose (dark)** | `#FDAFBF` | The same accent on navy: labels, spend-chart fills, frequency bands, result stats |
+| **Matas tint** | `#FFF1F2` | Card fills — meta tiles, finding cards, mechanic cards |
+| **Matas tint (deep)** | `#FFE4E6` | Hover state, borders, carousel placeholders |
+| Dark section | `#0B1D35` | `.cm-section--dark`, `.cm-spend` panel |
+
+### Matas palette — four values, no more
+The case runs on **two** accent values and **two** tints. `#E11D48` and `#FDAFBF` are the
+same accent at different contrast, picked by the ground they sit on — light or navy. Do not
+introduce a third mid-pink: `#FBB6C4` and `#F2718C` both existed at one point and were folded
+back in, because they sat within ~5 luminance of a value already in the system.
+
+Icons use `#E11D48` on `#FFF1F2`, which measures 4.28:1 — above the 3:1 floor for non-text
+graphics. An earlier softer pink measured 2.54:1 and did not.
+
+---
 
 ### Typography
 | Element | Font | Size | Weight |
@@ -82,7 +98,7 @@ Every change must be mobile-optimized. Before finishing any task, verify:
 |---|---|---|
 | `cm-c1` | Maersk | Hero / process images |
 | `cm-c2` | Maersk | Result cards (9 cards) |
-| `cm-c3` | Matas | — |
+| `cm-c3` | Matas | App feature cards (6) — images pending, see placeholders |
 | `cm-c4` | Maersk | Component design system images |
 
 ### Result cards — narrative order (cm-c2)
@@ -94,6 +110,31 @@ Every change must be mobile-optimized. Before finishing any task, verify:
 - Opens by sliding up from bottom
 - **Close animation**: `scroller.scrollTop = 0` first (hidden by overlay), then `translateY(vpH + 40px)` with `cubic-bezier(0.4, 0, 0.8, 0.55)` over `520ms`
 - Never use `translateY(100%)` for close — panel height ≠ viewport height and causes a sweep-through effect
+
+---
+
+## Matas case components
+
+Added when the Matas case was rebuilt from the original 1508 deck. All three are Matas-only today.
+
+### `.cm-findings` / `.cm-finding`
+3×3 grid of the nine research findings — Phosphor icon above a short label, pink card.
+Ordered as an argument, not the deck's original order: row 1 what's broken, row 2 why it's
+confusing, row 3 what members actually want. Row 2 ends on the inequality finding so it hands
+straight off to the spend chart in the next section.
+Below 768px it stacks to one column and flips to icon-left / text-right.
+
+### `.cm-spend`
+Dark inset panel inside a light section, showing that the bottom 50% of members and the top 1%
+spend the same. Pure CSS — no image. The bottom bar fills 50%; the top bar uses a fixed 10px
+sliver, since a true 1% would render sub-pixel. Both numbers are stated in the labels so the
+sliver isn't read as a real proportion.
+The `Equal spend` badge swaps to `=` below 768px via `.cm-spend__equal-full` / `--short`.
+
+### `.cm-car__card-img--ph`
+Dashed placeholder standing in for a carousel image, labelled with the filename it expects.
+Replace the div with an `<img>` (plus the skeleton sibling — see Carousel conventions) once the
+export lands.
 
 ---
 
