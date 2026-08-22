@@ -1,53 +1,22 @@
-window.initSoftboxStage = function (canvas, plateUrls) {
+/**
+ * A studio product shot on a canvas.
+ *
+ * The shot list and the ground colour are arguments rather than constants,
+ * because two cards on the same page running the identical camera move would
+ * read as one asset used twice. Everything else — the device, the plinth, the
+ * lighting rig, the glass response — is shared on purpose: they are the same
+ * imaginary studio, photographed differently.
+ */
+window.initSoftboxStage = function (canvas, config) {
   "use strict";
+
+  const plateUrls = config.plates;
+  const SHOTS = config.shots;
+  const GROUND = config.ground;
 
   const THREE = window.THREE;
   const gsap = window.gsap;
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  /* ════════════════════════════════════════════════════════════════
-     THE SHOT LIST
-
-     Each entry is a camera position in spherical terms plus a look-at
-     point expressed IN SCREEN SPACE — x and y across the face of the
-     display. That is what makes "zoom in on the task list" a thing you
-     can write down: the target is the UI feature, not a world position.
-
-     The close-ups are bounded, though. Visible width is roughly
-     2 * dist * tan(17deg) * aspect, and the enclosure is 7.19 across —
-     push past about 8 units and the panel runs edge to edge, the bezel
-     leaves frame, and the shot stops reading as a DEVICE at all. It
-     becomes a flat screenshot pasted over the render for four seconds.
-     A product film has to keep a lit edge in frame to stay a product film.
-     ════════════════════════════════════════════════════════════════ */
-  const SHOTS = [
-    {
-      n: "01", t: "Dashboard", lens: "35mm", plate: 0, hold: 4.0,
-      from: { az: -26, el: 11, dist: 16.8, tx: 0, ty: -0.2, roll: -1.6, key: 1, amb: 1 },
-      to:   { az: -17, el: 9,  dist: 15.0, tx: -0.35, ty: -0.3, roll: -0.5, key: 1, amb: 1 },
-    },
-    {
-      n: "02", t: "Task list", lens: "85mm", plate: 0, hold: 3.4,
-      /* The macro. Targeted at the screen's upper-left CORNER rather than
-         its middle, which is what keeps the bezel and the lit enclosure
-         edge in shot at this distance — the reference does exactly this,
-         and it is why its close-up still reads as a device instead of a
-         screenshot. The roll is real too: about eight degrees of tilt,
-         where the wides sit near level. */
-      from: { az: 26, el: 1.5, dist: 5.4, tx: -2.15, ty: 1.35, roll: 8.5, key: 0.62, amb: 0.36 },
-      to:   { az: 17, el: 4,   dist: 4.9, tx: -1.55, ty: 1.05, roll: 5.2, key: 0.66, amb: 0.36 },
-    },
-    {
-      n: "03", t: "Purchase orders", lens: "85mm", plate: 1, hold: 3.4,
-      from: { az: -24, el: 2, dist: 5.6, tx: 1.6, ty: 1.2, roll: -7.5, key: 0.66, amb: 0.4 },
-      to:   { az: -15, el: 5, dist: 5.1, tx: 1.0, ty: 0.7, roll: -4.2, key: 0.7, amb: 0.4 },
-    },
-    {
-      n: "04", t: "Detail page", lens: "40mm", plate: 2, hold: 4.4,
-      from: { az: 12, el: 7,  dist: 14.6, tx: 0.2, ty: -0.1, roll: 1.4, key: 1.05, amb: 0.92 },
-      to:   { az: 3,  el: 10, dist: 13.2, tx: -0.1, ty: -0.3, roll: 0.4, key: 1.05, amb: 0.92 },
-    },
-  ];
 
   /* ── device proportions ─────────────────────────────────────────── */
   const SCREEN_W = 6.99, SCREEN_H = 4.37;
@@ -98,7 +67,7 @@ window.initSoftboxStage = function (canvas, plateUrls) {
      the floor. Blue has to keep that range, so the base sits deep and the
      splats carry it up to near-white, passing through #B5E0F5 across the
      middle where most of the frame lives. */
-  scene.background = new THREE.Color(0x3f86af);
+  scene.background = new THREE.Color(GROUND.deep);
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 200);
 
   /* ════════════════════════════════════════════════════════════════
@@ -268,13 +237,15 @@ window.initSoftboxStage = function (canvas, plateUrls) {
       const h = THREE.MathUtils.clamp(1 - (y + 9) / 26, 0, 1);
       const side = THREE.MathUtils.clamp(1 - Math.abs(x) / 34, 0, 1);
       const t = Math.pow(h, 1.55) * (0.4 + side * 0.6);
+      const lo = GROUND.low;
+      const hi = GROUND.high;
       /* Spanning most of the way from the deep base to near-white. The
          previous pass ran from light cyan to slightly-lighter cyan, which is
          why the volume disappeared — a cloud you cannot see the pools in is
          just a coloured rectangle with a cost. */
-      const r = 0.2 + t * 0.72;
-      const g = 0.47 + t * 0.49;
-      const b = 0.64 + t * 0.34;
+      const r = lo[0] + t * (hi[0] - lo[0]);
+      const g = lo[1] + t * (hi[1] - lo[1]);
+      const b = lo[2] + t * (hi[2] - lo[2]);
       col.set([r, g, b], i * 3);
       alp[i] = 0.08 + rnd() * 0.16;
     }
@@ -800,7 +771,7 @@ window.initSoftboxStage = function (canvas, plateUrls) {
      no need to recompute it from the matrix every frame. */
   const screenCentre = new THREE.Vector3(0, 0, FACE_Z);
 
-  const rig = { az: -26, el: 11, dist: 16.8, tx: 0, ty: -0.2, roll: -1.6, key: 1, amb: 1 };
+  const rig = Object.assign({}, SHOTS[0].from);
   const drag = { az: 0, el: 0 };
 
   function applyRig() {

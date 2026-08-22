@@ -1102,7 +1102,8 @@
        The panel is 612x574 and the film is 1250x1175 — the same aspect to
        within half a percent — so `cover` crops essentially nothing and the card
        keeps the exact height of its neighbours. */
-    .case__image-stacked--maersk { padding: 0; }
+    .case__image-stacked--maersk,
+    .case__image-stacked--formalize { padding: 0; }
     .case__stage {
       position: relative;
       width: 100%;
@@ -1974,7 +1975,8 @@
          put a pale panel inside a pale panel. The base rule that zeroes this
          padding sits outside the media queries and loses to them on
          specificity, so it has to be restated here. */
-      .case__image-stacked--maersk { padding: 0; overflow: hidden; }
+      .case__image-stacked--maersk,
+      .case__image-stacked--formalize { padding: 0; overflow: hidden; }
       .case__image-stacked .case__image-inner { transform: none !important; width: 100% !important; }
       .case__text-stacked { flex: none; padding: 36px 40px; order: 2; }
 
@@ -2062,7 +2064,8 @@
          put a pale panel inside a pale panel. The base rule that zeroes this
          padding sits outside the media queries and loses to them on
          specificity, so it has to be restated here. */
-      .case__image-stacked--maersk { padding: 0; overflow: hidden; }
+      .case__image-stacked--maersk,
+      .case__image-stacked--formalize { padding: 0; overflow: hidden; }
       .case__text-stacked { flex: none; padding: 28px 24px; order: 2; }
       .case--stacked .case__title { font-size: 32px; }
       .case__image-stacked .case__image-inner { transform: none !important; width: 100% !important; }
@@ -4429,7 +4432,15 @@
 
           <!-- Image area at top -->
           <div class="case__image-stacked case__image-stacked--formalize">
-            <img src="public/images/formalize/formalize-hero.webp" alt="Formalize" class="case__image-inner" loading="lazy">
+            <!-- Same treatment as the Maersk card: a live product shot with
+                 the poster underneath as a genuine fallback. Different camera
+                 setups and a different ground, so the two never read as one
+                 asset used twice. -->
+            <div class="case__stage" aria-hidden="true">
+              <img class="case__stage-poster" src="public/images/formalize/formalize-stage-poster.jpg" alt="" loading="lazy">
+              <canvas class="case__stage-canvas" data-stage="formalize"
+                      data-plates="public/images/formalize/plates/plate-1.webp,public/images/formalize/plates/plate-2.webp,public/images/formalize/plates/plate-3.webp,public/images/formalize/plates/plate-4.webp"></canvas>
+            </div>
           </div>
 
           <!-- Text strip at bottom -->
@@ -4465,8 +4476,8 @@
                  the card's heading and copy carry the meaning. -->
             <div class="case__stage" aria-hidden="true">
               <img class="case__stage-poster" src="public/videos/maersk-stage-poster.jpg" alt="" loading="lazy">
-              <canvas class="case__stage-canvas"
-                      data-plates="public/images/maersk/plates/plate-1.png,public/images/maersk/plates/plate-2.png,public/images/maersk/plates/plate-3.png"></canvas>
+              <canvas class="case__stage-canvas" data-stage="maersk"
+                      data-plates="public/images/maersk/plates/plate-1.webp,public/images/maersk/plates/plate-2.webp,public/images/maersk/plates/plate-3.webp"></canvas>
             </div>
           </div>
           <div class="case__text-stacked">
@@ -7344,8 +7355,8 @@
      * not fired yet.
      */
     (function initCaseStage() {
-      const stage = document.querySelector(".case__stage-canvas");
-      if (!stage) return;
+      const stages = [...document.querySelectorAll(".case__stage-canvas")];
+      if (!stages.length) return;
 
       // An explicit request not to see motion. Nothing is fetched, nothing
       // runs, and the poster stands in permanently.
@@ -7368,28 +7379,47 @@
           document.body.appendChild(el);
         });
 
-      let handle = null;
-      let started = false;
+      /* Shared across every card, so the second one costs nothing but its
+         own plates. Without this the two cards would each pull their own
+         copy of three.js the moment they scrolled into view. */
+      let libs = null;
+      const ensureLibs = () => {
+        if (!libs) {
+          libs = Promise.all([
+            load("public/js/three.min.js"),
+            load("public/js/gsap.min.js"),
+          ])
+            .then(() => load("public/js/stage-configs.js"))
+            .then(() => load("public/js/softbox-stage.js"));
+        }
+        return libs;
+      };
+
+      const handles = new WeakMap();
+      const starting = new WeakSet();
 
       const io = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
+            const el = entry.target;
+            const handle = handles.get(el);
             if (entry.isIntersecting) {
-              if (!started) {
-                started = true;
-                Promise.all([
-                  load("public/js/three.min.js"),
-                  load("public/js/gsap.min.js"),
-                ])
-                  .then(() => load("public/js/softbox-stage.js"))
+              if (!handle && !starting.has(el)) {
+                starting.add(el);
+                ensureLibs()
                   .then(() => {
-                    handle = window.initSoftboxStage(
-                      stage,
-                      stage.dataset.plates.split(","),
+                    const cfg = window.STAGE_CONFIGS[el.dataset.stage];
+                    handles.set(
+                      el,
+                      window.initSoftboxStage(el, {
+                        plates: el.dataset.plates.split(","),
+                        shots: cfg.shots,
+                        ground: cfg.ground,
+                      }),
                     );
                     // only reveal once there is a frame worth showing
                     requestAnimationFrame(() =>
-                      requestAnimationFrame(() => stage.classList.add("is-live")),
+                      requestAnimationFrame(() => el.classList.add("is-live")),
                     );
                   })
                   .catch(() => {
@@ -7408,7 +7438,7 @@
         { rootMargin: "300px 0px", threshold: 0.01 },
       );
 
-      io.observe(stage);
+      stages.forEach((el) => io.observe(el));
     })();
   </script>
 

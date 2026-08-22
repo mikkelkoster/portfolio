@@ -138,6 +138,57 @@ export lands.
 
 ---
 
+## Case-card 3D stages
+
+The Maersk and Formalize hero cards run a live WebGL product shot instead of a
+screenshot: a studio display on a dark plinth against a gaussian-splat backdrop,
+cutting between four camera setups.
+
+### Files
+| File | Role |
+|---|---|
+| `public/js/softbox-stage.js` | the scene — device, plinth, lighting, splats, glass |
+| `public/js/stage-configs.js` | per-card shot lists and ground colours |
+| `public/js/three.min.js`, `gsap.min.js` | vendored, loaded on demand |
+| `public/images/{case}/plates/plate-N.webp` | the screens shown on the display |
+
+### Plates
+**16:10, 1536px wide, lossless WebP.** All three constraints are load-bearing:
+
+- **16:10** is the panel's own ratio (6.99 / 4.37). Anything else gets cropped
+  from the bottom at runtime — a 4:3 export throws away 17%, a 6:5 export 25%.
+  Ask for source at 3072x1920 and downsample.
+- **1536** is the compromise between the two ends of the loop. The widest shot
+  needs ~1074px at 2x and the closest macro ~2790px; one texture cannot be 1:1
+  at both. Larger biases toward the macro but makes the wides minify, which is
+  what fades 1px separators during a pan.
+- **Lossless** because lossy WebP subsamples chroma even at quality 100 — max
+  error 14 levels, and the gap between a `#F7F8F9` card fill and white is 8.
+  Lossy erases exactly the fine UI detail the shot exists to show.
+
+### Adding a stage to a card
+1. Plates into `public/images/{case}/plates/`
+2. A config under `window.STAGE_CONFIGS` in `stage-configs.js`
+3. Markup: `.case__stage` wrapper, poster `<img>`, and a canvas with
+   `data-stage` (the config key) and `data-plates` (comma-separated URLs)
+4. Zero the panel's padding — **including inside both mobile breakpoints**,
+   where the base rule loses on specificity
+
+### Things that will bite
+- `.case__stage` needs `aspect-ratio`. It replaced a `<video>`, which carried
+  intrinsic dimensions; a div has none, so where the panel height is
+  indefinite `height: 100%` computes to auto and the stage collapses to zero.
+- The canvas needs explicit `width/height: 100%`. A canvas is a replaced
+  element, so `inset: 0` resolves to its intrinsic size — the drawing buffer.
+- Keep `initCaseStage` in its own `<script>` block. It once shared one with an
+  unrelated preloader; deleting that preloader took the loader with it, and the
+  card silently fell back to its poster, which is what success looks like.
+- Posters are captured from the scene itself. That needs
+  `preserveDrawingBuffer: true` patched in temporarily — it is off in normal
+  operation.
+
+---
+
 ## Update this file
 Keep `CLAUDE.md` up to date as the project evolves:
 - New carousel IDs → add to the table
