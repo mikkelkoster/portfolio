@@ -7326,7 +7326,91 @@
     })();
   </script>
 
+  <script>
+    /**
+     * Case-card stage: a live WebGL product shot, loaded on approach.
+     *
+     * Roughly 2MB of scripts and plates, which is far too much to spend on a
+     * front page most visitors never scroll to the bottom of — so nothing is
+     * requested until the card is within 300px of the viewport. Until then,
+     * and forever if anything below fails, the poster underneath is what the
+     * card shows. It is a real fallback rather than a placeholder: a captured
+     * frame of this same scene, so the card looks finished either way.
+     *
+     * Kept in its own <script> block on purpose. It previously shared one
+     * with an unrelated image preloader, and deleting that preloader took
+     * this with it — the card silently fell back to the poster with no error
+     * anywhere, because a missing observer looks exactly like one that has
+     * not fired yet.
+     */
+    (function initCaseStage() {
+      const stage = document.querySelector(".case__stage-canvas");
+      if (!stage) return;
 
+      // An explicit request not to see motion. Nothing is fetched, nothing
+      // runs, and the poster stands in permanently.
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      // No point downloading three.js to find out the device cannot run it.
+      const probe = document.createElement("canvas");
+      const canRender = !!(
+        window.WebGL2RenderingContext && probe.getContext("webgl2")
+      );
+      if (!canRender || !("IntersectionObserver" in window)) return;
+
+      const load = (src) =>
+        new Promise((resolve, reject) => {
+          const el = document.createElement("script");
+          el.src = src;
+          el.async = false; // three must be defined before the scene runs
+          el.onload = resolve;
+          el.onerror = reject;
+          document.body.appendChild(el);
+        });
+
+      let handle = null;
+      let started = false;
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              if (!started) {
+                started = true;
+                Promise.all([
+                  load("public/js/three.min.js"),
+                  load("public/js/gsap.min.js"),
+                ])
+                  .then(() => load("public/js/softbox-stage.js"))
+                  .then(() => {
+                    handle = window.initSoftboxStage(
+                      stage,
+                      stage.dataset.plates.split(","),
+                    );
+                    // only reveal once there is a frame worth showing
+                    requestAnimationFrame(() =>
+                      requestAnimationFrame(() => stage.classList.add("is-live")),
+                    );
+                  })
+                  .catch(() => {
+                    /* poster stays; nothing to clean up */
+                  });
+              } else if (handle) {
+                handle.resume();
+              }
+            } else if (handle) {
+              handle.pause();
+            }
+          });
+        },
+        // begin fetching a little before it arrives, so the first frame is
+        // ready rather than fading in after the card is already in view
+        { rootMargin: "300px 0px", threshold: 0.01 },
+      );
+
+      io.observe(stage);
+    })();
+  </script>
 
 </body>
 </html>
