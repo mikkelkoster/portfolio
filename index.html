@@ -1657,28 +1657,25 @@
        While collapsed the real last child is hidden, so the bottom of the
        list would have no rule — the last visible row carries it instead. */
     .exp-list.is-clipped .exp-item--cut { border-bottom: 1px solid var(--slate-200); }
+    /* The transition sits on .is-revealing, not .is-shown: it has to apply
+       when .is-shown is REMOVED too, and a transition declared on the class
+       being removed does not run. */
     .exp-item--more.is-revealing {
       display: flex;
       opacity: 0;
       transform: translateY(12px);
+      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 0.7, 0.3, 1);
     }
     .exp-item--more.is-shown {
       opacity: 1;
       transform: none;
-      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 0.7, 0.3, 1);
     }
     .exp-actions {
       margin-top: 24px;
       display: flex;
       flex-wrap: wrap;
+      justify-content: center;
       gap: 12px;
-    }
-    /* Spent once the list is complete — a control that can only be pressed
-       once should not sit there afterwards looking pressable. */
-    #exp-show-all.is-spent {
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
     }
     @media (prefers-reduced-motion: reduce) {
       .exp-item--more.is-revealing { opacity: 1; transform: none; }
@@ -5521,7 +5518,7 @@
       </div>
 
       <div class="exp-actions">
-        <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--secondary btn--sm">Download full CV</a>
+        <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--primary btn--sm">Download full CV</a>
         <button type="button" class="btn btn--secondary btn--sm" id="exp-show-all" aria-expanded="false" aria-controls="exp-list">Show all experience</button>
       </div>
 
@@ -6007,9 +6004,11 @@
       const hidden = [...list.querySelectorAll('.exp-item--more')];
       if (!hidden.length) { btn.remove(); return; }
 
-      const STEP = 80;
-      btn.addEventListener('click', () => {
-        btn.setAttribute('aria-expanded', 'true');
+      const STEP = 80, EASE = 520;
+      const SPAN = (hidden.length - 1) * STEP + EASE;
+      let open = false, busy = false;
+
+      function expand() {
         list.classList.remove('is-clipped');
         // Put every row into its start state first, then take ONE reflow for
         // the batch — reading offsetHeight per row would flush layout five
@@ -6017,9 +6016,36 @@
         hidden.forEach(el => el.classList.add('is-revealing'));
         void list.offsetHeight;
         hidden.forEach((el, i) => setTimeout(() => el.classList.add('is-shown'), i * STEP));
-        btn.classList.add('is-spent');
-        setTimeout(() => btn.remove(), hidden.length * STEP + 800);
-      }, { once: true });
+      }
+
+      function collapse() {
+        // Bottom row first, so the list reads as folding back down into the
+        // button rather than collapsing from under the reader's eye.
+        const n = hidden.length;
+        hidden.forEach((el, i) => {
+          if (el.classList.contains('is-open')) closeExpItem(el);
+          setTimeout(() => el.classList.remove('is-shown'), (n - 1 - i) * STEP);
+        });
+        setTimeout(() => {
+          hidden.forEach(el => el.classList.remove('is-revealing'));
+          list.classList.add('is-clipped');
+          // Collapsing removes five rows of height. If that leaves the button
+          // above the fold the reader loses their place entirely.
+          if (btn.getBoundingClientRect().bottom < 0) {
+            btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
+        }, SPAN);
+      }
+
+      btn.addEventListener('click', () => {
+        if (busy) return;
+        busy = true;
+        open = !open;
+        btn.setAttribute('aria-expanded', String(open));
+        btn.textContent = open ? 'Collapse experience' : 'Show all experience';
+        (open ? expand : collapse)();
+        setTimeout(() => { busy = false; }, SPAN);
+      });
     })();
 
     /* ── 12. Parallax on work card images ──────────────── */
@@ -7924,16 +7950,63 @@
          stage it knows about, and a WeakMap cannot be walked. The elements
          live as long as the page does, so nothing is retained that would not
          have been anyway. */
+      /* How much of the card the reader can actually see, 0..1.
+         intersectionRatio cannot answer this: it is measured against the
+         root as expanded by rootMargin, so a card sitting a full screen
+         BELOW the fold reports 1.0 and would win the contest below against
+         the card the reader is really looking at. That was already happening
+         at 300px; at 700px it would be blatant. */
+      function visibleFraction(el) {
+        const r = el.getBoundingClientRect();
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        if (r.height <= 0) return 0;
+        return Math.max(0, Math.min(vh, r.bottom) - Math.max(0, r.top)) / r.height;
+      }
+
+      /* The winner has to be re-picked on scroll, not only when the observer
+         fires. With a 700px rootMargin a card's intersectionRatio hits 1.0
+         while it is still off-screen and then stops changing, so no further
+         callback arrives as it crosses the fold — judging on observer events
+         alone, playback did not start until the card was 86% visible.
+         rAF-coalesced, three rect reads a frame, and only while a scene
+         actually exists. */
+      let pickQueued = false;
+      function pickWinner() {
+        pickQueued = false;
+        /* Most-visible-wins on its own hands over at the 50/50 crossover,
+           which is late: the card you are scrolling toward sits there loaded
+           and still while the one leaving keeps playing. A card still
+           entering — top edge below the viewport top — gets a bias so it
+           takes over while the outgoing one is on its way out. Measured, the
+           handover moves from 53% visible to roughly 30%. */
+        let best = null, bestScore = 0, bestSeen = 0;
+        handles.forEach((handle, el) => {
+          const seen = visibleFraction(el);
+          const entering = el.getBoundingClientRect().top > 0;
+          const score = seen + (entering && seen > 0 ? 0.2 : 0);
+          if (score > bestScore) { bestScore = score; bestSeen = seen; best = el; }
+        });
+        handles.forEach((handle, el) => {
+          if (el === best && bestSeen > 0.12) handle.resume();
+          else handle.pause();
+        });
+      }
+      function queuePick() {
+        if (pickQueued || !handles.size) return;
+        pickQueued = true;
+        requestAnimationFrame(pickWinner);
+      }
+      window.addEventListener("scroll", queuePick, { passive: true });
+      window.addEventListener("resize", queuePick, { passive: true });
+
       const handles = new Map();
       const starting = new WeakSet();
-      const ratios = new Map();
 
       const io = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             const el = entry.target;
             const handle = handles.get(el);
-            ratios.set(el, entry.isIntersecting ? entry.intersectionRatio : 0);
             if (entry.isIntersecting) {
               if (!handle && !starting.has(el)) {
                 starting.add(el);
@@ -7958,7 +8031,10 @@
                     );
                     // only reveal once there is a frame worth showing
                     requestAnimationFrame(() =>
-                      requestAnimationFrame(() => el.classList.add("is-live")),
+                      requestAnimationFrame(() => {
+                        el.classList.add("is-live");
+                        queuePick();   // it may already be the one on screen
+                      }),
                     );
                   })
                   .catch(() => {
@@ -7978,19 +8054,17 @@
              The winner is whichever card is most visible; everything else
              pauses. Ratios come from the observer, so a card that has merely
              been pre-loaded by the 300px margin never starts drawing. */
-          let best = null, bestRatio = 0;
-          ratios.forEach((r, el) => {
-            if (r > bestRatio) { bestRatio = r; best = el; }
-          });
-          handles.forEach((handle, el) => {
-            if (el === best && bestRatio > 0.25) handle.resume();
-            else handle.pause();
-          });
+          queuePick();
         },
         /* rootMargin buys the load a head start so the first frame is ready
-           rather than fading in late. The thresholds are what let the code
-           above tell "just visible" from "being looked at". */
-        { rootMargin: "300px 0px", threshold: [0, 0.25, 0.5, 0.75, 1] },
+           rather than fading in late — 700px is roughly a screen, so the
+           scene is built and drawing before the card reaches the fold. The
+           thresholds only decide how often the winner is re-evaluated; what
+           it is measured on is visibleFraction, not these. */
+        {
+          rootMargin: "700px 0px",
+          threshold: [0, 0.05, 0.1, 0.2, 0.35, 0.5, 0.65, 0.8, 1],
+        },
       );
 
       stages.forEach((el) => io.observe(el));
