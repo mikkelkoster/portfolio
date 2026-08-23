@@ -53,6 +53,15 @@
     }
     a { text-decoration: none; color: inherit; }
     img { display: block; max-width: 100%; }
+    /* The other half of intrinsic width/height attributes.
+       Those attributes reserve layout space so content does not shift as
+       lazy images decode — but `height` is ALSO a presentational hint, so an
+       image whose width is constrained by CSS keeps the raw attribute height
+       in pixels and stretches. `height: auto` restores the aspect ratio.
+       Wrapped in :where() so its specificity is zero: presentational hints
+       lose to any author declaration regardless of specificity, while any
+       rule that genuinely wants a fixed height still beats this one. */
+    :where(img[width][height]) { height: auto; }
 
     /* ── DESIGN TOKENS ──────────────────────────────────── */
     :root {
@@ -75,6 +84,14 @@
       --blue:       var(--brand-600);
       --blue-dk:    var(--brand-700);
       --blue-50:    var(--brand-50);
+      /* Availability. A new hue in a blue-and-navy system, and the only
+         place it appears — which is the point: it has to read as a state,
+         not as another brand colour. Two values, picked by ground:
+         --avail on white, --avail-dark on the navy pill. */
+      --avail:       #0E9F6E;
+      --avail-line:  #9BDCC2;
+      --avail-dark:  #34D399;
+      /* No green for the pill's TEXT — see .pill-nav__status. */
       --slate-50:   #F8FAFC;
       --slate-100:  #F1F5F9;
       --slate-200:  #E2E8F0;
@@ -175,6 +192,21 @@
       padding: 6px 14px;
       border-radius: 100px;
     }
+    /* Below 900 the pill runs out of room, so the words move from the
+       button to the status. A mail glyph is unambiguous; "Available" is the
+       thing a visitor cannot infer from an icon, so that is what keeps its
+       words. LinkedIn goes — it is in the footer and the hero. */
+    @media (max-width: 900px) {
+      .pill-nav__linkedin,
+      .pill-nav__cv,
+      .pill-nav__cta,
+      .pill-nav__status-full { display: none; }
+      .pill-nav__mail { display: inline-flex; }
+      .pill-nav__status-short { display: inline; }
+      .pill-nav__status { padding-left: 0; border-left: 0; }
+      .pill-nav__inner { gap: 12px; padding: 6px 6px 6px 16px; }
+    }
+
     @media (max-width: 768px) {
       /* Always show pill nav on mobile at bottom — hide regular nav */
       .nav { display: none !important; }
@@ -254,6 +286,110 @@
     .nav.in-light .nav__links a { color: var(--muted); }
     .nav.in-light .nav__links a:hover { color: var(--dark); }
     .nav__buttons { display: flex; gap: 8px; }
+
+    /* ── Availability ─────────────────────────────────────────────
+       One dot, two homes: the hero badge and the floating pill. The ring
+       is a pseudo-element so the pulse never moves layout. */
+    .avail-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--avail);
+      position: relative; flex-shrink: 0;
+    }
+    .avail-dot::after {
+      content: ""; position: absolute; inset: -4px;
+      border-radius: 50%;
+      border: 1px solid color-mix(in srgb, var(--avail) 55%, transparent);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .avail-dot::after { animation: avail-ping 2.8s cubic-bezier(0, 0, 0.2, 1) infinite; }
+      @keyframes avail-ping {
+        0%   { transform: scale(1);    opacity: 0.85; }
+        70%  { transform: scale(1.85); opacity: 0; }
+        100% { transform: scale(1.85); opacity: 0; }
+      }
+    }
+
+    /* The hero badge. Green stroke, but on the hero's OWN ground — the
+       hero is deep navy, so a white fill would put the brightest object on
+       the page around a secondary fact. A barely-lifted translucent fill
+       lets the stroke do the work and keeps the badge subordinate to the
+       three headlines above it. */
+    .hero__avail {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      /* The hero text column is a flex parent, so inline-flex alone still
+         gets stretched to the column width. These two keep it shrink-wrapped
+         to the sentence. */
+      align-self: flex-start;
+      width: fit-content;
+      margin-top: 22px;
+      padding: 8px 17px 8px 14px;
+      border: 1px solid color-mix(in srgb, var(--avail-dark) 42%, transparent);
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.05);
+      /* Green text, same value as the dot and the pill status. The lighter
+         --avail-dark is the one that reads on a dark ground. */
+      color: var(--avail-dark);
+      font-size: 13.5px;
+      font-weight: 500;
+      line-height: 1.2;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .hero__avail .avail-dot { background: var(--avail-dark); }
+    .hero__avail .avail-dot::after {
+      border-color: color-mix(in srgb, var(--avail-dark) 55%, transparent);
+    }
+
+    /* In the pill. The hairline divider is what makes it read as a status
+       attached to the name rather than a fourth button. */
+    .pill-nav__status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding-left: 16px;
+      border-left: 1px solid rgba(255,255,255,0.18);
+      font-size: 12.5px;
+      /* White, not green — and this is a contrast decision, not a taste one.
+         The pill is rgba(15,23,41,0.55), so its ground is whatever is behind
+         it: near-black over the hero, but mid-grey over every light section,
+         which is most of the page. Measured against that grey, the greens
+         land between 1.1:1 and 1.9:1, where 4.5:1 is the floor for text this
+         size. Every other label in the pill is white for exactly this reason.
+
+         The DOT stays green and carries the signal. A 8px disc is a
+         non-text graphic, so it answers to the 3:1 floor rather than 4.5,
+         and it clears that on both grounds. The hero badge keeps green text
+         because its ground is fixed and dark — 9.6:1 there. */
+      color: rgba(255, 255, 255, 0.88);
+      white-space: nowrap;
+    }
+    .pill-nav__status .avail-dot { background: var(--avail-dark); }
+    .pill-nav__status .avail-dot::after {
+      border-color: color-mix(in srgb, var(--avail-dark) 55%, transparent);
+    }
+    .pill-nav__status-short { display: none; }
+
+    /* The icon-only CTA. It draws at 32px but the tap target is padded to
+       44 — shrinking the target with the label is the usual way this goes
+       wrong on a phone. */
+    .pill-nav__mail {
+      display: none;
+      align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .pill-nav__mail::before {
+      content: ""; position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 44px; height: 44px;
+    }
+    .pill-nav__mail:hover { background: var(--blue-dk); }
 
     .btn {
       display: inline-flex;
@@ -1103,7 +1239,8 @@
        within half a percent — so `cover` crops essentially nothing and the card
        keeps the exact height of its neighbours. */
     .case__image-stacked--maersk,
-    .case__image-stacked--formalize { padding: 0; }
+    .case__image-stacked--formalize,
+    .case__image-stacked--matas { padding: 0; }
     .case__stage {
       position: relative;
       width: 100%;
@@ -1525,6 +1662,13 @@
       transition: height 0.52s cubic-bezier(0.33, 1, 0.68, 1),
                   opacity 0.38s cubic-bezier(0.33, 1, 0.68, 1);
     }
+    /* Unused at present — every role has a logo. Kept for the next one that
+       does not: it drops the image column rather than leaving a 220px hole,
+       while the text keeps the measure it would have had in the second
+       column, so losing the image does not turn a readable paragraph into a
+       full-width line. */
+    .exp-expand-inner--text { grid-template-columns: 1fr !important; }
+    .exp-expand-inner--text .exp-expand-text { max-width: 876px; }
     .exp-expand-inner {
       display: grid;
       grid-template-columns: 220px 1fr;
@@ -1976,7 +2120,8 @@
          padding sits outside the media queries and loses to them on
          specificity, so it has to be restated here. */
       .case__image-stacked--maersk,
-      .case__image-stacked--formalize { padding: 0; overflow: hidden; }
+      .case__image-stacked--formalize,
+      .case__image-stacked--matas { padding: 0; overflow: hidden; }
       .case__image-stacked .case__image-inner { transform: none !important; width: 100% !important; }
       .case__text-stacked { flex: none; padding: 36px 40px; order: 2; }
 
@@ -2065,7 +2210,8 @@
          padding sits outside the media queries and loses to them on
          specificity, so it has to be restated here. */
       .case__image-stacked--maersk,
-      .case__image-stacked--formalize { padding: 0; overflow: hidden; }
+      .case__image-stacked--formalize,
+      .case__image-stacked--matas { padding: 0; overflow: hidden; }
       .case__text-stacked { flex: none; padding: 28px 24px; order: 2; }
       .case--stacked .case__title { font-size: 32px; }
       .case__image-stacked .case__image-inner { transform: none !important; width: 100% !important; }
@@ -2175,6 +2321,12 @@
     /* Panel — no longer scrolls itself */
     .case-modal__panel {
       width: min(1280px, calc(100vw - 32px));
+      /* The sheet floats: 56px of dimmed page above it and the same below,
+         so scrolling to the end lands on a rounded bottom edge rather than
+         running into the viewport. I briefly removed the lower half of that,
+         having mistaken it for the transient paint gap reported during
+         scrolling — which was a compositor issue, fixed separately by not
+         leaving the panel promoted to its own layer. */
       min-height: calc(100vh - 112px);
       margin-bottom: 56px;
       background: #FAFAFA;
@@ -4280,13 +4432,21 @@
   <nav class="pill-nav" id="pill-nav" aria-hidden="true">
     <div class="pill-nav__inner">
       <a href="#" class="pill-nav__logo">Mikkel Køster</a>
+      <p class="pill-nav__status">
+        <span class="avail-dot" aria-hidden="true"></span>
+        <span class="pill-nav__status-full">Available for freelance &amp; fractional</span>
+        <span class="pill-nav__status-short">Available</span>
+      </p>
       <div class="pill-nav__buttons">
         <a href="https://www.linkedin.com/in/mikkelkoester/" target="_blank" rel="noopener noreferrer" class="btn btn--linkedin btn--sm pill-nav__linkedin">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0;"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
           LinkedIn
         </a>
-        <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--ghost btn--sm">Download CV</a>
-        <a href="mailto:hello@mikkelkoster.com" class="btn btn--primary btn--sm">Get in touch</a>
+        <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--ghost btn--sm pill-nav__cv">CV</a>
+        <a href="mailto:hello@mikkelkoster.com" class="btn btn--primary btn--sm pill-nav__cta">Get in touch</a>
+        <a href="mailto:hello@mikkelkoster.com" class="pill-nav__mail" aria-label="Get in touch">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>
+        </a>
       </div>
     </div>
   </nav>
@@ -4324,6 +4484,10 @@
         </div>
         <p class="hero__tagline" id="hero-tagline">
           15 years in design, 8 of them leading teams. I've built design systems and products across agencies, scale-ups and in-house. I design and ship with AI, and I'm particular about craft and detail.
+        </p>
+        <p class="hero__avail">
+          <span class="avail-dot" aria-hidden="true"></span>
+          Available for freelance and fractional work
         </p>
       </div>
 
@@ -4493,6 +4657,41 @@
                 <span class="tag">Design system</span>
               </div>
               <button class="btn btn--primary btn--sm" data-case="maersk">
+                See case study
+                <span class="btn-arrow"><svg style="margin-left:4px" width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Matas -->
+        <div class="case case--stacked case--matas will-fade-scale" data-delay="180">
+          <div class="case__image-stacked case__image-stacked--matas">
+            <!-- Same contract as the other two stages: nothing is fetched
+                 until the card is near the viewport, and the poster beneath
+                 is a real fallback rather than a placeholder — it is what
+                 stays if WebGL is unavailable, if the scripts fail, or if the
+                 visitor has asked for reduced motion. -->
+            <div class="case__stage" aria-hidden="true">
+              <img class="case__stage-poster" src="public/images/matas/matas-stage-poster.jpg" alt="" loading="lazy">
+              <canvas class="case__stage-canvas" data-stage="matas"
+                      data-model="public/models/iphone-17-pro.min.glb"
+                      data-plates="public/images/matas/plates/plate-1.webp,public/images/matas/plates/plate-2.webp,public/images/matas/plates/plate-3.webp"></canvas>
+            </div>
+          </div>
+          <div class="case__text-stacked">
+            <div>
+              <h3 class="case__title">Matas</h3>
+              <p class="case__challenge">Rebuilt Denmark's largest loyalty programme from transactional to relationship — and redesigned the app around it.</p>
+              <p class="case__body">Explored the programme directions, built the prototypes and high-fidelity screens, and ran five rounds of user testing — taking the concepts and the design decisions to the CEO and the steering committee. 1.5 million members, and 150 screens across every member journey.</p>
+            </div>
+            <div class="case__footer-stacked">
+              <div class="case__tags">
+                <span class="tag">Loyalty programme</span>
+                <span class="tag">App design</span>
+                <span class="tag">User research</span>
+              </div>
+              <button class="btn btn--primary btn--sm" data-case="matas">
                 See case study
                 <span class="btn-arrow"><svg style="margin-left:4px" width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               </button>
@@ -4735,7 +4934,7 @@
             <div class="testimonial-mark">&ldquo;</div>
             <p class="testimonial-quote">Mikkel is a rare breed of design leader who doesn't just manage pixels—he scales product vision. As Head of Engineering, I had a front-row seat to his impact. He built a comprehensive, cutting-edge design system entirely from scratch, completely elevating our frontend velocity and aesthetic standards. Mikkel has an unparalleled eye for talent, single-handedly recruiting a world-class design team that consistently punched above its weight. He was absolutely instrumental in shipping critical, high-stakes features for both our Formalize and Whistleblower software. Beyond his craft, Mikkel was the ultimate bridge between Product, Design, and Engineering, always dismantling silos to find the absolute best solution for the product. Any company lucky enough to land him next is getting a transformative leader.</p>
             <div class="testimonial-author">
-              <a href="https://www.linkedin.com/in/e-holst-petersen/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-emil.webp" alt="Emil Holst Petersen" loading="lazy"></a>
+              <a href="https://www.linkedin.com/in/e-holst-petersen/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-emil.webp" alt="Emil Holst Petersen" loading="lazy" width="420" height="420"></a>
               <div>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                   <a href="https://www.linkedin.com/in/e-holst-petersen/" target="_blank" rel="noopener" class="testimonial-name">Emil Holst Petersen</a>
@@ -4753,7 +4952,7 @@
             <div class="testimonial-mark">&ldquo;</div>
             <p class="testimonial-quote">I have had the pleasure of working with Mikkel on two occasions: as a colleague at Hello Group, and at Formalize, where Mikkel was my manager. Mikkel is incredibly inspiring to work with. He is one of those people who seems to have more hours in the day than everyone else. He is highly productive while maintaining a very high standard of quality. As a manager and leader, Mikkel creates a strong sense of psychological safety, where everyone wants to contribute without being afraid of failing. He brings out the best in everyone on the team. I sincerely hope I will get the opportunity to work with Mikkel a third time someday.</p>
             <div class="testimonial-author">
-              <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-anders.webp" alt="Anders Tolborg" loading="lazy"></div>
+              <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-anders.webp" alt="Anders Tolborg" loading="lazy" width="800" height="800"></div>
               <div>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                   <p class="testimonial-name">Anders Tolborg</p>
@@ -4771,7 +4970,7 @@
             <div class="testimonial-mark">&ldquo;</div>
             <p class="testimonial-quote">Mikkel has strong user-focused design thinking and a lot of energy in how he works. Across multiple product cycles, he always pushed for high quality in design iterations and made collaboration between product, design and engineering very smooth. What I appreciated most was his ability to create alignment and momentum in a stage where the product organisation was still forming. His empathy, team-first mindset, and practical way of working made him a very strong partner in building how we worked across functions.</p>
             <div class="testimonial-author">
-              <a href="https://www.linkedin.com/in/simon-svenstrup/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-simon.webp" alt="Simon la Fontaine Svenstrup" loading="lazy"></a>
+              <a href="https://www.linkedin.com/in/simon-svenstrup/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-simon.webp" alt="Simon la Fontaine Svenstrup" loading="lazy" width="800" height="800"></a>
               <div>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                   <a href="https://www.linkedin.com/in/simon-svenstrup/" target="_blank" rel="noopener" class="testimonial-name">Simon la Fontaine Svenstrup</a>
@@ -4789,7 +4988,7 @@
             <div class="testimonial-mark">&ldquo;</div>
             <p class="testimonial-quote">Mikkel brings a rare combination of strong design craft and the ability to simplify complexity. He consistently found ways to break messy problems down into simple, practical concepts — his storytelling made alignment feel easy. Together we co-created a design system, defined page recipes, and established UX principles that gave teams clarity and direction, enabling a full navigation and UI overhaul delivered without compromising quality. As someone responsible for raising the bar on experience, I've worked with many strong profiles. Mikkel stands out. He raises the standard in a way that lasts, both in the product and in the team.</p>
             <div class="testimonial-author">
-              <a href="https://www.linkedin.com/in/patrick-rischel-24baba6/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-patrick.webp" alt="Patrick Rischel" loading="lazy"></a>
+              <a href="https://www.linkedin.com/in/patrick-rischel-24baba6/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-patrick.webp" alt="Patrick Rischel" loading="lazy" width="300" height="300"></a>
               <div>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                   <a href="https://www.linkedin.com/in/patrick-rischel-24baba6/" target="_blank" rel="noopener" class="testimonial-name">Patrick Rischel</a>
@@ -4808,7 +5007,7 @@
             <div class="testimonial-mark">&ldquo;</div>
             <p class="testimonial-quote">Mikkel was one of the first leaders I'd worked with who truly understood the strategic value of research. He didn't just make space for it — he integrated it into how the team operated, and made sure our findings shaped direction rather than just informed delivery. Mikkel is one of the best strategic designers I've had the pleasure of working with. While his design expertise is exceptional, his true strength lies in his leadership. He has a rare ability to bring out the best in people, creating an environment where individuals grow, take ownership, and thrive. Working with Mikkel makes you a better and braver designer, a strong believer in teamwork, and a more confident professional. His quiet optimism and endless curiosity are as contagious as they are powerful.</p>
             <div class="testimonial-author">
-              <a href="https://www.linkedin.com/in/vikiolgod/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-viki.webp" alt="Viki Ølgod Frandsen" loading="lazy"></a>
+              <a href="https://www.linkedin.com/in/vikiolgod/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-viki.webp" alt="Viki Ølgod Frandsen" loading="lazy" width="800" height="800"></a>
               <div>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                   <a href="https://www.linkedin.com/in/vikiolgod/" target="_blank" rel="noopener" class="testimonial-name">Viki Ølgod Frandsen</a>
@@ -5062,6 +5261,108 @@
                 <div class="exp-expand-img"><img src="public/images/main/main-exp-nodes.webp" alt="Nodes"></div>
               </div>
               <p class="exp-expand-text">Worked closely with the CEO and Managing Partner to drive business development and lead major new business pitches. Advised clients on customer experience strategy and mobile app technology. Designed the UX for a platform facilitating the BMW i3 launch in partnership with YouTube. Developed customer support concepts and a child safety app concept for Danish telco TDC. Hello Great Works later invested a 25% stake in Nodes — which led directly to being headhunted into what became NoA Ignite.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thinkhouse -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="420">
+            <div class="exp-company-wrap">
+              <span class="exp-company">Thinkhouse</span>
+              <span class="exp-period">Oct 2011 – Apr 2013</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Creative Project Manager</span>
+              <span class="exp-desc">Digital campaign strategy and production for Coca-Cola, Carlsberg, Tuborg and Mars.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge">Agency</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img"><img src="public/images/main/main-exp-thinkhouse.webp" alt="Thinkhouse" loading="lazy" width="528" height="360"></div>
+              </div>
+              <p class="exp-expand-text">Led digital campaign strategy and creative production for major FMCG brands, bridging offline events with digital and social execution. Designed the presentation for the Somersby Cider launch at the National Carlsberg Sales Meeting — the largest gathering of all Carlsberg brands and sales representatives. Campaign work across Coca-Cola, Carlsberg, Tuborg, Mars and Snickers.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Riot Bernard -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="480">
+            <div class="exp-company-wrap">
+              <span class="exp-company">Riot Bernard — Shanghai</span>
+              <span class="exp-period">Mar – Oct 2011</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Co-Founder</span>
+              <span class="exp-desc">Co-founded an online-only eyewear brand with a buy-one-donate-one model, built from Shanghai.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge">Startup</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img"><img src="public/images/main/main-exp-riotbernard.webp" alt="Riot Bernard" loading="lazy" width="528" height="360"></div>
+              </div>
+              <p class="exp-expand-text">Co-founded an online-only prescription eyewear brand with a buy-one-donate-one model, taking on Denmark's conventional optical market. Led brand, marketing and logistics through launch from Shanghai, established a local optician partnership, and sourced the first collection on the ground in China.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Wolff Olins -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="540">
+            <div class="exp-company-wrap">
+              <span class="exp-company">Wolff Olins — London</span>
+              <span class="exp-period">Oct 2010 – Jan 2011</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Intern</span>
+              <span class="exp-desc">Four months in London at one of the world's leading brand consultancies — American Express, Skype.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge">Agency</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img"><img src="public/images/main/main-exp-wolffolins.webp" alt="Wolff Olins" loading="lazy" width="528" height="360"></div>
+              </div>
+              <p class="exp-expand-text">Interned at one of the world's leading brand consultancies, contributing to client work for American Express and Skype. Developed creative tools and facilitated co-creation workshops for client engagements, and contributed to concept development and research across projects.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- The Kaospilots -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="600">
+            <div class="exp-company-wrap">
+              <span class="exp-company">The Kaospilots</span>
+              <span class="exp-period">Aug 2008 – Jun 2011</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Student</span>
+              <span class="exp-desc">Three-year hybrid business and design school built on leadership, entrepreneurship and real projects.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge">Education</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img"><img src="public/images/main/main-exp-kaospilots.webp" alt="The Kaospilots" loading="lazy" width="528" height="360"></div>
+              </div>
+              <p class="exp-expand-text">A three-year hybrid business, design and leadership programme, ranked among the world's most innovative schools by BusinessWeek and FastCompany. Focused on leadership, entrepreneurship and project-based learning in real-world contexts — which is where both the Wolff Olins internship and Riot Bernard came from, each running inside these three years.</p>
             </div>
           </div>
         </div>
@@ -5685,7 +5986,7 @@
             <div class="cm-car__col">
               <div class="cm-car__slide">
                 <div class="cm-skeleton"></div>
-                <img src="public/images/maersk/maersk-dashboard.webp" alt="Supply Chain Overview dashboard" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy">
+                <img src="public/images/maersk/maersk-dashboard.webp" alt="Supply Chain Overview dashboard" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="1800" height="1188">
               </div>
               <div class="cm-car__cap">
                 <p class="cm-car__cap-title">Supply Chain Overview</p>
@@ -5695,7 +5996,7 @@
             <div class="cm-car__col">
               <div class="cm-car__slide">
                 <div class="cm-skeleton"></div>
-                <img src="public/images/maersk/maersk-list.webp" alt="Shipment list view" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy">
+                <img src="public/images/maersk/maersk-list.webp" alt="Shipment list view" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="1800" height="1188">
               </div>
               <div class="cm-car__cap">
                 <p class="cm-car__cap-title">Shipment List</p>
@@ -5705,7 +6006,7 @@
             <div class="cm-car__col">
               <div class="cm-car__slide">
                 <div class="cm-skeleton"></div>
-                <img src="public/images/maersk/maersk-detail.webp" alt="Shipment detail view" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy">
+                <img src="public/images/maersk/maersk-detail.webp" alt="Shipment detail view" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="1800" height="1188">
               </div>
               <div class="cm-car__cap">
                 <p class="cm-car__cap-title">Shipment Detail</p>
@@ -5741,7 +6042,7 @@
               <p class="cm-ba-dark__label">Before</p>
               <p class="cm-ba-dark__title">Move containers from A to B</p>
               <p class="cm-ba-dark__body">Maersk's value was in its ships and routes. Customers booked a container; Maersk delivered it. Revenue was tied to volume shipped.</p>
-              <img src="public/images/maersk/maersk-before.svg" alt="Before: container shipping" style="width:100%;margin-top:24px;display:block;" loading="lazy">
+              <img src="public/images/maersk/maersk-before.svg" alt="Before: container shipping" style="width:100%;margin-top:24px;display:block;" loading="lazy" width="390" height="80">
             </div>
             <div class="cm-ba-dark__arrow">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -5750,7 +6051,7 @@
               <p class="cm-ba-dark__label">After</p>
               <p class="cm-ba-dark__title">Run the customer's entire supply chain</p>
               <p class="cm-ba-dark__body">Maersk manages freight, customs, warehousing, and last-mile — end to end. Revenue tied to value delivered, not containers counted.</p>
-              <img src="public/images/maersk/maersk-after.svg" alt="After: integrated supply chain" style="width:100%;margin-top:24px;display:block;" loading="lazy">
+              <img src="public/images/maersk/maersk-after.svg" alt="After: integrated supply chain" style="width:100%;margin-top:24px;display:block;" loading="lazy" width="390" height="80">
             </div>
           </div>
         </div>
@@ -5764,7 +6065,7 @@
           <p class="cm-body" style="max-width:600px;margin-bottom:40px;">Terminals, spreadsheets, internal web tools, and manual workarounds — a constellation of legacy systems that operators lived in every day, with no single product holding it together.</p>
 
           <div style="background:#f8fafc;border-radius:16px;padding:32px;">
-            <img src="public/images/maersk/maersk-from-this.webp" alt="Legacy tools operators lived in every day" style="width:100%;display:block;" loading="lazy">
+            <img src="public/images/maersk/maersk-from-this.webp" alt="Legacy tools operators lived in every day" style="width:100%;display:block;" loading="lazy" width="1920" height="730">
           </div>
         </div>
 
@@ -5878,7 +6179,7 @@
             <!-- 01 — First-ever Design Lead (sets the stakes) -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-01.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-01.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">01</p>
                   <p class="cm-car__card-title">First-ever Design Lead</p>
@@ -5890,7 +6191,7 @@
             <!-- 02 — Shift left (the strategic reframe) -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-04.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-04.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">02</p>
                   <p class="cm-car__card-title">Shift left</p>
@@ -5902,7 +6203,7 @@
             <!-- 03 — Scaled team (built the capacity) -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-02.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-02.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">03</p>
                   <p class="cm-car__card-title">Scaled team from 6 → 12</p>
@@ -5914,7 +6215,7 @@
             <!-- 04 — 3 sub-teams (structured for specialisation) -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-03.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-03.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">04</p>
                   <p class="cm-car__card-title">3 sub-teams</p>
@@ -5926,7 +6227,7 @@
             <!-- 05 — North Star Vision (aligned the whole platform) -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-05.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-05.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">05</p>
                   <p class="cm-car__card-title">North Star Vision</p>
@@ -5938,7 +6239,7 @@
             <!-- 06 — Flea Market / Design System (the infrastructure) -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-07.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-07.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">06</p>
                   <p class="cm-car__card-title">"Flea Market"</p>
@@ -5950,7 +6251,7 @@
             <!-- 07 — Grand Central Station (product initiative) -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-06.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-06.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">07</p>
                   <p class="cm-car__card-title">"Grand Central Station"</p>
@@ -5962,7 +6263,7 @@
             <!-- 08 — Dressed for Success (rollout framework) -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-08.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-08.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">08</p>
                   <p class="cm-car__card-title">"Dressed for Success"</p>
@@ -5974,7 +6275,7 @@
             <!-- 09 — Closed the design-to-delivery gap (QA gate, the capstone) -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-09.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:140px;"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-09.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">09</p>
                   <p class="cm-car__card-title">Closed the design-to-delivery gap</p>
@@ -6004,7 +6305,7 @@
           <p class="cm-label cm-label--light" data-n="06"><span>The Work</span></p>
           <h3 class="cm-headline cm-headline--light" style="margin-bottom:40px;">From a chaotic, inconsistent mess</h3>
           <div style="border-radius:12px;overflow:hidden;margin-top:8px;">
-            <img src="public/images/maersk/maersk-inconsistent-mess.webp" alt="Fragmented legacy tools — the chaotic state before" style="width:100%;display:block;" loading="lazy">
+            <img src="public/images/maersk/maersk-inconsistent-mess.webp" alt="Fragmented legacy tools — the chaotic state before" style="width:100%;display:block;" loading="lazy" width="1920" height="1192">
           </div>
         </div>
 
@@ -6016,15 +6317,15 @@
           <div class="cm-svg-spread">
             <div class="cm-svg-spread-item">
               <p class="cm-svg-spread-label">List pages</p>
-              <img src="public/images/maersk/maersk-list-pages.svg" alt="List pages template" class="cm-svg-spread-img" loading="lazy">
+              <img src="public/images/maersk/maersk-list-pages.svg" alt="List pages template" class="cm-svg-spread-img" loading="lazy" width="304" height="190">
             </div>
             <div class="cm-svg-spread-item">
               <p class="cm-svg-spread-label">Detail pages</p>
-              <img src="public/images/maersk/maersk-detail-pages.svg" alt="Detail pages template" class="cm-svg-spread-img" loading="lazy">
+              <img src="public/images/maersk/maersk-detail-pages.svg" alt="Detail pages template" class="cm-svg-spread-img" loading="lazy" width="304" height="190">
             </div>
             <div class="cm-svg-spread-item">
               <p class="cm-svg-spread-label">Creation flows</p>
-              <img src="public/images/maersk/maersk-creation-flows.svg" alt="Creation flows template" class="cm-svg-spread-img" loading="lazy">
+              <img src="public/images/maersk/maersk-creation-flows.svg" alt="Creation flows template" class="cm-svg-spread-img" loading="lazy" width="304" height="190">
             </div>
           </div>
         </div>
@@ -6033,40 +6334,40 @@
         <div class="cm-car-wrap cm-car-wrap--ds" style="background:#E8F0F9;padding:0 0 72px 80px;overflow:hidden;">
           <div class="cm-car__track" id="cm-c4-track" style="align-items:flex-start;">
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-01.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-01.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="3322" height="1850"></div>
             </div>
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-02.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-02.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="1264" height="1863"></div>
             </div>
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-03.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-03.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2380" height="1850"></div>
             </div>
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-04.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-04.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2136" height="1850"></div>
             </div>
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-05.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-05.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="1566" height="1850"></div>
             </div>
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-06.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-06.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2544" height="1850"></div>
             </div>
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-07.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-07.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2800" height="1850"></div>
             </div>
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-08.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-08.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2800" height="1850"></div>
             </div>
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-09.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-09.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2800" height="1850"></div>
             </div>
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-10.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-10.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2810" height="1850"></div>
             </div>
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-11.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-11.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2800" height="1014"></div>
             </div>
             <div class="cm-car__col cm-car__col--ds">
-              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-12.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy"></div>
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-12.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2212" height="1712"></div>
             </div>
           </div>
           <div class="cm-car__footer" style="padding-left:0;padding-right:80px;padding-top:20px;">
@@ -6097,7 +6398,7 @@
               <span class="cm-lego-emoji">❌</span>
               <span class="cm-lego-row__title">Not like this</span>
             </div>
-            <img class="cm-lego-img" src="public/images/maersk/maersk-not-like-this.webp" alt="No design system: product team produces inconsistent products" loading="lazy">
+            <img class="cm-lego-img" src="public/images/maersk/maersk-not-like-this.webp" alt="No design system: product team produces inconsistent products" loading="lazy" width="1920" height="472">
           </div>
 
           <!-- ✅ Like this -->
@@ -6106,7 +6407,7 @@
               <span class="cm-lego-emoji">✅</span>
               <span class="cm-lego-row__title">Like this</span>
             </div>
-            <img class="cm-lego-img" src="public/images/maersk/maersk-like-this.webp" alt="Design system plus instructions: product team passes a quality gate and ships consistent products" loading="lazy">
+            <img class="cm-lego-img" src="public/images/maersk/maersk-like-this.webp" alt="Design system plus instructions: product team passes a quality gate and ships consistent products" loading="lazy" width="1920" height="452">
           </div>
         </div>
 
@@ -6115,7 +6416,7 @@
         ══════════════════════════════════════════════ -->
         <div class="cm-section--light" style="padding:0 80px 40px;">
           <div style="border-radius:16px;overflow:hidden;">
-            <img src="public/images/maersk/maersk-team.webp" alt="The Maersk design team" style="width:100%;display:block;" loading="lazy">
+            <img src="public/images/maersk/maersk-team.webp" alt="The Maersk design team" style="width:100%;display:block;" loading="lazy" width="4032" height="3024">
           </div>
         </div>
 
@@ -6156,7 +6457,7 @@
                   <div class="testimonial-mark">&ldquo;</div>
                   <p class="testimonial-quote">Mikkel brings a rare combination of strong design craft and the ability to simplify complexity. He consistently found ways to break messy problems down into simple, practical concepts — his storytelling made alignment feel easy. Together we co-created a design system, defined page recipes, and established UX principles that gave teams clarity and direction, enabling a full navigation and UI overhaul delivered without compromising quality. As someone responsible for raising the bar on experience, I've worked with many strong profiles. Mikkel stands out. He raises the standard in a way that lasts, both in the product and in the team.</p>
                   <div class="testimonial-author">
-                    <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-patrick.webp" alt="Patrick Rischel" loading="lazy"></div>
+                    <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-patrick.webp" alt="Patrick Rischel" loading="lazy" width="300" height="300"></div>
                     <div>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                         <p class="testimonial-name">Patrick Rischel</p>
@@ -6173,7 +6474,7 @@
                   <div class="testimonial-mark">&ldquo;</div>
                   <p class="testimonial-quote">Mikkel was one of the first leaders I'd worked with who truly understood the strategic value of research. He didn't just make space for it — he integrated it into how the team operated, and made sure our findings shaped direction rather than just informed delivery. Mikkel is one of the best strategic designers I've had the pleasure of working with. While his design expertise is exceptional, his true strength lies in his leadership. He has a rare ability to bring out the best in people, creating an environment where individuals grow, take ownership, and thrive. Working with Mikkel makes you a better and braver designer, a strong believer in teamwork, and a more confident professional.</p>
                   <div class="testimonial-author">
-                    <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-viki.webp" alt="Viki Ølgod Frandsen" loading="lazy"></div>
+                    <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-viki.webp" alt="Viki Ølgod Frandsen" loading="lazy" width="800" height="800"></div>
                     <div>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                         <p class="testimonial-name">Viki Ølgod Frandsen</p>
@@ -6237,7 +6538,7 @@
 
         <!-- Hero image — the full app spread -->
         <div style="padding:16px 80px 80px 80px;overflow:hidden;">
-          <img src="public/images/matas/matas-breaker-01.jpg" alt="Club Matas app — points balance and personalised offers" style="width:100%;display:block;border-radius:0;" loading="lazy">
+          <img src="public/images/matas/matas-breaker-01.jpg" alt="Club Matas app — points balance and personalised offers" style="width:100%;display:block;border-radius:0;" loading="lazy" width="1800" height="987">
         </div>
         </div><!-- end pink gradient wrapper -->
 
@@ -6251,7 +6552,7 @@
 
           <div class="cm-ba-dark">
             <div class="cm-ba-dark__col cm-ba-dark__col--before">
-              <img src="public/images/matas/matas-transactional.svg" alt="" aria-hidden="true" class="cm-ba-dark__art">
+              <img src="public/images/matas/matas-transactional.svg" alt="" aria-hidden="true" class="cm-ba-dark__art" width="294" height="320">
               <p class="cm-ba-dark__label">Before</p>
               <p class="cm-ba-dark__title">Transactional earn-and-burn</p>
               <p class="cm-ba-dark__body">Collect points at checkout, redeem for discounts. No personalisation, and no reason to care which tier you were in.</p>
@@ -6260,7 +6561,7 @@
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
             <div class="cm-ba-dark__col cm-ba-dark__col--after">
-              <img src="public/images/matas/matas-relationship.svg" alt="" aria-hidden="true" class="cm-ba-dark__art">
+              <img src="public/images/matas/matas-relationship.svg" alt="" aria-hidden="true" class="cm-ba-dark__art" width="235" height="320">
               <p class="cm-ba-dark__label">After</p>
               <p class="cm-ba-dark__title">Relationship-focused loyalty</p>
               <p class="cm-ba-dark__body">Rewards and status for high-tier members, clear point value for everyone else, and offers matched to what people actually buy.</p>
@@ -6322,15 +6623,15 @@
           <p class="cm-body">Members had told us what was broken. The same research told us what they wanted instead, and those three answers set the brief for the whole redesign.</p>
           <div class="cm-themes">
             <div class="cm-theme">
-              <img src="public/images/matas/matas-club-value.svg" alt="" aria-hidden="true">
+              <img src="public/images/matas/matas-club-value.svg" alt="" aria-hidden="true" width="169" height="150">
               <p class="cm-theme__text">More for my money, and rewards that suit me</p>
             </div>
             <div class="cm-theme">
-              <img src="public/images/matas/matas-club-easy.svg" alt="" aria-hidden="true">
+              <img src="public/images/matas/matas-club-easy.svg" alt="" aria-hidden="true" width="136" height="173">
               <p class="cm-theme__text">Quick and easy to shop, and to re-shop what I bought before</p>
             </div>
             <div class="cm-theme">
-              <img src="public/images/matas/matas-club-inspiration.svg" alt="" aria-hidden="true">
+              <img src="public/images/matas/matas-club-inspiration.svg" alt="" aria-hidden="true" width="193" height="150">
               <p class="cm-theme__text">Lots of inspiration and personal advice</p>
             </div>
           </div>
@@ -6338,7 +6639,7 @@
 
         <div class="cm-breaker">
           <figure>
-            <img src="public/images/matas/matas-breaker-02.jpg" alt="Two Club Matas members" loading="lazy">
+            <img src="public/images/matas/matas-breaker-02.jpg" alt="Two Club Matas members" loading="lazy" width="1800" height="956">
             <figcaption class="cm-breaker__stat">
               <span class="cm-breaker__num">1.5M</span>
               <span class="cm-breaker__lbl" aria-label="members"><span aria-hidden="true">m</span><span aria-hidden="true">e</span><span aria-hidden="true">m</span><span aria-hidden="true">b</span><span aria-hidden="true">e</span><span aria-hidden="true">r</span><span aria-hidden="true">s</span></span>
@@ -6449,16 +6750,16 @@
               <p class="cm-ba-card__tag" style="color:#E11D48;">Low-frequency members</p>
               <p class="cm-ba-card__title">Points</p>
               <div class="cm-mech__visual">
-                <img src="public/images/matas/matas-points-badge.png" alt="" aria-hidden="true" class="cm-mech__badge" loading="lazy">
-                <img src="public/images/matas/matas-points-ui.jpg" alt="Point deals screen" class="cm-mech__shot" loading="lazy">
+                <img src="public/images/matas/matas-points-badge.png" alt="" aria-hidden="true" class="cm-mech__badge" loading="lazy" width="420" height="420">
+                <img src="public/images/matas/matas-points-ui.jpg" alt="Point deals screen" class="cm-mech__shot" loading="lazy" width="657" height="1800">
               </div>
             </div>
             <div class="cm-ba-card" style="border-color:#FFE4E6;background:#FFF1F2;">
               <p class="cm-ba-card__tag" style="color:#E11D48;">High-frequency members</p>
               <p class="cm-ba-card__title">Rewards</p>
               <div class="cm-mech__visual">
-                <img src="public/images/matas/matas-rewards-badge.png" alt="" aria-hidden="true" class="cm-mech__badge" loading="lazy">
-                <img src="public/images/matas/matas-rewards-ui.jpg" alt="Mit Plus rewards screen" class="cm-mech__shot" loading="lazy">
+                <img src="public/images/matas/matas-rewards-badge.png" alt="" aria-hidden="true" class="cm-mech__badge" loading="lazy" width="418" height="420">
+                <img src="public/images/matas/matas-rewards-ui.jpg" alt="Mit Plus rewards screen" class="cm-mech__shot" loading="lazy" width="649" height="1800">
               </div>
             </div>
           </div>
@@ -6466,7 +6767,7 @@
 
         <div class="cm-breaker">
           <figure>
-            <img src="public/images/matas/matas-breaker-03.jpg" alt="Club Matas app — points, offers and product inspiration" loading="lazy">
+            <img src="public/images/matas/matas-breaker-03.jpg" alt="Club Matas app — points, offers and product inspiration" loading="lazy" width="1800" height="1013">
           </figure>
         </div>
 
@@ -6481,98 +6782,27 @@
           <div class="cm-vs">
             <div class="cm-vs__col">
               <p class="cm-vs__tag">Old</p>
-              <img src="public/images/matas/matas-app-old.jpg" alt="The Club Matas app before the redesign" loading="lazy">
+              <img src="public/images/matas/matas-app-old.jpg" alt="The Club Matas app before the redesign" loading="lazy" width="900" height="1800">
             </div>
             <div class="cm-vs__arrow">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
             <div class="cm-vs__col">
               <p class="cm-vs__tag">New</p>
-              <img src="public/images/matas/matas-app-new.jpg" alt="The Club Matas app after the redesign" loading="lazy">
+              <img src="public/images/matas/matas-app-new.jpg" alt="The Club Matas app after the redesign" loading="lazy" width="900" height="1800">
             </div>
           </div>
 
           <div class="cm-map">
-            <img src="public/images/matas/matas-screens-map.jpg" alt="All 150 screens laid out across every member flow" loading="lazy">
+            <img src="public/images/matas/matas-screens-map.jpg" alt="All 150 screens laid out across every member flow" loading="lazy" width="1800" height="1410">
           </div>
         </div>
 
-        <!-- App features carousel -->
-        <div class="cm-car-wrap" style="background:var(--bg);padding:32px 0 64px 80px;overflow:hidden;">
-          <div class="cm-car__track" id="cm-c3-track" style="padding-bottom:4px;">
-            <div class="cm-car__col cm-car__col--narrow">
-              <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-01-dashboard.webp</div>
-                <div class="cm-car__card-body-wrap">
-                  <p class="cm-car__card-num">01</p>
-                  <p class="cm-car__card-title">Loyalty dashboard</p>
-                  <p class="cm-car__card-body">Tier, points balance, progress to the next reward, and personalised offers on one screen.</p>
-                </div>
-              </div>
-            </div>
-            <div class="cm-car__col cm-car__col--narrow">
-              <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-02-rewards.webp</div>
-                <div class="cm-car__card-body-wrap">
-                  <p class="cm-car__card-num">02</p>
-                  <p class="cm-car__card-title">Reward selection</p>
-                  <p class="cm-car__card-body">When high-tier members hit their spend threshold, they pick from 4 reward categories instead of being assigned one.</p>
-                </div>
-              </div>
-            </div>
-            <div class="cm-car__col cm-car__col--narrow">
-              <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-03-inspiration.webp</div>
-                <div class="cm-car__card-body-wrap">
-                  <p class="cm-car__card-num">03</p>
-                  <p class="cm-car__card-title">Personalised inspiration</p>
-                  <p class="cm-car__card-body">Articles, new products, and offers tuned to the brands a member follows.</p>
-                </div>
-              </div>
-            </div>
-            <div class="cm-car__col cm-car__col--narrow">
-              <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-04-scan-go.webp</div>
-                <div class="cm-car__card-body-wrap">
-                  <p class="cm-car__card-num">04</p>
-                  <p class="cm-car__card-title">Scan &amp; Go</p>
-                  <p class="cm-car__card-body">Scan products in-store from the app, with points applied as you go.</p>
-                </div>
-              </div>
-            </div>
-            <div class="cm-car__col cm-car__col--narrow">
-              <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-05-skin-test.webp</div>
-                <div class="cm-car__card-body-wrap">
-                  <p class="cm-car__card-num">05</p>
-                  <p class="cm-car__card-title">Skin test &amp; advice</p>
-                  <p class="cm-car__card-body">Product recommendations based on the member's skin profile.</p>
-                </div>
-              </div>
-            </div>
-            <div class="cm-car__col cm-car__col--narrow">
-              <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img cm-car__card-img--ph" style="height:140px;background:#FFE4E6;">matas-work-06-reorder.webp</div>
-                <div class="cm-car__card-body-wrap">
-                  <p class="cm-car__card-num">06</p>
-                  <p class="cm-car__card-title">Easy reorder</p>
-                  <p class="cm-car__card-body">One-tap reorder for the products members already buy every week.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="cm-car__footer" style="padding-left:0;padding-right:80px;">
-            <div class="cm-car__dots" id="cm-c3-dots"></div>
-            <div class="cm-car__controls">
-              <button class="cm-car__btn" id="cm-c3-prev" aria-label="Previous" disabled>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-              </button>
-              <button class="cm-car__btn" id="cm-c3-next" aria-label="Next">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
+        <!-- App features carousel removed for now — its six cards were
+             filename placeholders (matas-work-01-dashboard.webp and
+             friends), and a reachable case study should not show them.
+             The markup is in git history; restoring it means putting the
+             block back and adding 'cm-c3' to carsByCase below. -->
 
         <!-- ══════════════════════════════════════════════
              §7  THE RESULT  (dark close)
@@ -6638,7 +6868,7 @@
         <!-- Hero image -->
         <div style="padding:0 80px 80px;background:#ffffff;">
           <div style="background:#eff6ff;border:1px solid #CBD5E1;border-radius:20px;overflow:hidden;">
-            <img src="public/images/formalize/formalize-hero-case.webp" alt="Formalize product interface" style="width:100%;display:block;" loading="lazy">
+            <img src="public/images/formalize/formalize-hero-case.webp" alt="Formalize product interface" style="width:100%;display:block;" loading="lazy" width="1920" height="1460">
           </div>
         </div>
 
@@ -6652,12 +6882,12 @@
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
             <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:28px 32px;">
-              <div style="width:30px;height:30px;margin-bottom:12px;"><img src="public/images/formalize/formalize-pain-icon.svg" alt="" style="width:100%;height:100%;display:block;" loading="lazy"></div>
+              <div style="width:30px;height:30px;margin-bottom:12px;"><img src="public/images/formalize/formalize-pain-icon.svg" alt="" style="width:100%;height:100%;display:block;" loading="lazy" width="30" height="30"></div>
               <p style="font-family:'Fraunces',serif;font-size:22px;font-weight:400;color:#0f1729;margin-bottom:12px;">Pain</p>
               <p style="font-size:14px;color:#0f1729;line-height:1.6;">EU regulatory compliance requirements are increasingly affecting small and medium-sized enterprises, not just large corporations.</p>
             </div>
             <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:28px 32px;">
-              <div style="width:30px;height:30px;margin-bottom:12px;"><img src="public/images/formalize/formalize-solution-icon.svg" alt="" style="width:100%;height:100%;display:block;" loading="lazy"></div>
+              <div style="width:30px;height:30px;margin-bottom:12px;"><img src="public/images/formalize/formalize-solution-icon.svg" alt="" style="width:100%;height:100%;display:block;" loading="lazy" width="30" height="30"></div>
               <p style="font-family:'Fraunces',serif;font-size:22px;font-weight:400;color:#0f1729;margin-bottom:12px;">Solution</p>
               <p style="font-size:14px;color:#0f1729;line-height:1.6;">Formalize offers an intuitive platform that delivers compliance confidence with a single source of truth for navigating existing, new, and future regulations.</p>
             </div>
@@ -6674,7 +6904,7 @@
 
           <!-- Diagram SVG -->
           <div style="border-radius:16px;overflow:hidden;">
-            <img src="public/images/formalize/formalize-starting-point.svg" alt="Two products, design on the outside" style="width:100%;display:block;" loading="lazy">
+            <img src="public/images/formalize/formalize-starting-point.svg" alt="Two products, design on the outside" style="width:100%;display:block;" loading="lazy" width="998" height="336">
           </div>
         </div>
 
@@ -6682,7 +6912,7 @@
              A · MANTRA
         ══════════════════════════════════════════════ -->
         <div class="cm-section--dark" style="background:#080751;padding:80px;text-align:center;overflow:hidden;">
-          <div style="width:50px;height:50px;margin:0 auto 24px;"><img src="public/images/formalize/formalize-quote.svg" alt="" style="width:100%;height:100%;display:block;" loading="lazy"></div>
+          <div style="width:50px;height:50px;margin:0 auto 24px;"><img src="public/images/formalize/formalize-quote.svg" alt="" style="width:100%;height:100%;display:block;" loading="lazy" width="50" height="50"></div>
           <p style="font-family:'Fraunces',serif;font-size:clamp(28px,4vw,52px);font-weight:400;color:#ffffff;line-height:1.18;max-width:820px;margin:0 auto 24px;">If you&rsquo;re not investing in UX, you&rsquo;re investing in luck.</p>
           <p style="font-size:14px;color:rgba(255,255,255,0.4);">The mantra I brought to Formalize.</p>
         </div>
@@ -6783,7 +7013,7 @@
             <!-- Card 01 -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-01.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-01.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">01</p>
                   <p class="cm-car__card-title">Built the design function from zero</p>
@@ -6795,7 +7025,7 @@
             <!-- Card 02 -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-02.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-02.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">02</p>
                   <p class="cm-car__card-title">Hired a standout team of four</p>
@@ -6807,7 +7037,7 @@
             <!-- Card 03 -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-03.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-03.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">03</p>
                   <p class="cm-car__card-title">Triads in every product team</p>
@@ -6819,7 +7049,7 @@
             <!-- Card 04 -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-04.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-04.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">04</p>
                   <p class="cm-car__card-title">Won buy-in for a design refresh</p>
@@ -6831,7 +7061,7 @@
             <!-- Card 05 -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-05.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-05.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">05</p>
                   <p class="cm-car__card-title">A design system, built with engineering</p>
@@ -6843,7 +7073,7 @@
             <!-- Card 06 -->
             <div class="cm-car__col cm-car__col--narrow">
               <div class="cm-car__text-card cm-car__text-card--result">
-                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-06.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy"></div>
+                <div class="cm-car__card-img" style="height:280px;"><div class="cm-skeleton"></div><img src="public/images/formalize/formalize-journey-06.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.35s ease;" loading="lazy" width="800" height="560"></div>
                 <div class="cm-car__card-body-wrap">
                   <p class="cm-car__card-num">06</p>
                   <p class="cm-car__card-title">A clear vision for the platform</p>
@@ -6878,11 +7108,11 @@
           <div class="cm-fba" style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;margin-bottom:64px;">
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                <img src="public/images/formalize/formalize-from-this-icon.svg" alt="" style="width:20px;height:20px;display:block;" loading="lazy">
+                <img src="public/images/formalize/formalize-from-this-icon.svg" alt="" style="width:20px;height:20px;display:block;" loading="lazy" width="20" height="20">
                 <p style="font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:#ffffff;">From this</p>
               </div>
               <div style="border-radius:4px;overflow:hidden;">
-                <img src="public/images/formalize/formalize-from-this-list.webp" alt="Before redesign" style="width:100%;display:block;" loading="lazy">
+                <img src="public/images/formalize/formalize-from-this-list.webp" alt="Before redesign" style="width:100%;display:block;" loading="lazy" width="856" height="660">
               </div>
             </div>
             <div class="cm-fba__arrow" style="display:flex;align-items:center;justify-content:center;padding:0 4px;align-self:center;margin-top:36px;">
@@ -6890,11 +7120,11 @@
             </div>
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                <img src="public/images/formalize/formalize-to-this-icon.svg" alt="" style="width:20px;height:20px;display:block;" loading="lazy">
+                <img src="public/images/formalize/formalize-to-this-icon.svg" alt="" style="width:20px;height:20px;display:block;" loading="lazy" width="20" height="20">
                 <p style="font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:#ffffff;">To this</p>
               </div>
               <div style="border-radius:4px;overflow:hidden;">
-                <img src="public/images/formalize/formalize-to-this-list.webp" alt="After redesign" style="width:100%;display:block;" loading="lazy">
+                <img src="public/images/formalize/formalize-to-this-list.webp" alt="After redesign" style="width:100%;display:block;" loading="lazy" width="968" height="672">
               </div>
             </div>
           </div>
@@ -6903,11 +7133,11 @@
           <div class="cm-fba" style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;">
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                <img src="public/images/formalize/formalize-from-this-icon.svg" alt="" style="width:20px;height:20px;display:block;" loading="lazy">
+                <img src="public/images/formalize/formalize-from-this-icon.svg" alt="" style="width:20px;height:20px;display:block;" loading="lazy" width="20" height="20">
                 <p style="font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:#ffffff;">From this</p>
               </div>
               <div style="border-radius:4px;overflow:hidden;">
-                <img src="public/images/formalize/formalize-from-this-detail.webp" alt="Before redesign" style="width:100%;display:block;" loading="lazy">
+                <img src="public/images/formalize/formalize-from-this-detail.webp" alt="Before redesign" style="width:100%;display:block;" loading="lazy" width="856" height="660">
               </div>
             </div>
             <div class="cm-fba__arrow" style="display:flex;align-items:center;justify-content:center;padding:0 4px;align-self:center;margin-top:36px;">
@@ -6915,11 +7145,11 @@
             </div>
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                <img src="public/images/formalize/formalize-to-this-icon.svg" alt="" style="width:20px;height:20px;display:block;" loading="lazy">
+                <img src="public/images/formalize/formalize-to-this-icon.svg" alt="" style="width:20px;height:20px;display:block;" loading="lazy" width="20" height="20">
                 <p style="font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:#ffffff;">To this</p>
               </div>
               <div style="border-radius:4px;overflow:hidden;">
-                <img src="public/images/formalize/formalize-to-this-detail.webp" alt="After redesign" style="width:100%;display:block;" loading="lazy">
+                <img src="public/images/formalize/formalize-to-this-detail.webp" alt="After redesign" style="width:100%;display:block;" loading="lazy" width="2880" height="2000">
               </div>
             </div>
           </div>
@@ -6935,38 +7165,38 @@
           <!-- Row 1: cards 470×350 -->
           <div class="fp-grid fp-grid--2" style="margin-bottom:20px;">
             <div class="fp-card" style="aspect-ratio:470/350;">
-              <img src="public/images/formalize/fp-dora-inner.webp" alt="DORA compliance questionnaire" style="left:3.191%;top:4.286%;width:96.809%;" loading="lazy">
+              <img src="public/images/formalize/fp-dora-inner.webp" alt="DORA compliance questionnaire" style="left:3.191%;top:4.286%;width:96.809%;" loading="lazy" width="1365" height="1005">
             </div>
             <div class="fp-card" style="aspect-ratio:470/350;">
-              <img src="public/images/formalize/fp-filters-inner.webp" alt="Search and filter panel" style="left:3.120%;top:4.286%;width:96.880%;" loading="lazy">
+              <img src="public/images/formalize/fp-filters-inner.webp" alt="Search and filter panel" style="left:3.120%;top:4.286%;width:96.880%;" loading="lazy" width="1366" height="1005">
             </div>
           </div>
 
           <!-- Row 2: card 960×500 -->
           <div class="fp-card" style="aspect-ratio:960/500;margin-bottom:20px;">
-            <img src="public/images/formalize/fp-tree-inner.webp" alt="System connections tree map" style="left:4.167%;top:7.200%;width:91.667%;" loading="lazy">
+            <img src="public/images/formalize/fp-tree-inner.webp" alt="System connections tree map" style="left:4.167%;top:7.200%;width:91.667%;" loading="lazy" width="2640" height="1392">
           </div>
 
           <!-- Row 3: cards 470×300 -->
           <div class="fp-grid fp-grid--2" style="margin-bottom:20px;">
             <div class="fp-card" style="aspect-ratio:470/300;">
-              <img src="public/images/formalize/fp-risk-matrix-inner.webp" alt="Risk score and matrix" style="left:1.277%;top:18.392%;width:95.745%;" loading="lazy">
+              <img src="public/images/formalize/fp-risk-matrix-inner.webp" alt="Risk score and matrix" style="left:1.277%;top:18.392%;width:95.745%;" loading="lazy" width="1350" height="572">
             </div>
             <div class="fp-card" style="aspect-ratio:470/300;">
-              <img src="public/images/formalize/fp-connections-panel-inner.webp" alt="Connections panel" style="left:15.319%;top:5.000%;width:59.574%;" loading="lazy">
+              <img src="public/images/formalize/fp-connections-panel-inner.webp" alt="Connections panel" style="left:15.319%;top:5.000%;width:59.574%;" loading="lazy" width="840" height="855">
             </div>
           </div>
 
           <!-- Row 4: cards 306.67×350 -->
           <div class="fp-grid fp-grid--3">
             <div class="fp-card" style="aspect-ratio:306.667/350;">
-              <img src="public/images/formalize/fp-nav-inner.webp" alt="Navigation sidebar" style="left:23.478%;top:4.286%;width:48.913%;" loading="lazy">
+              <img src="public/images/formalize/fp-nav-inner.webp" alt="Navigation sidebar" style="left:23.478%;top:4.286%;width:48.913%;" loading="lazy" width="450" height="1005">
             </div>
             <div class="fp-card" style="aspect-ratio:306.667/350;">
-              <img src="public/images/formalize/fp-workflows-inner.webp" alt="Workflows" style="left:4.130%;top:4.286%;width:91.304%;" loading="lazy">
+              <img src="public/images/formalize/fp-workflows-inner.webp" alt="Workflows" style="left:4.130%;top:4.286%;width:91.304%;" loading="lazy" width="840" height="1005">
             </div>
             <div class="fp-card" style="aspect-ratio:306.667/350;">
-              <img src="public/images/formalize/fp-deadline-inner.webp" alt="Deadlines" style="left:6.087%;top:7.143%;width:88.043%;" loading="lazy">
+              <img src="public/images/formalize/fp-deadline-inner.webp" alt="Deadlines" style="left:6.087%;top:7.143%;width:88.043%;" loading="lazy" width="810" height="899">
             </div>
           </div>
         </div>
@@ -7001,9 +7231,9 @@
         ══════════════════════════════════════════════ -->
         <div class="cm-section--dark" style="background:#080751;padding:80px;overflow:hidden;">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
-            <img src="public/images/formalize/formalize-image01.webp" alt="" style="width:100%;height:400px;object-fit:cover;border-radius:10px;display:block;" loading="lazy">
-            <img src="public/images/formalize/formalize-image02.webp" alt="" style="width:100%;height:400px;object-fit:cover;border-radius:10px;display:block;" loading="lazy">
-            <img src="public/images/formalize/formalize-image03.webp" alt="" style="width:100%;height:400px;object-fit:cover;border-radius:10px;display:block;" loading="lazy">
+            <img src="public/images/formalize/formalize-image01.webp" alt="" style="width:100%;height:400px;object-fit:cover;border-radius:10px;display:block;" loading="lazy" width="614" height="800">
+            <img src="public/images/formalize/formalize-image02.webp" alt="" style="width:100%;height:400px;object-fit:cover;border-radius:10px;display:block;" loading="lazy" width="614" height="800">
+            <img src="public/images/formalize/formalize-image03.webp" alt="" style="width:100%;height:400px;object-fit:cover;border-radius:10px;display:block;" loading="lazy" width="614" height="800">
           </div>
         </div>
 
@@ -7045,7 +7275,7 @@
                   <div class="testimonial-mark">&ldquo;</div>
                   <p class="testimonial-quote">Mikkel is a rare breed of design leader who doesn't just manage pixels — he scales product vision. He built a comprehensive, cutting-edge design system entirely from scratch, elevating our frontend velocity and aesthetic standards. He has an unparalleled eye for talent, single-handedly recruiting a world-class design team that punched above its weight — and was the ultimate bridge between Product, Design, and Engineering.</p>
                   <div class="testimonial-author">
-                    <div class="testimonial-avatar" style="overflow:hidden;"><img src="public/images/main/main-testimonial-emil.webp" alt="Emil Holst Petersen" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy"></div>
+                    <div class="testimonial-avatar" style="overflow:hidden;"><img src="public/images/main/main-testimonial-emil.webp" alt="Emil Holst Petersen" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" width="420" height="420"></div>
                     <div>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                         <p class="testimonial-name">Emil Holst Petersen</p>
@@ -7061,7 +7291,7 @@
                   <div class="testimonial-mark">&ldquo;</div>
                   <p class="testimonial-quote">Mikkel is incredibly inspiring to work with. He is one of those people who seems to have more hours in the day than everyone else — highly productive while maintaining a very high standard of quality. As a manager, Mikkel creates a strong sense of psychological safety, where everyone wants to contribute without being afraid of failing. He brings out the best in everyone on the team.</p>
                   <div class="testimonial-author">
-                    <div class="testimonial-avatar" style="overflow:hidden;"><img src="public/images/main/main-testimonial-anders.webp" alt="Anders Tolborg" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy"></div>
+                    <div class="testimonial-avatar" style="overflow:hidden;"><img src="public/images/main/main-testimonial-anders.webp" alt="Anders Tolborg" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" width="800" height="800"></div>
                     <div>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                         <p class="testimonial-name">Anders Tolborg</p>
@@ -7077,7 +7307,7 @@
                   <div class="testimonial-mark">&ldquo;</div>
                   <p class="testimonial-quote">Mikkel has strong user-focused design thinking and a lot of energy in how he works. He always pushed for high quality in design iterations and made collaboration between product, design and engineering very smooth. What I appreciated most was his ability to create alignment and momentum while the product organisation was still forming.</p>
                   <div class="testimonial-author">
-                    <div class="testimonial-avatar" style="overflow:hidden;"><img src="public/images/main/main-testimonial-simon.webp" alt="Simon la Fontaine Svenstrup" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy"></div>
+                    <div class="testimonial-avatar" style="overflow:hidden;"><img src="public/images/main/main-testimonial-simon.webp" alt="Simon la Fontaine Svenstrup" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" width="800" height="800"></div>
                     <div>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                         <p class="testimonial-name">Simon la Fontaine Svenstrup</p>
@@ -7189,6 +7419,25 @@
           closeWrap.classList.add('is-visible');
           updateCloseTheme(); // set correct initial theme
         }, 500);
+        /* Drop the transform once the sheet has arrived.
+           A transform — even an identity one — promotes the element to its
+           own compositor layer, and this panel is twelve thousand pixels
+           tall with overflow:hidden and a rounded top clipping it. Rasterising
+           a mask that size costs enough that a fast scroll can outrun it, and
+           an un-rasterised tile presents as transparent: you see straight
+           through the sheet to the dimmed page behind it.
+
+           Idle, the panel does not need to be a layer at all — it only needs
+           one while it is sliding. So the transform comes off when the entry
+           transition finishes, and closeModal puts it back for the exit. */
+        const settle = (ev) => {
+          if (ev.propertyName !== 'transform') return;
+          panel.removeEventListener('transitionend', settle);
+          if (!modal.classList.contains('is-open')) return;
+          panel.style.transition = 'none';
+          panel.style.transform = 'none';
+        };
+        panel.addEventListener('transitionend', settle);
       }
 
       function closeModal() {
@@ -7200,6 +7449,14 @@
         const vpH = window.innerHeight;
         // panel.getBoundingClientRect() now reflects the top position (scrollTop=0)
         const exitY = vpH + 40;
+        /* Re-promote before animating out. The panel may be sitting on
+           `transform: none` (see settle() in openModal), and going straight
+           from that to a transition in the same task can be missed — so the
+           identity transform is set first, then a forced reflow makes it the
+           animation's start value. */
+        panel.style.transition = 'none';
+        panel.style.transform = 'translateY(0)';
+        panel.getBoundingClientRect();
         panel.style.transition = 'transform 0.52s cubic-bezier(0.4, 0, 0.8, 0.55)';
         panel.style.transform = `translateY(${exitY}px)`;
         setTimeout(() => overlay.classList.remove('is-open'), 60);
@@ -7316,7 +7573,7 @@
       // Case content switching + carousel init
       const caseContents = ['maersk', 'matas', 'formalize'];
       const carsInited = {};
-      const carsByCase = { maersk: ['cm-c1', 'cm-c2', 'cm-c4', 'cm-c5'], matas: ['cm-c3'], formalize: ['cm-c6', 'cm-c7'] };
+      const carsByCase = { maersk: ['cm-c1', 'cm-c2', 'cm-c4', 'cm-c5'], matas: [], formalize: ['cm-c6', 'cm-c7'] };
 
       const origOpen = openModal;
       openModal = function(caseId) {
@@ -7390,31 +7647,49 @@
             load("public/js/gsap.min.js"),
           ])
             .then(() => load("public/js/stage-configs.js"))
-            .then(() => load("public/js/softbox-stage.js"));
+            .then(() => load("public/js/softbox-stage.js"))
+            /* Matas is a phone and needs a real model, so it has its own
+               scene file. Both are loaded once and shared — the second card
+               of either kind costs nothing but its own plates. */
+            .then(() => load("public/js/phone-stage.js"));
         }
         return libs;
       };
 
-      const handles = new WeakMap();
+      /* Maps, not WeakMaps: the pause/resume pass below has to iterate every
+         stage it knows about, and a WeakMap cannot be walked. The elements
+         live as long as the page does, so nothing is retained that would not
+         have been anyway. */
+      const handles = new Map();
       const starting = new WeakSet();
+      const ratios = new Map();
 
       const io = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             const el = entry.target;
             const handle = handles.get(el);
+            ratios.set(el, entry.isIntersecting ? entry.intersectionRatio : 0);
             if (entry.isIntersecting) {
               if (!handle && !starting.has(el)) {
                 starting.add(el);
                 ensureLibs()
                   .then(() => {
                     const cfg = window.STAGE_CONFIGS[el.dataset.stage];
+                    /* A card asks for a phone by carrying data-model. The
+                       two scenes take the same options; the phone one also
+                       needs to know which model to fetch. */
+                    const modelUrl = el.dataset.model;
+                    const init = modelUrl
+                      ? window.initPhoneStage
+                      : window.initSoftboxStage;
                     handles.set(
                       el,
-                      window.initSoftboxStage(el, {
+                      init(el, {
                         plates: el.dataset.plates.split(","),
                         shots: cfg.shots,
                         ground: cfg.ground,
+                        model: modelUrl,
                       }),
                     );
                     // only reveal once there is a frame worth showing
@@ -7425,17 +7700,33 @@
                   .catch(() => {
                     /* poster stays; nothing to clean up */
                   });
-              } else if (handle) {
-                handle.resume();
               }
-            } else if (handle) {
-              handle.pause();
             }
           });
+
+          /* Only ONE film runs at a time, and it is the one you are actually
+             looking at. Two of these on screen together cost 24fps between
+             them — each is a full WebGL context with its own scene, and the
+             second one buys nothing because a reader can only watch one.
+             It is the better design call as well: two product shots cutting
+             and panning at once compete rather than compose.
+
+             The winner is whichever card is most visible; everything else
+             pauses. Ratios come from the observer, so a card that has merely
+             been pre-loaded by the 300px margin never starts drawing. */
+          let best = null, bestRatio = 0;
+          ratios.forEach((r, el) => {
+            if (r > bestRatio) { bestRatio = r; best = el; }
+          });
+          handles.forEach((handle, el) => {
+            if (el === best && bestRatio > 0.25) handle.resume();
+            else handle.pause();
+          });
         },
-        // begin fetching a little before it arrives, so the first frame is
-        // ready rather than fading in after the card is already in view
-        { rootMargin: "300px 0px", threshold: 0.01 },
+        /* rootMargin buys the load a head start so the first frame is ready
+           rather than fading in late. The thresholds are what let the code
+           above tell "just visible" from "being looked at". */
+        { rootMargin: "300px 0px", threshold: [0, 0.25, 0.5, 0.75, 1] },
       );
 
       stages.forEach((el) => io.observe(el));

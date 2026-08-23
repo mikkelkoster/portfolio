@@ -1,0 +1,16 @@
+"Iphone 17 pro" (https://skfb.ly/pzYOR) by Ibrahim.Bhl
+Licensed under Creative Commons Attribution 4.0
+http://creativecommons.org/licenses/by/4.0/
+
+CC BY requires this credit to be VISIBLE wherever the model is shown.
+The Maersk/Formalize stage already carries a credit line for the
+Apple Pro Display XDR (polyman Studio, CC BY 4.0) — this one joins it.
+
+Source: iphone_17_pro.glb, 12.56 MB, from Sketchfab.
+Shipped: iphone-17-pro.min.glb, 813 KB.
+Pipeline: gltf-transform prune -> dedup -> optimize
+          (webp textures @1024, meshopt compression;
+           simplify/join/instance/palette/flatten all OFF —
+           the geometry is only 90k vertices and simplify risks
+           the chamfered edges that make the frame read as metal)
+Screen mesh: Object_33 — emissive, 0.958 x 2 local, aspect 0.479.

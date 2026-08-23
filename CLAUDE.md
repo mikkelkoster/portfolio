@@ -147,10 +147,51 @@ cutting between four camera setups.
 ### Files
 | File | Role |
 |---|---|
-| `public/js/softbox-stage.js` | the scene — device, plinth, lighting, splats, glass |
+| `public/js/softbox-stage.js` | the MONITOR scene — device, plinth, lighting, splats, glass |
+| `public/js/phone-stage.js` | the PHONE scene — GLB model, scrolling screen |
 | `public/js/stage-configs.js` | per-card shot lists and ground colours |
 | `public/js/three.min.js`, `gsap.min.js` | vendored, loaded on demand |
+| `public/models/iphone-17-pro.min.glb` | the phone, 813KB (CC BY — see ATTRIBUTION.txt) |
 | `public/images/{case}/plates/plate-N.webp` | the screens shown on the display |
+
+A card asks for the phone scene by carrying `data-model`; without it the
+loader uses the monitor scene. `three.min.js` is an esbuild bundle that
+includes `GLTFLoader` and `MeshoptDecoder` — 19KB more gzipped than plain
+three, and it serves all three cards.
+
+**The two scene files duplicate their shared parts** — renderer, environment,
+light rig, splat backdrop, linear-light mip chain. That is deliberate: a
+shared module would be loaded by every card on a page where only one may ever
+come into view. Fix a bug in one of those blocks and fix it in the other too.
+
+### Only one film runs at a time
+Two stages on screen cost 24fps between them — each is a full WebGL context,
+and the second buys nothing because a reader can only watch one. The
+IntersectionObserver tracks `intersectionRatio` and resumes only the most
+visible card (>0.25), pausing the rest. It is the better design call as well:
+two product shots cutting and panning at once compete rather than compose.
+
+### The backdrop renders small
+The splat cloud was the single most expensive thing in either scene —
+measured, 11.8ms of a 30.7ms frame at 1.38 megapixels, against a phone model
+costing nothing measurable. It is pure overdraw: 3000 large alpha-blended
+quads with no depth rejection. Both scenes now render it into a 34%-scale
+target and composite it up; the device draws at full resolution over the top.
+`autoClear` goes off for the main pass or the composite is wiped.
+**Both the start() and resume() loops must call `renderFrame()`** — they have
+different indentation and are easy to miss, and a card that scrolls away and
+returns then renders with no backdrop at all.
+
+### Phone plates scroll, they are not screenshots
+The Matas captures are whole pages — 720x6953 for the first, 4.6 screens tall.
+The texture shows a screen-shaped window (`repeat.y`) and the shot slides it
+(`offset.y`), so `scroll` in the shot config is the fraction of the remaining
+page a shot travels. `offset.y` starts at `1 - window` and counts DOWN,
+because three's V axis runs bottom-up while image rows run top-down.
+These are **lossy WebP q92**, not lossless: the plate is minified ~1.6x on a
+phone screen, so chroma subsampling sits well below the visible threshold.
+The lossless rule above is for the monitor plates, which render 1074-2790px
+wide — a different regime.
 
 ### Plates
 **16:10, 1536px wide, lossless WebP.** All three constraints are load-bearing:
@@ -186,6 +227,37 @@ cutting between four camera setups.
 - Posters are captured from the scene itself. That needs
   `preserveDrawingBuffer: true` patched in temporarily — it is off in normal
   operation.
+
+### Four things that were wrong, and are load-bearing now
+Each of these was found by measurement after the flicker was blamed on
+something else first. Do not undo them without re-measuring.
+
+- **Mip levels are built in LINEAR light, and level 0 is left verbatim.**
+  Canvas `drawImage` averages in sRGB, but the GPU decodes the texture to
+  linear before filtering, so it expects the sRGB encoding of the *linear*
+  average. The error differs per channel and grows with how far apart the
+  averaged values are — large for navy beside white text, negligible for grey
+  on white. That put a colour cast on mip 1 that mip 0 did not have, so any
+  change of scale shifted the chrome's hue. Level 0 stays untouched because
+  the macro shots magnify the panel and read straight from it.
+- **The chain low-passes, it does not sharpen.** It used to unsharp-mask each
+  level to save thin lines from minification. Unsharp amplifies exactly the
+  frequencies that alias, so the rescued lines then shimmered. Measured on
+  dark chrome under sub-pixel motion: sharpened 1.63, plain box 1.51, gentle
+  low-pass 1.34 — against a white-area floor of 1.37.
+- **The glare streak clamps and its ends are painted black.** The end fade was
+  `destination-out`, which clears alpha; the canvas is opaque by then and the
+  material reads colour, so the fade did nothing — 0 at column 0, 51 at column
+  1. With `RepeatWrapping` that cliff landed on the panel as a hard vertical
+  seam that slid across the glass whenever the offset was non-zero.
+- **`key`/`amb` are 1 in every shot.** Grading each setup separately moved the
+  whole frame's mean brightness 14 levels between shots and the backdrop gain
+  29%, arriving instantly on each cut — four times a loop. It reads as the
+  lights jumping, not as a look.
+
+Also removed: the sheen quad over the panel. Measured against the panel
+underneath it contributed a flat −3 levels across 96% of pixels — no highlight,
+no gradient, just a darker screen for a third of a frame's budget.
 
 ---
 

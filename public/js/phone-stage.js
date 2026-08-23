@@ -1,52 +1,42 @@
 /**
- * A studio product shot on a canvas.
+ * Case-card 3D stage: a phone, for the Matas card.
  *
- * The shot list and the ground colour are arguments rather than constants,
- * because two cards on the same page running the identical camera move would
- * read as one asset used twice. Everything else — the device, the plinth, the
- * lighting rig, the glass response — is shared on purpose: they are the same
- * imaginary studio, photographed differently.
+ * The sibling of softbox-stage.js, and deliberately a separate file. That one
+ * builds its device out of primitives — a monitor is a few rounded slabs and
+ * looks right. A phone does not: the chamfered rails and the camera plateau
+ * are most of what makes it read as an iPhone rather than a rounded box, so
+ * this one loads a real model instead.
+ *
+ * What is shared with softbox-stage.js is copied rather than imported: the
+ * renderer, the built environment, the light rig, the gaussian-splat backdrop
+ * and the linear-light mip chain are identical in both. They are stable and
+ * asset-driven, and a shared module would have to be loaded by both cards on
+ * a page where only one of them may ever come into view. If you fix a bug in
+ * one of those blocks, fix it in the other file too.
+ *
+ * The one genuinely new thing here is that the screen SCROLLS. The Matas
+ * captures are whole pages — 604x5833 for the first — so the plate is not a
+ * screenshot to be shown, it is a document to be moved through. The texture
+ * shows a screen-shaped window onto it and the shot slides that window down.
  */
-window.initSoftboxStage = function (canvas, config) {
+window.initPhoneStage = function (canvas, config) {
   "use strict";
 
   const plateUrls = config.plates;
   const SHOTS = config.shots;
   const GROUND = config.ground;
+  const MODEL_URL = config.model;
 
   const THREE = window.THREE;
   const gsap = window.gsap;
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ── device proportions ─────────────────────────────────────────── */
-  const SCREEN_W = 6.99, SCREEN_H = 4.37;
-  const BEZEL = 0.055;
-  const GLASS_W = SCREEN_W + BEZEL * 2, GLASS_H = SCREEN_H + BEZEL * 2;
-  const BODY_W = GLASS_W + 0.1, BODY_H = GLASS_H + 0.1;
-  const BODY_D = 0.3, BODY_BEVEL = 0.03, BODY_R = 0.125;
-  const GLASS_D = 0.022, GLASS_BEVEL = 0.005, GLASS_R = 0.075;
-  const GLASS_Z = BODY_D / 2 + BODY_BEVEL - 0.004;
-  /* Derived, never hand-typed. The bevel on an extrusion pushes the front
-     face past depth/2, so a screen plane placed at depth/2 sits INSIDE the
-     glass and renders black. Deriving it from the glass makes that
-     impossible. */
-  const FACE_Z = GLASS_Z + GLASS_D + GLASS_BEVEL + 0.008;
-
-  const ARM_W = 1.28, ARM_H = 1.3, ARM_D = 0.12, ARM_Z = -0.26;
-  const BASE_D = 1.62, BASE_T = 0.045, BASE_FWD = 0.62, DROP = 0.2;
-  const BASE_Y = -BODY_H / 2 - ARM_H + DROP;
-  const GROUND_Y = BASE_Y - BASE_T - 0.014;
-
-  const ALU = "#cdd2d9";
-
-  /* The plinth. Deliberately shallow in Z — a deep slab eats the lower
-     third of every frame and the display looks stranded on a runway. The
-     fillet is small on purpose too: at any real radius the edge stops being
-     an edge and becomes a soft band eating a slice of both faces, which is
-     what makes a block read as toy plastic rather than as machined. */
-  const PL_W = 10.4, PL_D = 6.6, PL_H = 3.4, PL_R = 0.09;
-  const PL_FRONT_Z = 2.75;
-  const PL_TOP = GROUND_Y;
+  /* The phone, in scene units. Everything else is measured off the model
+     once it loads, so this is the only number that sets the scale. */
+  const PHONE_H = 7.0;
+  /* Its own screen aspect, read off the mesh at load time rather than
+     assumed — it decides how tall a window each plate shows. */
+  let screenAspect = 0.479;
 
   /* ── renderer ───────────────────────────────────────────────────── */
   const renderer = new THREE.WebGLRenderer({
@@ -323,16 +313,16 @@ window.initSoftboxStage = function (canvas, config) {
   const splats = buildSplats(3000);
 
   /* ── the backdrop, rendered small ────────────────────────────────
-     Measured in the phone stage, which shares this code: the splat cloud was
-     11.8ms of a 30.7ms frame at 1.38 megapixels — the single most expensive
-     thing in the scene, and more than the device itself by a wide margin.
-     The cost is overdraw, three thousand large alpha-blended quads with no
-     depth rejection.
+     The splat cloud is the single most expensive thing in this scene:
+     measured, 11.8ms of a 30.7ms frame at 1.38 megapixels, against a phone
+     model that costs nothing measurable. The cost is pure overdraw — three
+     thousand large alpha-blended quads with no depth rejection, each one
+     covering a good fraction of the frame.
 
-     It is also the element that can least afford it, being a soft volumetric
-     gradient with no hard feature in it. Rendered at a third of the
-     resolution and scaled up, the difference is invisible; the device, its
-     screen and its edges still draw at full resolution over the top. */
+     It is also the one element that can least afford it: a soft volumetric
+     gradient with no hard feature anywhere in it, so rendering it at a third
+     of the resolution and scaling it up is invisible. Everything sharp — the
+     phone, its screen, its edges — still draws at full resolution on top. */
   const BG_SCALE = 0.34;
   const bgScene = new THREE.Scene();
   bgScene.background = new THREE.Color(GROUND.deep);
@@ -351,8 +341,9 @@ window.initSoftboxStage = function (canvas, config) {
     })
   ));
 
-  /* autoClear off for the main pass, or it wipes the composite the instant
-     the device starts drawing. */
+  /* Backdrop into its target, blitted up, then the phone over the top with
+     the colour buffer left alone — autoClear off, or the composite is wiped
+     the instant the main scene starts drawing. */
   function renderFrame() {
     renderer.setRenderTarget(bgRT);
     renderer.clear();
@@ -410,308 +401,208 @@ window.initSoftboxStage = function (canvas, config) {
   }
 
 
-  /* ── the plinth ───────────────────────────────────────────────────
-     One box, one material, so the top face has no seam. An earlier version
-     of this scene laid a separate flat plane over the top to carry a
-     reflection; two surfaces with different roughness meeting a fraction of
-     a unit apart draw a hard line all the way round the top.
+  /* ── the phone ────────────────────────────────────────────────────
+     fetch + parse, NOT loader.load(). GLTFLoader.load() routes through
+     FileLoader, which on some hosts hangs on a response it cannot content-
+     sniff — no error, no progress, a promise that never settles. Fetching
+     the bytes and handing them to parse() is explicit and reports failure. */
+  let screenMat = null;
+  let screenMesh = null;
+  const phone = new THREE.Group();
+  scene.add(phone);
 
-     Matte, near-black, almost no environment. In the reference the plinth
-     returns nearly nothing — its whole shape is described by the key
-     falling across the top face and dying on the front. Gloss here would
-     compete with the device for attention and read as plastic. */
-  const plinth = new THREE.Mesh(
-    slab(PL_W, PL_D, PL_R, PL_H, 0.02),
-    new THREE.MeshStandardMaterial({
-      color: 0x15191f,
-      roughness: 0.74,
-      metalness: 0.05,
-      envMapIntensity: 0.22,
-    })
-  );
-  plinth.rotation.x = -Math.PI / 2;
-  plinth.position.set(0, PL_TOP - PL_H / 2, PL_FRONT_Z - PL_D / 2);
-  plinth.receiveShadow = true;
-  /* castShadow off deliberately: it throws onto a floor you can barely see,
-     and including it would force the key's shadow frustum wide enough to
-     cover a 10-unit box — spending the whole texel budget on empty space
-     and softening the one shadow that matters. */
-  scene.add(plinth);
+  async function loadPhone(url) {
+    const buf = await (await fetch(url)).arrayBuffer();
+    const loader = new THREE.GLTFLoader();
+    loader.setMeshoptDecoder(THREE.MeshoptDecoder);
+    const gltf = await new Promise((ok, err) => loader.parse(buf, "", ok, err));
+    const model = gltf.scene;
 
-  /* ── geometry helpers ───────────────────────────────────────────── */
-  function roundedRect(w, h, r) {
-    const s = new THREE.Shape();
-    const x = -w / 2, y = -h / 2;
-    s.moveTo(x + r, y);
-    s.lineTo(x + w - r, y);
-    s.quadraticCurveTo(x + w, y, x + w, y + r);
-    s.lineTo(x + w, y + h - r);
-    s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    s.lineTo(x + r, y + h);
-    s.quadraticCurveTo(x, y + h, x, y + h - r);
-    s.lineTo(x, y + r);
-    s.quadraticCurveTo(x, y, x + r, y);
-    return s;
-  }
+    /* updateMatrixWorld BEFORE measuring. Sketchfab nests the mesh under
+       transform nodes, so a freshly parsed scene has stale world matrices
+       and Box3.setFromObject returns local-space numbers — which fits the
+       model to the wrong scale and puts the camera inside it. */
+    model.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    const centre = box.getCenter(new THREE.Vector3());
+    const k = PHONE_H / size.y;
+    model.scale.setScalar(k);
+    model.position.sub(centre.multiplyScalar(k));
+    phone.add(model);
+    phone.updateMatrixWorld(true);
 
-  function slab(w, h, r, depth, bevel) {
-    const geo = new THREE.ExtrudeGeometry(roundedRect(w, h, r), {
-      depth: depth - bevel * 2,
-      bevelEnabled: true,
-      bevelThickness: bevel,
-      bevelSize: bevel,
-      bevelSegments: 4,
-      curveSegments: 26,
+    /* The screen is found by GEOMETRY, not by name. It is the thinnest
+       textured mesh in the model — which is what being a screen means, and
+       survives a re-export that renumbers the objects. */
+    let best = null;
+    model.traverse((o) => {
+      if (!o.isMesh || !o.material || !o.material.map) return;
+      o.geometry.computeBoundingBox();
+      const s = o.geometry.boundingBox.getSize(new THREE.Vector3());
+      const dims = [s.x, s.y, s.z].sort((a, b) => a - b);
+      if (!best || dims[0] < best.thickness) {
+        best = { mesh: o, thickness: dims[0], w: dims[1], h: dims[2] };
+      }
     });
-    geo.center();
-    return geo;
-  }
+    if (!best) throw new Error("no screen mesh in model");
 
-  /* ShapeGeometry derives its UVs from world coordinates, so a plane built
-     this way arrives with UVs in scene units rather than 0..1 and the
-     texture lands somewhere off in space. Remap them. */
-  function facePlane(w, h, r) {
-    const geo = new THREE.ShapeGeometry(roundedRect(w, h, r), 26);
-    const p = geo.attributes.position;
-    const uv = new Float32Array(p.count * 2);
-    for (let i = 0; i < p.count; i++) {
-      uv[i * 2] = (p.getX(i) + w / 2) / w;
-      uv[i * 2 + 1] = (p.getY(i) + h / 2) / h;
+    screenMesh = best.mesh;
+    screenAspect = Math.min(best.w, best.h) / Math.max(best.w, best.h);
+
+    /* Rebuild the panel's UVs from its own bounding box. The model's screen
+       UVs address a region of its baked atlas, so dropping a plate onto them
+       samples some arbitrary corner of it — for this model, a patch of the
+       stock wallpaper. Deriving u,v from the local box maps one plate across
+       the whole panel, which is what the coordinates would have been if the
+       mesh had been authored for exactly one image. */
+    const geo = screenMesh.geometry;
+    geo.computeBoundingBox();
+    const bb = geo.boundingBox;
+    const pos = geo.attributes.position;
+    /* The screen lies in the model's XZ plane, so its two in-plane axes are
+       x and z, not x and y. Picking them by extent rather than by name keeps
+       this correct if the model is ever re-exported upright. */
+    const ext = { x: bb.max.x - bb.min.x, y: bb.max.y - bb.min.y, z: bb.max.z - bb.min.z };
+    const axes = ["x", "y", "z"].sort((a, b) => ext[b] - ext[a]);
+    const AV = axes[0], AU = axes[1];         // longest = down the screen
+    const uv = new Float32Array(pos.count * 2);
+    for (let i = 0; i < pos.count; i++) {
+      const u = (pos["get" + AU.toUpperCase()](i) - bb.min[AU]) / (ext[AU] || 1);
+      const v = (pos["get" + AV.toUpperCase()](i) - bb.min[AV]) / (ext[AV] || 1);
+      uv[i * 2] = u;
+      uv[i * 2 + 1] = v;
     }
     geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
-    return geo;
+
+    screenMat = new THREE.MeshBasicMaterial({ color: 0x0b0d11, toneMapped: false });
+    screenMesh.material = screenMat;
+    screenMesh.castShadow = false;
+
+    /* ── the bezel ────────────────────────────────────────────────────
+       An OVERLAY, not something baked into the plate — and that is the whole
+       point. On the monitor stage the bezel is composited into the picture,
+       which works because that picture is a still. These plates scroll: bake
+       a border into the top of a page and it slides away with the first
+       shot, leaving the UI running off the edge again a second later. The
+       bezel belongs to the device, so it has to live on the device.
+
+       It also fixes a second thing visible in the same frame. The screen
+       mesh is a rectangle and the phone's display is not — without this the
+       interface sits square into corners that should be rounded.
+
+       Sharing the screen's geometry means it inherits the transform exactly,
+       and polygonOffset biases it toward the viewer so it wins the depth
+       test without needing to know which way the mesh's normals face. */
+    const BEZEL = 0.028;        // of the screen's WIDTH
+    const RADIUS = 0.098;       // ditto — the display's corner, not the body's
+    const bez = document.createElement("canvas");
+    bez.width = 512;
+    bez.height = Math.round(512 / screenAspect);
+    const bg = bez.getContext("2d");
+    bg.fillStyle = "#05060a";
+    bg.fillRect(0, 0, bez.width, bez.height);
+    /* destination-out IS right here, unlike in the monitor's glare texture
+       where it silently did nothing: this material reads ALPHA, so clearing
+       alpha is exactly what punches the window through. */
+    const inset = bez.width * BEZEL;
+    const r = bez.width * RADIUS;
+    bg.globalCompositeOperation = "destination-out";
+    bg.beginPath();
+    bg.roundRect(inset, inset, bez.width - inset * 2, bez.height - inset * 2, r);
+    bg.fill();
+
+    /* The Dynamic Island, painted back in over the window.
+       The model carries a front camera and a Face ID sensor as real geometry,
+       sitting 0.006 proud of the display — and on the real device those live
+       inside a black cutout. The export had that cutout baked into its
+       wallpaper, so swapping in a plate took the island away and left two
+       fully-rough metal discs floating on the interface, returning the
+       average of the room. In a pink room that average is a pink circle.
+
+       Position is derived from the camera mesh rather than eyeballed: its
+       centre lands at u 0.595, v 0.954 of the screen, which is the right-hand
+       end of the island exactly as it is on the device. */
+    bg.globalCompositeOperation = "source-over";
+    const islandW = bez.width * 0.26;
+    const islandH = bez.height * 0.043;
+    const islandCx = bez.width * 0.51;
+    const islandCy = bez.height * 0.046;
+    bg.beginPath();
+    bg.roundRect(islandCx - islandW / 2, islandCy - islandH / 2,
+                 islandW, islandH, islandH / 2);
+    bg.fill();
+
+    const bezelTex = new THREE.CanvasTexture(bez);
+    bezelTex.colorSpace = THREE.SRGBColorSpace;
+    bezelTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    bezelTex.needsUpdate = true;
+    const bezel = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      map: bezelTex,
+      transparent: true,
+      depthWrite: false,
+      toneMapped: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+    }));
+    bezel.castShadow = false;
+    screenMesh.add(bezel);
+
+    /* The export's materials are LEFT ALONE, and that is a reversal of what
+       the monitor stage does.
+
+       There, every surface arrives at metalness 1 with roughness near 1, and
+       that pair renders as flat pale plastic: fully rough metal returns the
+       average of its surroundings, and in a studio built of white softboxes
+       that average is white. Taming it to a polished 0.86/0.34 is what
+       restores the aluminium.
+
+       This model has the same numbers and needs the opposite treatment. A
+       phone is not a slab — it is chamfered rails and a curved back, and at
+       roughness 0.34 each of those small faces becomes a mirror showing one
+       flat sample of a soft, near-uniform pink room. Twenty-three of the
+       thirty-one meshes got rewritten that way, which is exactly why the
+       body read as a black silhouette with no gradient down the rail.
+       Compared side by side, the untouched materials have the tonal range;
+       the "tamed" ones do not. */
+    model.traverse((o) => {
+      if (!o.isMesh) return;
+      o.castShadow = false;
+      o.receiveShadow = false;
+    });
   }
 
-  /* ── brushed finish ─────────────────────────────────────────────── */
-
-  /* Anodised aluminium is covered in fine directional abrasion, and that
-     abrasion is the reason it reads as metal rather than grey plastic.
-     Drawn as long horizontal strokes rather than random noise — noise gives
-     a sandblasted finish, not a brushed one. Strokes that overflow the
-     right edge are redrawn at x - w so the texture tiles without leaving a
-     column of truncated ends, which would show up as vertical banding: the
-     one direction this texture must have nothing in. */
-  function brushed() {
-    const w = 2048, h = 1024;
-    const c = document.createElement("canvas");
-    c.width = w; c.height = h;
-    const g = c.getContext("2d");
-
-    let seed = 0x2545f491;
-    const rand = () => {
-      seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
-      return ((seed >>> 0) % 100000) / 100000;
-    };
-
-    g.fillStyle = "#565656";
-    g.fillRect(0, 0, w, h);
-    g.lineWidth = 2;
-    g.lineCap = "round";
-    for (let i = 0; i < 20000; i++) {
-      const x = rand() * w, y = rand() * h;
-      const len = 60 + rand() * 700;
-      const a = 0.012 + rand() * 0.03;
-      g.strokeStyle = (rand() > 0.5 ? "rgba(255,255,255," : "rgba(0,0,0,") + a + ")";
-      g.beginPath(); g.moveTo(x, y); g.lineTo(x + len, y); g.stroke();
-      if (x + len > w) {
-        g.beginPath(); g.moveTo(x - w, y); g.lineTo(x + len - w, y); g.stroke();
-      }
-    }
-    const tex = new THREE.CanvasTexture(c);
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    tex.repeat.set(4.5, 4.5);
-    return tex;
-  }
-
-  const brush = brushed();
-  const aluminium = (rough) => new THREE.MeshPhysicalMaterial({
-    color: ALU,
-    roughnessMap: brush,
-    roughness: rough,
-    metalness: 0.9,
-    anisotropy: 0.6,
-    envMapIntensity: 1.35,
-  });
-
-  /* ── the device ─────────────────────────────────────────────────── */
-  const device = new THREE.Group();
-  scene.add(device);
-
-  const body = new THREE.Mesh(slab(BODY_W, BODY_H, BODY_R, BODY_D, BODY_BEVEL), aluminium(1));
-  /* NOT offset back by half its depth.
-     `slab()` calls geo.center(), so the body already straddles z = 0 and its
-     front face lands at BODY_D/2 + bevel — which is exactly what GLASS_Z is
-     derived from. Pushing it back another BODY_D/2 left the glass and the
-     picture floating a fifth of a unit clear of the enclosure: invisible
-     head-on, and glaringly obvious the moment you drag round to the side. */
-  body.castShadow = body.receiveShadow = true;
-  device.add(body);
-
-  const glass = new THREE.Mesh(
-    slab(GLASS_W, GLASS_H, GLASS_R, GLASS_D, GLASS_BEVEL),
-    new THREE.MeshPhysicalMaterial({
-      color: 0x08080a, metalness: 0.4, roughness: 0.14, envMapIntensity: 1.4,
-    })
-  );
-  glass.position.z = GLASS_Z;
-  glass.castShadow = glass.receiveShadow = true;
-  device.add(glass);
-
-  const screenGeo = facePlane(SCREEN_W, SCREEN_H, 0.05);
-  const screenMat = new THREE.MeshBasicMaterial({ color: 0x0b0d11, toneMapped: false });
-  const screen = new THREE.Mesh(screenGeo, screenMat);
-  screen.position.z = FACE_Z;
-  device.add(screen);
-
-  /* The sheen is GONE. It was a full MeshStandardMaterial — metalness 1,
-     roughness 0.08, sampling the prefiltered environment — stretched over
-     the whole panel and drawn transparently every frame. Measured against
-     the panel underneath, what that bought was a flat -3 levels across 96%
-     of the pixels: not a highlight, not a gradient, just a slightly darker
-     screen, for a third of a frame's budget at full resolution. Whatever
-     gloss reads here comes from the glare bar below. */
-
-  /* ── screen glare ─────────────────────────────────────────────────
-     A soft-edged bar of light raked across the glass — the reflection of
-     the key softbox in a sheet of glossy glass.
-
-     It is swept by moving the TEXTURE OFFSET, never the mesh. Translating
-     the quad instead was the obvious first approach and it is wrong: the
-     plane slides off the panel and reads as a grey slab floating in front
-     of the device. Pinning the mesh to the screen and scrolling the map
-     through it keeps the highlight inside the glass where it belongs.
-
-     The canvas is vignetted at both ends so the wrap point never shows as
-     a hard vertical seam crossing the panel. */
-  function glareTexture() {
-    const c = document.createElement("canvas");
-    c.width = c.height = 512;
-    const g = c.getContext("2d");
-    g.fillStyle = "#000";
-    g.fillRect(0, 0, 512, 512);
-    g.save();
-    g.translate(256, 256);
-    g.rotate((-27 * Math.PI) / 180);
-    const bar = g.createLinearGradient(-200, 0, 200, 0);
-    bar.addColorStop(0.00, "rgba(255,255,255,0)");
-    bar.addColorStop(0.42, "rgba(255,255,255,0.42)");
-    bar.addColorStop(0.50, "rgba(255,255,255,0.92)");
-    bar.addColorStop(0.58, "rgba(255,255,255,0.42)");
-    bar.addColorStop(1.00, "rgba(255,255,255,0)");
-    g.fillStyle = bar;
-    g.fillRect(-380, -380, 760, 760);
-    g.restore();
-    /* Fade the ends by painting BLACK over them, not by removing alpha.
-       This was destination-out, which only clears the alpha channel — and
-       by this point the canvas is opaque black with the bar composited into
-       it, so every pixel already has alpha 1 and full RGB. The material
-       reads colour. Clearing alpha never touched what it reads, so the fade
-       did nothing: measured, the texture went from 0 at column 0 to 51 at
-       column 1, a hard cliff at both edges.
-
-       That cliff is what slid across the glass. The streak is offset
-       horizontally to track the camera, and with the wrap mode on Repeat,
-       any non-zero offset puts the sample coordinate across an integer
-       somewhere on the panel — a hard vertical seam, with a second wrapped
-       copy of the streak beyond it. */
-    const ends = g.createLinearGradient(0, 0, 512, 0);
-    ends.addColorStop(0.00, "rgba(0,0,0,1)");
-    ends.addColorStop(0.22, "rgba(0,0,0,0)");
-    ends.addColorStop(0.78, "rgba(0,0,0,0)");
-    ends.addColorStop(1.00, "rgba(0,0,0,1)");
-    g.globalCompositeOperation = "source-over";
-    g.fillStyle = ends;
-    g.fillRect(0, 0, 512, 512);
-
-    const tex = new THREE.CanvasTexture(c);
-    /* Clamp, not Repeat. With the ends genuinely dark now, sampling past
-       either edge returns zero instead of wrapping a second streak in. */
-    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-    return tex;
-  }
-
-  const glareTex = glareTexture();
-  const glareMat = new THREE.MeshBasicMaterial({
-    map: glareTex,
-    transparent: true,
-    opacity: 0,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    toneMapped: false,
-  });
-  /* Sized to the GLASS, not to the picture area. A softbox reflected in a
-     glossy panel does not stop where the pixels stop — it carries on across
-     the black surround. That matters more than it sounds: over a bright UI
-     an additive highlight is nearly invisible, which is physically correct
-     and visually useless. Letting the bar run out onto the dark glass gives
-     it somewhere to actually read, and the eye then accepts the faint part
-     crossing the picture as the same reflection. */
-  const glare = new THREE.Mesh(facePlane(GLASS_W, GLASS_H, GLASS_R), glareMat);
-  glare.position.z = FACE_Z + 0.012;
-  device.add(glare);
-
-  /* The camera, centred in the top bezel. A one-line detail, but its
-     absence is the kind of thing that reads as "not a real product" long
-     before anyone works out why. */
-  const eye = new THREE.Mesh(
-    new THREE.CircleGeometry(0.022, 24),
-    new THREE.MeshStandardMaterial({ color: 0x0a0a0c, metalness: 0.5, roughness: 0.25 })
-  );
-  eye.position.set(0, SCREEN_H / 2 + BEZEL / 2, FACE_Z + 0.002);
-  device.add(eye);
-
-  const arm = new THREE.Mesh(slab(ARM_W, ARM_H, 0.06, ARM_D, 0.02), aluminium(1.1));
-  arm.position.set(0, -BODY_H / 2 - ARM_H / 2 + DROP, ARM_Z);
-  arm.castShadow = arm.receiveShadow = true;
-  device.add(arm);
-
-  const foot = new THREE.Mesh(slab(ARM_W, BASE_D, 0.14, BASE_T, 0.018), aluminium(1.1));
-  foot.rotation.x = -Math.PI / 2;
-  foot.position.set(0, BASE_Y, ARM_Z + BASE_FWD);
-  foot.castShadow = foot.receiveShadow = true;
-  device.add(foot);
-
-  /* Ambient occlusion, painted — the one thing a shadow map cannot give
-     you. A shadow map answers "is the key blocked from here", but the
-     darkening in the crevice where two surfaces meet comes from ambient
-     light being blocked from EVERY direction at once. It is tight to the
-     foot, and it is what actually reads as contact rather than hover. */
+  /* ── the shadow it sits in ────────────────────────────────────────
+     Painted, not cast. There is no plinth here for a shadow map to land on
+     and no horizon in the composition, so a real one would have nothing to
+     fall across. A soft pool underneath does the whole job of anchoring the
+     phone, and costs one transparent quad instead of a depth pass. */
   function contactPool() {
     const c = document.createElement("canvas");
     c.width = c.height = 256;
     const g = c.getContext("2d");
-    const grad = g.createRadialGradient(128, 128, 6, 128, 128, 124);
-    grad.addColorStop(0.00, "rgba(0,0,0,0.9)");
-    grad.addColorStop(0.30, "rgba(0,0,0,0.5)");
-    grad.addColorStop(0.64, "rgba(0,0,0,0.14)");
+    const grad = g.createRadialGradient(128, 128, 4, 128, 128, 124);
+    grad.addColorStop(0.00, "rgba(0,0,0,0.78)");
+    grad.addColorStop(0.28, "rgba(0,0,0,0.40)");
+    grad.addColorStop(0.62, "rgba(0,0,0,0.11)");
     grad.addColorStop(1.00, "rgba(0,0,0,0)");
     g.fillStyle = grad;
     g.fillRect(0, 0, 256, 256);
     return new THREE.CanvasTexture(c);
   }
-
   const contact = new THREE.Mesh(
-    new THREE.PlaneGeometry(ARM_W * 1.7, BASE_D * 1.5),
+    new THREE.PlaneGeometry(PHONE_H * 0.62, PHONE_H * 0.42),
     new THREE.MeshBasicMaterial({
-      map: contactPool(),
-      transparent: true,
-      opacity: 0.62,
-      depthWrite: false,
-      toneMapped: false,
+      map: contactPool(), transparent: true, opacity: 0.5,
+      depthWrite: false, toneMapped: false,
     })
   );
   contact.rotation.x = -Math.PI / 2;
-  contact.position.set(0, PL_TOP + 0.006, ARM_Z + BASE_FWD);
+  contact.position.set(0, -PHONE_H / 2 - 0.02, 0.1);
   scene.add(contact);
 
   /* ── the plates ─────────────────────────────────────────────────── */
-
-  /* Three screens, so the piece walks through the product rather than
-     staring at one page for twenty seconds. The plate changes on the CUT,
-     at the moment the camera starts moving to the next shot — the same
-     place an editor would change what is on the monitor. Swapping it
-     mid-hold, with the camera settled, looks like the screen glitched. */
   const plates = [];
 
   /* ── the mip chain: linear-light, and soft below level 0 ──────────
@@ -837,7 +728,14 @@ window.initSoftboxStage = function (canvas, config) {
     return levels;
   }
 
-  function loadPlate(id) {
+  /* Each plate is a whole page, not a screen. `window` is the fraction of it
+     visible at once — screen width over screen height, against the image's
+     own aspect — and it is what the scroll tween moves.
+
+     offset.y starts at 1 - window because three's V axis runs bottom-up
+     while the image rows run top-down: the TOP of a capture lives at v = 1.
+     Scrolling down the page therefore means offset.y counting DOWN to 0. */
+  function loadPlate(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -849,49 +747,36 @@ window.initSoftboxStage = function (canvas, config) {
         tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
         tex.minFilter = THREE.LinearMipmapLinearFilter;
         tex.magFilter = THREE.LinearFilter;
-        /* The plates are 4:3 and the panel is 16:10, so each is cropped
-           rather than squashed — anchored to the top, which is where a
-           UI's chrome lives and the part you cannot afford to lose. */
-        const crop = (SCREEN_H / SCREEN_W) / (img.height / img.width);
-        tex.repeat.set(1, crop);
-        tex.offset.set(0, 1 - crop);
+        /* Clamped on both axes. The window slides right to the edges of the
+           page, and on Repeat the last row of the footer would wrap round
+           and show the status bar again directly beneath it. */
+        tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+        const win = Math.min(1, (img.width / screenAspect) / img.height);
+        tex.repeat.set(1, win);
+        tex.offset.set(0, 1 - win);
+        tex.userData.window = win;
         tex.needsUpdate = true;
         resolve(tex);
       };
       img.onerror = reject;
-      img.src = id;
+      img.src = url;
     });
   }
 
-  Promise.all(plateUrls.map(loadPlate))
-    .then((loaded) => {
-      plates.push(...loaded);
-      screenMat.map = plates[0];
-      screenMat.color.set(0xffffff);
-      screenMat.needsUpdate = true;
-      start();
-    })
-    .catch(() => {});
-
   /* ════════════════════════════════════════════════════════════════
      CAMERA
-
-     The rig is spherical and the device never moves. Orbiting the CAMERA
-     rather than spinning the object is what keeps the ground shadow
-     anchored — rotate the device and its shadow swings around with it,
-     which instantly reads as fake.
+     The rig is spherical and the phone never moves. Orbiting the CAMERA
+     rather than the object is what keeps the contact shadow anchored —
+     spin the phone and its shadow swings with it, which reads as fake
+     instantly.
      ════════════════════════════════════════════════════════════════ */
-  /* The device never moves, so the picture plane's centre is a constant —
-     no need to recompute it from the matrix every frame. */
-  const screenCentre = new THREE.Vector3(0, 0, FACE_Z);
-
-  const rig = Object.assign({}, SHOTS[0].from);
+  const rig = { az: 0, el: 0, dist: 14, tx: 0, ty: 0, roll: 0, key: 1, amb: 1 };
   const drag = { az: 0, el: 0 };
 
   function applyRig() {
     const az = THREE.MathUtils.degToRad(rig.az + drag.az);
     const el = THREE.MathUtils.degToRad(
-      THREE.MathUtils.clamp(rig.el + drag.el, -6, 46)
+      THREE.MathUtils.clamp(rig.el + drag.el, -22, 46)
     );
     const target = new THREE.Vector3(rig.tx, rig.ty, 0);
     camera.position.set(
@@ -903,94 +788,50 @@ window.initSoftboxStage = function (canvas, config) {
     camera.lookAt(target);
     camera.rotateZ(THREE.MathUtils.degToRad(rig.roll));
 
-    /* The whole SET is relit per shot, not just the key.
-       In the reference the backdrop swings from a bright lower sweep on the
-       wides to near-black on the macro — the room is genuinely relit
-       between setups, the way it would be on a real shoot, rather than one
-       exposure held across every angle. The macros go dark so the screen is
-       the only thing left with any value in it. */
     key.intensity = 2.5 * rig.key;
-    /* Floors raised across the board. On a dark ground a low ambient was
-       what created the range; on a pale one the same values crush every
-       surface the key misses and the device reads as a cut-out pasted on
-       top. The macros still deepen the set — they just deepen towards
-       saturated cyan now instead of towards black. */
     ambient.intensity = 0.16 + 0.2 * rig.amb;
     hemi.intensity = 0.14 + 0.26 * rig.amb;
     splats.mat.uniforms.uGain.value = 0.55 + 0.45 * rig.amb;
+  }
 
-    /* ── glass response ───────────────────────────────────────────────
-       A screen is not a picture, it is a picture behind a mirror, and how
-       much of each you see depends entirely on the angle you stand at.
-       Two things follow from that, and both are driven from the real view
-       vector rather than from the azimuth number.
+  /* ── the plate, and the scroll through it ───────────────────────── */
+  let scrollTween = null;
 
-       ONE — where the highlight sits. The reflected image of a fixed light
-       sweeps across a flat panel in proportion to the TANGENT of the view
-       angle, not linearly. The linear version this replaces drifted at a
-       constant rate and felt painted on; tangent accelerates as the panel
-       turns away, which is what a real reflection does.
+  function showPlate(index) {
+    const plate = plates[index];
+    if (!plate || !screenMat) return;
+    if (screenMat.map !== plate) {
+      screenMat.map = plate;
+      screenMat.color.set(0xffffff);
+      screenMat.needsUpdate = true;
+    }
+    // rewind to the top of the page for this shot
+    plate.offset.y = 1 - plate.userData.window;
+  }
 
-       TWO — how strong it is. Fresnel: glass reflects about 4% head-on and
-       approaches 100% at grazing incidence. So the UI washes out and the
-       room takes over as the screen turns edge-on, which is the single most
-       recognisable behaviour of a real display. */
-    const eyeDir = camera.position.clone().sub(screenCentre).normalize();
-    const cosT = Math.abs(eyeDir.z);
-
-    /* Schlick's exponent is 5. This uses 2.6, deliberately.
-       True Fresnel is nearly flat until about 60 degrees off-axis, and the
-       choreography never leaves ±27 — so the physically exact curve would
-       hold the glare at a constant 4% through every shot and only wake up
-       if someone dragged right round. Product films push this for the same
-       reason. It is a stylised curve, not a wrong one. */
-    const fres = 0.04 + 0.96 * Math.pow(1 - cosT, 2.6);
-
-    glareTex.offset.x = THREE.MathUtils.clamp(
-      -Math.atan2(eyeDir.x, Math.max(eyeDir.z, 0.08)) * 0.42, -0.48, 0.48
-    );
-    /* Both dialled right down, and the reason is arithmetic rather than
-       taste. A card background in the plate sits at about 0.97 of full
-       white and the page behind it at 1.00 — three percent apart. Any
-       UNIFORM additive lift above roughly 0.02 pushes the card past 1.0,
-       it clips, and the two become the same white: every panel edge and
-       row separator in the UI disappears at once. The sheen was adding
-       0.068 across the whole picture at these angles, so the greys never
-       stood a chance.
-
-       A real glossy screen genuinely does wash out like that, and if this
-       were a photograph of a monitor it would be right. It is a device
-       mockup whose job is to show the interface, so legibility wins.
-
-       The glare survives because it is not uniform — it is a narrow band,
-       and the UI it crosses has large DARK regions (the navy header, the
-       sidebar) where adding 0.06 is a big relative lift and clearly reads.
-       It shows where it can be seen and stays out of the whites. */
-    glareMat.opacity = THREE.MathUtils.clamp(0.02 + fres * 0.5, 0.02, 0.085);
+  /* The scroll itself. `travel` is how much of the remaining page the shot
+     moves through, 0..1 — a value of 1 would run a 4.6-screen capture past
+     the eye in three seconds, which reads as a flick rather than as reading.
+     Eased at both ends, because a scroll that starts and stops at full speed
+     is the one thing that always looks scripted. */
+  function scrollPlate(index, travel, seconds) {
+    const plate = plates[index];
+    if (!plate) return;
+    if (scrollTween) scrollTween.kill();
+    const win = plate.userData.window;
+    const room = Math.max(0, 1 - win);
+    scrollTween = gsap.to(plate.offset, {
+      y: (1 - win) - room * travel,
+      duration: seconds,
+      ease: "power1.inOut",
+    });
   }
 
   /* ════════════════════════════════════════════════════════════════
-     CHOREOGRAPHY
-
-     One GSAP timeline per shot, chained and looped. Every move eases in and
-     out of rest, so the camera is never travelling at a constant rate — a
-     linear dolly is the thing that most reliably reads as machine-driven.
-     `power2` on the way in, `power3` out: slightly quicker to leave a
-     position than to settle into the next one, which is how an operator
-     actually moves a head.
+     CHOREOGRAPHY — cuts, not moves. The camera jumps between setups and
+     creeps within them; what changes continuously is the page under the
+     glass. See softbox-stage.js for why the cuts are hard.
      ════════════════════════════════════════════════════════════════ */
-  /* The plate swap, which is all that survived of the slate. It used to be
-     bundled into the function that also drove the shot labels and the
-     readout; with the chrome gone it is worth being one small named thing
-     rather than a leftover with vestigial arguments. */
-  function showPlate(index) {
-    const plate = plates[index];
-    if (plate && screenMat.map !== plate) {
-      screenMat.map = plate;
-      screenMat.needsUpdate = true;
-    }
-  }
-
   let tl = null;
   let idle = null;
   let running = false;
@@ -1002,28 +843,12 @@ window.initSoftboxStage = function (canvas, config) {
     SHOTS.forEach((_, i) => {
       const order = (from + i) % SHOTS.length;
       const shot = SHOTS[order];
-
-      /* A CUT, not a move.
-         The reference does this twice in twelve seconds and both are single
-         frames — measured, the luminance jumps forty points between one
-         frame and the next, with nothing in between. Every earlier version
-         of this scene tweened the camera from one setup to the next, which
-         is a very different thing: it reads as one long continuous orbit
-         with labels attached, and it never lets the framing change enough
-         to be interesting. Jumping lets a wide sit next to a macro. */
-      tl.call(() => showPlate(shot.plate));
-      tl.set(rig, shot.from);
-
-      /* Linear, and this is the one place it belongs.
-         Elsewhere a constant-rate move reads as machine-driven, because you
-         watch it start and stop. Here you never see either end — the shot
-         begins and ends on a cut — so what is left is the steady creep of a
-         motorised head, which is exactly the texture the reference has. */
-      tl.to(rig, {
-        ...shot.to,
-        duration: shot.hold,
-        ease: "none",
+      tl.call(() => {
+        showPlate(shot.plate);
+        scrollPlate(shot.plate, shot.scroll !== undefined ? shot.scroll : 0.7, shot.hold);
       });
+      tl.set(rig, shot.from);
+      tl.to(rig, { ...shot.to, duration: shot.hold, ease: "none" });
     });
     return tl;
   }
@@ -1063,22 +888,12 @@ window.initSoftboxStage = function (canvas, config) {
   canvas.addEventListener("pointerup", release);
   canvas.addEventListener("pointercancel", release);
 
+
   /* ── resize ─────────────────────────────────────────────────────── */
   function resize() {
-    /* Measured from the CANVAS, not the window. On the standalone page those
-       were the same thing; in a card they are not, and sizing a card-sized
-       canvas to the viewport is how you get a render four times too big. */
     const r = canvas.getBoundingClientRect();
     const w = Math.max(1, Math.round(r.width));
     const h = Math.max(1, Math.round(r.height));
-    /* A pixel BUDGET rather than a fixed ratio. This scene is fill-rate
-       bound and nothing else, and what matters is not raw speed but where
-       the frame lands against the 16.7ms vsync budget: miss it and the
-       frame waits for the next refresh, so the rate halves rather than
-       degrading. Two of these cards can be on screen at once, so the cap is
-       per canvas and set low enough that both together stay clear of it.
-       At normal card sizes it never binds and the full device ratio is
-       used; it only engages on a very large viewport. */
     /* 1.15 megapixels, and the number is measured, not guessed.
 
        At 1.38MP these cards sat at 18.8ms against a 16.7ms vsync budget —
@@ -1102,9 +917,10 @@ window.initSoftboxStage = function (canvas, config) {
       Math.max(2, Math.round(buf.y * BG_SCALE))
     );
     camera.aspect = w / h;
-    /* Widen the field of view as the frame narrows, so the device does not
-       run out of the sides on a phone. */
-    camera.fov = w / h < 0.85 ? 46 : 34;
+    /* A phone is tall, so the framing runs out of HEIGHT before width — the
+       opposite of the monitor stage. Narrow the field of view as the frame
+       widens so a landscape card does not push the phone away to fit. */
+    camera.fov = w / h < 0.85 ? 30 : 26;
     camera.updateProjectionMatrix();
   }
   const ro = new ResizeObserver(resize);
@@ -1114,18 +930,14 @@ window.initSoftboxStage = function (canvas, config) {
   function start() {
     resize();
     showPlate(0);
-    renderer.shadowMap.needsUpdate = true;   // the one shadow render
+    renderer.shadowMap.needsUpdate = true;
     if (still) {
-      /* Reduced motion: hold the establishing shot. The page still shows
-         the product, it simply does not move. Dragging still works. */
       Object.assign(rig, SHOTS[0].from);
+      showPlate(SHOTS[0].plate);
     } else {
       buildTimeline(0);
     }
     running = true;
-    /* Mirrored onto the element so the running state is observable from
-       outside — useful for testing that a card which has scrolled away has
-       genuinely stopped drawing, which is otherwise invisible. */
     canvas.dataset.running = "1";
     renderer.setAnimationLoop(() => {
       applyRig();
@@ -1136,23 +948,37 @@ window.initSoftboxStage = function (canvas, config) {
     });
   }
 
+  /* Model first, then the plates. Order matters: each plate's scroll window
+     is computed against the SCREEN's aspect, and that number is measured off
+     the model's own mesh as it loads. Racing them would size every window
+     against a guess. */
+  loadPhone(MODEL_URL)
+    .then(() => Promise.all(plateUrls.map(loadPlate)))
+    .then((loaded) => {
+      plates.push(...loaded);
+      start();
+    })
+    .catch((err) => {
+      // a failure here leaves the poster showing, which is the right
+      // fallback — but say why, or it looks like success
+      console.error("Phone stage failed to start", err);
+    });
+
   return {
-    /* A card that has scrolled away should cost nothing. Stopping the render
-       loop AND the timeline matters — leaving the loop running to draw a
-       frozen scene still burns a full GPU pass per frame for something
-       nobody can see. */
     pause() {
       if (!running) return;
       running = false;
       canvas.dataset.running = "0";
-      renderer.setAnimationLoop(null);
       if (tl) tl.pause();
+      if (scrollTween) scrollTween.pause();
+      renderer.setAnimationLoop(null);
     },
     resume() {
       if (running) return;
       running = true;
       canvas.dataset.running = "1";
-      if (tl) tl.resume();
+      if (tl && !still) tl.resume();
+      if (scrollTween) scrollTween.resume();
       renderer.setAnimationLoop(() => {
         applyRig();
         camera.updateMatrixWorld();
