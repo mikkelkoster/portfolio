@@ -8,9 +8,19 @@
  *
  * Geometry that bounds every shot: visible width is roughly
  * 2 * dist * tan(17deg) * aspect scene units, and the enclosure is 7.19
- * across. Past about dist 8 the panel runs edge to edge, the bezel leaves
+ * across. Below that width the panel runs edge to edge, the bezel leaves
  * frame, and the shot stops reading as a DEVICE — it becomes a flat
- * screenshot pasted over the render. 8.3 is the practical floor.
+ * screenshot pasted over the render.
+ *
+ * The card renders at aspect 1.06 at every breakpoint, which puts the fit
+ * distance at 7.19 / (2 * tan(17deg) * 1.06) = 11.1. An earlier note here
+ * claimed a floor of 8.3; that was written when the card was wider, and two
+ * rounds of "closer" then took the establishing shots to ~9.5-10.6 — under
+ * the real threshold, which is why the monitor lost its frame and stand.
+ * tx shifts the look-at target, so it comes straight off the margin: a wide
+ * needs (3.595 + |tx|) / 0.324, not a flat 11.1. Each pair is then set from
+ * whichever end needs more room, since a shot has to push IN, not pull out.
+ * The macros are meant to lose the frame; that is what makes them macros.
  */
 /* A NOTE ON key/amb, which are now 1 everywhere.
  *
@@ -40,8 +50,8 @@ window.STAGE_CONFIGS = {
     shots: [
       {
         plate: 0, hold: 4.0,
-        from: { az: -26, el: 11, dist: 10.85, tx: 0, ty: -0.2, roll: -1.6, key: 1, amb: 1 },
-        to:   { az: -17, el: 9,  dist: 9.59, tx: -0.35, ty: -0.3, roll: -0.5, key: 1, amb: 1 },
+        from: { az: -26, el: 11, dist: 13.7, tx: 0, ty: -0.2, roll: -1.6, key: 1, amb: 1 },
+        to:   { az: -17, el: 9,  dist: 12.8, tx: -0.35, ty: -0.3, roll: -0.5, key: 1, amb: 1 },
       },
       {
         plate: 0, hold: 3.4,
@@ -55,8 +65,8 @@ window.STAGE_CONFIGS = {
       },
       {
         plate: 2, hold: 4.4,
-        from: { az: 12, el: 7,  dist: 10.6, tx: 0.2, ty: -0.1, roll: 1.4, key: 1, amb: 1 },
-        to:   { az: 3,  el: 10, dist: 9.58, tx: -0.1, ty: -0.3, roll: 0.4, key: 1, amb: 1 },
+        from: { az: 12, el: 7,  dist: 12.9, tx: 0.2, ty: -0.1, roll: 1.4, key: 1, amb: 1 },
+        to:   { az: 3,  el: 10, dist: 12.0, tx: -0.1, ty: -0.3, roll: 0.4, key: 1, amb: 1 },
       },
     ],
   },
@@ -77,8 +87,8 @@ window.STAGE_CONFIGS = {
       {
         // wide from the right, low — Maersk opens high and left
         plate: 0, hold: 3.9,
-        from: { az: 24, el: 5,   dist: 10.57, tx: 0.2, ty: -0.15, roll: 1.8, key: 1, amb: 1 },
-        to:   { az: 15, el: 7.5, dist: 9.45, tx: 0.4, ty: -0.3, roll: 0.6, key: 1, amb: 1 },
+        from: { az: 24, el: 5,   dist: 13.9, tx: 0.2, ty: -0.15, roll: 1.8, key: 1, amb: 1 },
+        to:   { az: 15, el: 7.5, dist: 13.0, tx: 0.4, ty: -0.3, roll: 0.6, key: 1, amb: 1 },
       },
       {
         // macro from the left with the opposite roll to Maersk's, targeted at
@@ -88,8 +98,8 @@ window.STAGE_CONFIGS = {
         to:   { az: -18, el: 5.5, dist: 3.7, tx: 1.25, ty: 0.75, roll: -5.4, key: 1, amb: 1 },
       },
       {
-        // the angle Maersk has nothing like: high and looking down, close
-        // enough to read the task panel but well short of losing the bezel
+        // the angle Maersk has nothing like: high and looking down. This one
+        // IS inside the bezel — it is a detail shot, not an establishing one
         plate: 2, hold: 3.5,
         from: { az: 9,  el: 26, dist: 6.47, tx: -0.3, ty: 0.5, roll: -2.4, key: 1, amb: 1 },
         to:   { az: -4, el: 19, dist: 5.92, tx: 0.1, ty: 0.2, roll: 1.2, key: 1, amb: 1 },
@@ -97,8 +107,8 @@ window.STAGE_CONFIGS = {
       {
         // resolves left-of-centre, where Maersk resolves right-of-centre
         plate: 3, hold: 4.3,
-        from: { az: -16, el: 12, dist: 10.31, tx: -0.4, ty: -0.2, roll: -1.2, key: 1, amb: 1 },
-        to:   { az: -6,  el: 14, dist: 9.43, tx: 0, ty: -0.35, roll: -0.3, key: 1, amb: 1 },
+        from: { az: -16, el: 12, dist: 13.0, tx: -0.4, ty: -0.2, roll: -1.2, key: 1, amb: 1 },
+        to:   { az: -6,  el: 14, dist: 11.7, tx: 0, ty: -0.35, roll: -0.3, key: 1, amb: 1 },
       },
     ],
   },

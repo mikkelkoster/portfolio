@@ -98,6 +98,10 @@
       --slate-300:  #CBD5E1;
       --challenge:  #1E293B;
       --px:         64px;
+      /* Vertical rhythm between main-page sections. Each section pays half
+         at the top and half at the bottom, so the gap between any two is
+         2x this. */
+      --section-y:  80px;
       --max-w:      1600px;
     }
 
@@ -685,7 +689,7 @@
     ════════════════════════════════════════════════════ */
     .about {
       background: var(--bg);
-      padding: 100px var(--px) 48px;
+      padding: 120px var(--px) var(--section-y);   /* opens wider — it follows the hero */
       max-width: var(--max-w);
       margin: 0 auto;
     }
@@ -758,7 +762,7 @@
     ════════════════════════════════════════════════════ */
     .skills {
       background: var(--bg);
-      padding: 48px var(--px);
+      padding: var(--section-y) var(--px);
       max-width: var(--max-w);
       margin: 0 auto;
     }
@@ -820,7 +824,7 @@
     ════════════════════════════════════════════════════ */
     .work {
       background: var(--bg);
-      padding: 48px var(--px);
+      padding: var(--section-y) var(--px);
       max-width: var(--max-w);
       margin: 0 auto;
     }
@@ -1501,7 +1505,7 @@
     ════════════════════════════════════════════════════ */
     .beyond {
       background: var(--bg);
-      padding: 48px var(--px) 60px;
+      padding: var(--section-y) var(--px) calc(var(--section-y) + 12px);
       max-width: var(--max-w);
       margin: 0 auto;
     }
@@ -1571,7 +1575,7 @@
     ════════════════════════════════════════════════════ */
     .experience {
       background: var(--bg);
-      padding: 48px var(--px) 60px;
+      padding: var(--section-y) var(--px) calc(var(--section-y) + 12px);
       max-width: var(--max-w);
       margin: 0 auto;
     }
@@ -1730,7 +1734,7 @@
     /* ── Testimonial ─────────────────────────────────── */
     /* ── TESTIMONIAL PEEK-CAROUSEL ──────────────────────── */
     .t-wrap {
-      padding: 48px 0 0 max(var(--px), calc((100vw - var(--max-w)) / 2 + var(--px)));
+      padding: var(--section-y) 0 0 max(var(--px), calc((100vw - var(--max-w)) / 2 + var(--px)));
       overflow: hidden;
     }
     .t-track {
@@ -1767,7 +1771,7 @@
       justify-content: flex-end;
       align-items: center;
       gap: 16px;
-      padding: 16px var(--px) 48px 0;
+      padding: 16px var(--px) var(--section-y) 0;
       max-width: var(--max-w);
       margin: 0 auto;
     }
@@ -2047,7 +2051,7 @@
        RESPONSIVE — TABLET  (≤ 1024px)
     ════════════════════════════════════════════════════ */
     @media (max-width: 1100px) {
-      :root { --px: 40px; }
+      :root { --px: 40px; --section-y: 64px; }
 
     }
 
@@ -2163,7 +2167,7 @@
        RESPONSIVE — MOBILE  (≤ 768px)
     ════════════════════════════════════════════════════ */
     @media (max-width: 768px) {
-      :root { --px: 20px; }
+      :root { --px: 20px; --section-y: 48px; }
 
       /* Nav */
       .nav__inner { padding: 0 20px; }
@@ -2184,7 +2188,7 @@
       .scroll-hint { display: none; }
 
       /* About */
-      .about { padding: 40px var(--px) 32px; }
+      .about { padding: calc(var(--section-y) + 16px) var(--px) var(--section-y); }
       .about__card { padding: 28px 24px; gap: 32px; border-radius: 16px; }
       .about__headline { font-size: 26px; }
       .about__body { font-size: 15px; }
@@ -2198,14 +2202,14 @@
       .stat__value { font-size: 32px; }
 
       /* Skills */
-      .skills { padding: 40px var(--px); }
+      .skills { padding: var(--section-y) var(--px); }
       .skill-row { flex-direction: column; gap: 16px; padding: 32px 0; }
       .skill-row__left { flex: none; width: 100%; }
       .skill-row__right { padding-top: 0; font-size: 15px; }
       .skill-title { font-size: 28px; }
 
       /* Work */
-      .work { padding: 40px var(--px); }
+      .work { padding: var(--section-y) var(--px); }
       .work__header { flex-direction: column; gap: 4px; margin-bottom: 28px; }
       .case,
       .case:nth-child(even) { flex-direction: column; height: auto; border-radius: 16px; }
@@ -2235,14 +2239,14 @@
       /* Carousel mobile override handled in carousel CSS block */
 
       /* Beyond */
-      .beyond { padding: 40px var(--px) 48px; }
+      .beyond { padding: var(--section-y) var(--px) calc(var(--section-y) + 12px); }
       .beyond__label { margin-bottom: 28px; }
       .beyond__grid { grid-template-columns: 1fr; gap: 24px; }
       .beyond-card__content { padding: 24px; }
       .beyond-card:hover { transform: none; }
 
       /* Experience */
-      .experience { padding: 40px var(--px) 48px; }
+      .experience { padding: var(--section-y) var(--px) calc(var(--section-y) + 12px); }
       .experience__header { flex-direction: column; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
       .exp-row {
         grid-template-columns: 1fr;
@@ -2254,7 +2258,7 @@
       .exp-badge { margin-top: 4px; justify-self: start; }
 
       /* Testimonial carousel */
-      .t-wrap { padding-top: 40px; padding-left: 20px; }
+      .t-wrap { padding-top: var(--section-y); padding-left: 20px; }
       .t-col { flex: 0 0 calc(100vw - 76px); height: auto; }
       .t-card { padding: 36px 28px; border-radius: 20px; }
       .testimonial-quote,
