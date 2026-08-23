@@ -2210,14 +2210,43 @@
       .nav__inner { padding: 0 20px; }
 
       /* Hero */
-      .hero__inner { padding-bottom: 40px; gap: 0; }
+      .hero__inner {
+        padding-top: calc(16px + env(safe-area-inset-top));   /* no nav to clear here */
+        padding-bottom: 40px;
+        gap: 0;
+      }
       .hero__line-inner { font-size: 48px; letter-spacing: -1.5px; white-space: normal; }
       .hero__tagline { font-size: 15px; max-width: 100%; }
       .hero__kicker { font-size: 15px; }
       .hero__headlines { margin-bottom: 16px; gap: 0; }
-      /* The badge leads on a phone: the hero column is bottom-weighted, so
-         below the tagline it lands at the very bottom of the screen. */
-      .hero__avail { order: -1; margin-top: 0; margin-bottom: 20px; }
+      /* The badge sits at the very top of the screen, above the photo.
+         Absolute positioning would anchor it to .hero__text, which is the
+         nearest positioned ancestor and is itself bottom-weighted — and
+         making that static drops the text behind the photo, since the photo
+         is absolute and would then paint above in-flow content. An auto
+         margin does the job in flow instead: as the first child of the
+         column it absorbs all the free space below itself, pinning the badge
+         to the top and leaving the headline and tagline at the bottom. */
+      .hero__inner { align-items: stretch; }
+      /* .hero__inner is a column with justify-content: flex-end here, so the
+         text block sits at its own content height at the bottom. It has to
+         fill the hero before the auto margin has any space to absorb. */
+      .hero__text { flex: 1 1 auto; justify-content: flex-end; }
+      .hero__avail {
+        order: -1;
+        align-self: stretch;
+        width: auto;
+        justify-content: center;
+        margin: 0 0 auto;
+        /* One line, whatever the handset. The phrase is fixed and long, so
+           the type scales with the viewport rather than the pill wrapping —
+           clamped so it neither shrinks past legible on a 320 nor grows past
+           the desktop size on a wide phone. */
+        white-space: nowrap;
+        font-size: clamp(11px, 3.25vw, 13.5px);
+        gap: 8px;
+        padding: 8px 14px 8px 12px;
+      }
       .hero__line { padding-bottom: 2px; }
       /* photo stays full-bleed (rules set in 950px breakpoint) */
       .hero__photo { max-height: none; }
@@ -2419,10 +2448,15 @@
       width: 48px;
       height: 48px;
       border-radius: 50%;
+      /* No backdrop-filter here. It is fixed over content that moves on every
+         scroll frame, so the blur re-computed continuously — measured at 24
+         of 35 dropped frames across a full-length scroll of the Maersk case,
+         p95 33.4ms -> 17.7ms with it removed. The fill is unchanged: at 48px
+         and 22% white the blur was contributing almost nothing to how this
+         reads, and both states still carry their own contrast (light disc
+         with a white glyph here, .is-dark inverting both over light plates). */
       background: rgba(255,255,255,0.22);
       border: 1.5px solid rgba(255,255,255,0.35);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
       display: flex;
       align-items: center;
       justify-content: center;
