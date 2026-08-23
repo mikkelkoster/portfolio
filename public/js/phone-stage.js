@@ -575,27 +575,59 @@ window.initPhoneStage = function (canvas, config) {
     screenMesh.add(bezel);
     bezelCanvas = bez;
 
-    /* The export's materials are LEFT ALONE, and that is a reversal of what
-       the monitor stage does.
+    /* ── the finish ───────────────────────────────────────────────────
+       Every material in this export arrives at metalness 1, roughness 1, and
+       that pair has no specular in it at all: fully rough metal returns the
+       flat average of its surroundings and nothing else. With no highlight
+       anywhere and no gradient down the rail, the body reads as a black
+       shape drawn around the screen rather than as an object — which is
+       exactly what "still flat" meant.
 
-       There, every surface arrives at metalness 1 with roughness near 1, and
-       that pair renders as flat pale plastic: fully rough metal returns the
-       average of its surroundings, and in a studio built of white softboxes
-       that average is white. Taming it to a polished 0.86/0.34 is what
-       restores the aluminium.
+       An earlier pass here set one polished number across all 31 meshes and
+       made it worse: the camera glass, the plastic and the lens interiors
+       all became mirrors of a soft, near-uniform pink room. The lesson was
+       not "leave it alone", it was "do it per material". This table is keyed
+       on the export's own material names.
 
-       This model has the same numbers and needs the opposite treatment. A
-       phone is not a slab — it is chamfered rails and a curved back, and at
-       roughness 0.34 each of those small faces becomes a mirror showing one
-       flat sample of a soft, near-uniform pink room. Twenty-three of the
-       thirty-one meshes got rewritten that way, which is exactly why the
-       body read as a black silhouette with no gradient down the rail.
-       Compared side by side, the untouched materials have the tonal range;
-       the "tamed" ones do not. */
+       Rim_Buttons and Material.002 are the two full-length bands that make
+       up the side rail — [0.98, 0.1, 2] and [0.97, 0.1, 2] in the model's
+       own units. They are what has to catch the key, and they are what
+       carries the read. */
+    const FINISH = {
+      Rim_Buttons:              { metalness: 1,    roughness: 0.22 },
+      "Material.002":           { metalness: 1,    roughness: 0.28 },
+      "Material.004":           { metalness: 1,    roughness: 0.34 },
+      Grill_USB:                { metalness: 1,    roughness: 0.38 },
+      Screw:                    { metalness: 1,    roughness: 0.38 },
+      "Material.001":           { metalness: 0.85, roughness: 0.38 },
+      "Material.003":           { metalness: 0.9,  roughness: 0.3 },
+      Screen_Rim:               { metalness: 0.25, roughness: 0.42 },
+      Screen_Glass:             { metalness: 0,    roughness: 0.06 },
+      Glass_Camera_Logo:        { metalness: 0,    roughness: 0.09 },
+      Flash_Glass_002:          { metalness: 0,    roughness: 0.12 },
+      Flash_002:                { metalness: 0,    roughness: 0.5 },
+      Plastic:                  { metalness: 0,    roughness: 0.55 },
+      // front camera and Face ID — the bezel's island covers these, so this
+      // is only insurance against the pink disc coming back at a new angle
+      Camera_Pixel_Glass_002:   { metalness: 0,    roughness: 0.1,  color: 0x0a0a12 },
+      Camera_Pixel__002:        { metalness: 0.5,  roughness: 0.28, color: 0x14141c },
+    };
+
     model.traverse((o) => {
       if (!o.isMesh) return;
       o.castShadow = false;
       o.receiveShadow = false;
+      if (o === screenMesh || !o.material) return;
+      const f = FINISH[o.material.name];
+      if (!f) return;                       // unlisted stays as authored
+      // The export shares material instances across meshes, so clone before
+      // writing or one entry in the table rewrites several others.
+      o.material = o.material.clone();
+      o.material.metalness = f.metalness;
+      o.material.roughness = f.roughness;
+      if (f.color !== undefined) o.material.color.setHex(f.color);
+      o.material.envMapIntensity = 1.15;
+      o.material.needsUpdate = true;
     });
   }
 
