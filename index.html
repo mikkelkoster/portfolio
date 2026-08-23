@@ -196,15 +196,20 @@
        button to the status. A mail glyph is unambiguous; "Available" is the
        thing a visitor cannot infer from an icon, so that is what keeps its
        words. LinkedIn goes — it is in the footer and the hero. */
+    /* Every selector here is scoped to .pill-nav on purpose. This block sits
+       above both the base .pill-nav__mail / .pill-nav__status-short rules and
+       .btn, and at equal specificity the later rule wins — so unscoped, four
+       of these six declarations lost and the block silently did nothing. The
+       extra class buys (0,2,0) and makes it independent of source order. */
     @media (max-width: 900px) {
-      .pill-nav__linkedin,
-      .pill-nav__cv,
-      .pill-nav__cta,
-      .pill-nav__status-full { display: none; }
-      .pill-nav__mail { display: inline-flex; }
-      .pill-nav__status-short { display: inline; }
-      .pill-nav__status { padding-left: 0; border-left: 0; }
-      .pill-nav__inner { gap: 12px; padding: 6px 6px 6px 16px; }
+      .pill-nav .pill-nav__linkedin,
+      .pill-nav .pill-nav__cv,
+      .pill-nav .pill-nav__cta,
+      .pill-nav .pill-nav__status-full { display: none; }
+      .pill-nav .pill-nav__mail { display: inline-flex; }
+      .pill-nav .pill-nav__status-short { display: inline; }
+      .pill-nav .pill-nav__status { padding-left: 0; border-left: 0; }
+      .pill-nav .pill-nav__inner { gap: 12px; padding: 6px 6px 6px 16px; }
     }
 
     @media (max-width: 768px) {
@@ -919,7 +924,7 @@
       gap: 8px;
     }
     /* ── Badge base ─────────────────────────────────────── */
-    .tag, .exp-badge, .testimonial-tag {
+    .tag, .exp-badge, .exp-place, .testimonial-tag {
       font-size: 11px;
       font-weight: 500;
       font-family: 'Poppins', sans-serif;
@@ -930,7 +935,7 @@
       white-space: nowrap;
     }
     /* Light-background variant */
-    .tag, .exp-badge {
+    .tag, .exp-badge, .exp-place {
       background: var(--slate-100);
       color: #334155; /* slate-700 */
     }
@@ -1607,6 +1612,7 @@
       font-size: 16px;
       color: var(--text);
       line-height: 1.3;
+      flex: 0 0 100%;   /* own line, so period + place wrap together beneath */
     }
     .exp-detail { display: flex; flex-direction: column; gap: 4px; }
     .exp-role {
@@ -1633,13 +1639,14 @@
       transition: background 0.18s ease;
     }
     .exp-item:hover { background: var(--slate-100); }
-    .exp-item:hover .exp-badge { border-color: var(--slate-300); background: var(--slate-200); }
+    .exp-item:hover .exp-badge,
+    .exp-item:hover .exp-place { border-color: var(--slate-300); background: var(--slate-200); }
     .exp-item:last-child {
       border-bottom: 1px solid var(--slate-200);
     }
     .exp-toggle { cursor: pointer; user-select: none; }
     .exp-item.is-open .exp-expand { cursor: pointer; }
-    .exp-company-wrap { display: flex; flex-direction: column; gap: 3px; }
+    .exp-company-wrap { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 8px; }
     .exp-row-right {
       display: flex;
       align-items: center;
@@ -1652,10 +1659,13 @@
       flex-shrink: 0;
       display: block;
       margin-top: 2px;
+      /* The glyph is drawn pointing down; closed rows show it flipped up. */
+      transform: rotate(180deg);
     }
     .exp-item.is-open { background: var(--slate-100); }
-    .exp-item.is-open .exp-badge { border-color: var(--slate-300); background: var(--slate-200); }
-    .exp-item.is-open .exp-chevron { transform: rotate(180deg); }
+    .exp-item.is-open .exp-badge,
+    .exp-item.is-open .exp-place { border-color: var(--slate-300); background: var(--slate-200); }
+    .exp-item.is-open .exp-chevron { transform: rotate(0deg); }
     .exp-expand {
       height: 0;
       overflow: hidden;
@@ -1854,7 +1864,8 @@
     html[data-theme="dark"] .nav.in-light .nav__theme-toggle:hover { background: rgba(255,255,255,0.1); color: #fff; }
     /* Badge text in dark mode */
     [data-theme="dark"] .tag,
-    [data-theme="dark"] .exp-badge { color: var(--body); }
+    [data-theme="dark"] .exp-badge,
+    [data-theme="dark"] .exp-place { color: var(--body); }
     /* Secondary button in dark mode */
     [data-theme="dark"] .btn--secondary {
       background: rgba(255,255,255,0.08);
@@ -2163,6 +2174,9 @@
       .hero__tagline { font-size: 15px; max-width: 100%; }
       .hero__kicker { font-size: 15px; }
       .hero__headlines { margin-bottom: 16px; gap: 0; }
+      /* The badge leads on a phone: the hero column is bottom-weighted, so
+         below the tagline it lands at the very bottom of the screen. */
+      .hero__avail { order: -1; margin-top: 0; margin-bottom: 20px; }
       .hero__line { padding-bottom: 2px; }
       /* photo stays full-bleed (rules set in 950px breakpoint) */
       .hero__photo { max-height: none; }
@@ -2261,7 +2275,13 @@
       .footer__top .container { flex-direction: column; align-items: flex-start; gap: 28px; }
       .footer__headline { font-size: 40px; letter-spacing: -1.5px; white-space: normal; }
       .footer__cta-email { font-size: 18px; align-self: flex-start; }
-      .footer__bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .footer__bottom {
+        flex-direction: column; align-items: flex-start; gap: 12px;
+        /* The pill is fixed to the bottom here, so the last rows of the
+           footer scroll underneath it. Clear its 40px height plus its 4px
+           offset and the safe area, and leave a gap under the last line. */
+        padding-bottom: calc(88px + env(safe-area-inset-bottom));
+      }
     }
 
     /* ════════════════════════════════════════════════════
@@ -5244,8 +5264,9 @@
         <div class="exp-item">
           <div class="exp-row exp-toggle will-fade-up" data-delay="240">
             <div class="exp-company-wrap">
-              <span class="exp-company">Firstborn — New York</span>
+              <span class="exp-company">Firstborn</span>
               <span class="exp-period">Apr – Oct 2018</span>
+              <span class="exp-place">New York</span>
             </div>
             <div class="exp-detail">
               <span class="exp-role">Senior Experience Strategist</span>
@@ -5347,8 +5368,9 @@
         <div class="exp-item">
           <div class="exp-row exp-toggle will-fade-up" data-delay="480">
             <div class="exp-company-wrap">
-              <span class="exp-company">Riot Bernard — Shanghai</span>
+              <span class="exp-company">Riot Bernard</span>
               <span class="exp-period">Mar – Oct 2011</span>
+              <span class="exp-place">Shanghai</span>
             </div>
             <div class="exp-detail">
               <span class="exp-role">Co-Founder</span>
@@ -5372,8 +5394,9 @@
         <div class="exp-item">
           <div class="exp-row exp-toggle will-fade-up" data-delay="540">
             <div class="exp-company-wrap">
-              <span class="exp-company">Wolff Olins — London</span>
+              <span class="exp-company">Wolff Olins</span>
               <span class="exp-period">Oct 2010 – Jan 2011</span>
+              <span class="exp-place">London</span>
             </div>
             <div class="exp-detail">
               <span class="exp-role">Intern</span>
