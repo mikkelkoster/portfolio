@@ -1659,12 +1659,20 @@
     .exp-list.is-clipped .exp-item--cut { border-bottom: 1px solid var(--slate-200); }
     /* The transition sits on .is-revealing, not .is-shown: it has to apply
        when .is-shown is REMOVED too, and a transition declared on the class
-       being removed does not run. */
+       being removed does not run.
+
+       Height is in here as well, driven inline by the JS. Fading alone left
+       every row holding its full height until the very end, so the buttons
+       underneath sat still and then jumped — the rows have to give their
+       height back as they go, one at a time. */
     .exp-item--more.is-revealing {
       display: flex;
       opacity: 0;
       transform: translateY(12px);
-      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 0.7, 0.3, 1);
+      overflow: hidden;
+      transition: opacity 0.42s ease,
+                  transform 0.42s cubic-bezier(0.22, 0.7, 0.3, 1),
+                  height 0.42s cubic-bezier(0.22, 0.7, 0.3, 1);
     }
     .exp-item--more.is-shown {
       opacity: 1;
@@ -6004,30 +6012,44 @@
       const hidden = [...list.querySelectorAll('.exp-item--more')];
       if (!hidden.length) { btn.remove(); return; }
 
-      const STEP = 80, EASE = 520;
-      const SPAN = (hidden.length - 1) * STEP + EASE;
+      const STEP = 80, DUR = 440;           // DUR tracks the CSS transition
+      const SPAN = (hidden.length - 1) * STEP + DUR;
       let open = false, busy = false;
 
       function expand() {
         list.classList.remove('is-clipped');
-        // Put every row into its start state first, then take ONE reflow for
-        // the batch — reading offsetHeight per row would flush layout five
-        // times and let the earlier rows animate before the later ones exist.
-        hidden.forEach(el => el.classList.add('is-revealing'));
-        void list.offsetHeight;
-        hidden.forEach((el, i) => setTimeout(() => el.classList.add('is-shown'), i * STEP));
+        hidden.forEach((el, i) => setTimeout(() => {
+          el.classList.add('is-revealing');
+          el.style.height = '0px';
+          void el.offsetHeight;                       // start from a real 0
+          el.style.height = el.scrollHeight + 'px';
+          el.classList.add('is-shown');
+          // Hand the height back to the content, or an accordion opened
+          // inside this row later would be clipped to the frozen value.
+          setTimeout(() => { el.style.height = ''; }, DUR);
+        }, i * STEP));
       }
 
       function collapse() {
         // Bottom row first, so the list reads as folding back down into the
         // button rather than collapsing from under the reader's eye.
         const n = hidden.length;
-        hidden.forEach((el, i) => {
+        hidden.forEach((el, i) => setTimeout(() => {
           if (el.classList.contains('is-open')) closeExpItem(el);
-          setTimeout(() => el.classList.remove('is-shown'), (n - 1 - i) * STEP);
-        });
+          // Measured at its own turn rather than up front: an accordion
+          // closing inside it is still settling, and the live height is the
+          // one that animates without a jump.
+          el.style.height = el.getBoundingClientRect().height + 'px';
+          void el.offsetHeight;
+          el.classList.remove('is-shown');
+          el.style.height = '0px';
+          setTimeout(() => {
+            el.classList.remove('is-revealing');
+            el.style.height = '';
+          }, DUR);
+        }, (n - 1 - i) * STEP));
+
         setTimeout(() => {
-          hidden.forEach(el => el.classList.remove('is-revealing'));
           list.classList.add('is-clipped');
           // Collapsing removes five rows of height. If that leaves the button
           // above the fold the reader loses their place entirely.
