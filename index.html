@@ -4335,17 +4335,78 @@
       .cm-vs__arrow { transform: rotate(90deg); padding-top: 0; justify-content: center; }
       .cm-ba-card__shot { max-width: 180px; }
 
-      /* ── Matas: frequency ladder stacks; ramp becomes a widening bar ── */
+      /* ── Matas: frequency ladder ──
+         Desktop reads row-major off a shared label column. Collapsed to one
+         column that source order becomes a flat list where no cell is
+         attached to anything. So on mobile the same cells regroup by tier
+         via `order`: each frequency becomes a card, and because a shared
+         label can't repeat across three cards, each cell carries its own
+         label from data-row. The bands lose their column span here, so the
+         coverage it encoded is spelled out in data-cover instead. */
       .cm-freq { padding: 32px 20px; }
       .cm-freq__title { font-size: 20px; }
       .cm-freq__sub { margin-bottom: 28px; font-size: 13px; }
       .cm-freq__tbl { grid-template-columns: 1fr; }
-      .cm-freq__tbl > * { padding: 12px 0; }
-      .cm-freq__head { margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(253,175,191,0.28); }
-      .cm-freq__rlab { padding-top: 14px; }
-      .cm-freq__band { margin-right: 0; }
-      .cm-freq__band--points,
-      .cm-freq__band--rewards { grid-column: 1 / 2; }
+      .cm-freq__tbl > * { padding: 0; border-bottom: none; }
+      .cm-freq__rlab { display: none; }
+
+      .cm-freq__tbl [data-tier] {
+        background: rgba(255,255,255,0.03);
+        border-left: 1px solid rgba(253,175,191,0.22);
+        border-right: 1px solid rgba(253,175,191,0.22);
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      [data-tier="1"] { --t: 0; }
+      [data-tier="2"] { --t: 1; }
+      [data-tier="3"] { --t: 2; }
+
+      .cm-freq__head {
+        order: calc(var(--t) * 3 + 1);
+        margin-top: 14px;
+        padding-top: 15px;
+        padding-bottom: 11px;
+        border: 1px solid rgba(253,175,191,0.22);
+        border-bottom: none;
+        border-radius: 12px 12px 0 0;
+        font-size: 16px;
+      }
+      .cm-freq__dots { order: calc(var(--t) * 3 + 2); padding-bottom: 13px; gap: 6px; }
+      .cm-freq__cell:not(.cm-freq__dots) {
+        order: calc(var(--t) * 3 + 3);
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(253,175,191,0.22);
+        border-radius: 0 0 12px 12px;
+        line-height: 1.7;
+      }
+      /* the row label the shared column used to carry, per cell */
+      .cm-freq__dots::before,
+      .cm-freq__cell:not(.cm-freq__dots)::before {
+        content: attr(data-row);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: rgba(248,250,252,0.40);
+      }
+      .cm-freq__dots::before { margin-right: 6px; }
+      .cm-freq__cell:not(.cm-freq__dots)::before { display: block; margin-bottom: 7px; }
+
+      .cm-freq__rlab--keep { display: block; order: 10; }
+      .cm-freq__band { margin-right: 0; padding: 14px 16px; }
+      .cm-freq__band--points { grid-column: 1 / 2; order: 11; }
+      .cm-freq__band--rewards { grid-column: 1 / 2; order: 12; }
+      /* what the column span said on desktop */
+      .cm-freq__band[data-cover]::after {
+        content: attr(data-cover);
+        display: block;
+        margin-top: 8px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: rgba(253,175,191,0.72);
+      }
 
       /* ── Matas: spend chart ── */
       .cm-spend { padding: 32px 20px; }
@@ -6723,23 +6784,23 @@
 
             <div class="cm-freq__tbl">
               <div class="cm-freq__rlab cm-freq__norule" style="border-bottom:1px solid rgba(253,175,191,0.32);"></div>
-              <div class="cm-freq__head">Low frequency</div>
-              <div class="cm-freq__head">Medium frequency</div>
-              <div class="cm-freq__head">High frequency</div>
+              <div class="cm-freq__head" data-tier="1">Low frequency</div>
+              <div class="cm-freq__head" data-tier="2">Medium frequency</div>
+              <div class="cm-freq__head" data-tier="3">High frequency</div>
 
               <div class="cm-freq__rlab">Spend</div>
-              <div class="cm-freq__cell cm-freq__dots"><i></i><i class="is-off"></i><i class="is-off"></i></div>
-              <div class="cm-freq__cell cm-freq__dots"><i></i><i></i><i class="is-off"></i></div>
-              <div class="cm-freq__cell cm-freq__dots"><i></i><i></i><i></i></div>
+              <div class="cm-freq__cell cm-freq__dots" data-tier="1" data-row="Spend"><i></i><i class="is-off"></i><i class="is-off"></i></div>
+              <div class="cm-freq__cell cm-freq__dots" data-tier="2" data-row="Spend"><i></i><i></i><i class="is-off"></i></div>
+              <div class="cm-freq__cell cm-freq__dots" data-tier="3" data-row="Spend"><i></i><i></i><i></i></div>
 
               <div class="cm-freq__rlab">What they want</div>
-              <div class="cm-freq__cell">Convenience<br>Price<br>Inspiration</div>
-              <div class="cm-freq__cell">Practical driven<br>Good guides for using products<br>Targeted product inspiration</div>
-              <div class="cm-freq__cell">Personal service and recommendations<br>Close brand relationship<br>Deeply committed</div>
+              <div class="cm-freq__cell" data-tier="1" data-row="What they want">Convenience<br>Price<br>Inspiration</div>
+              <div class="cm-freq__cell" data-tier="2" data-row="What they want">Practical driven<br>Good guides for using products<br>Targeted product inspiration</div>
+              <div class="cm-freq__cell" data-tier="3" data-row="What they want">Personal service and recommendations<br>Close brand relationship<br>Deeply committed</div>
 
-              <div class="cm-freq__rlab cm-freq__norule" style="padding-top:26px;">What we offered</div>
-              <div class="cm-freq__band cm-freq__band--points"><b>Points</b><span>Earned on every purchase. 1&nbsp;point = 1&nbsp;kr, for everyone.</span></div>
-              <div class="cm-freq__band cm-freq__band--rewards"><b>Rewards</b><span>A choice of benefit past 1,000&nbsp;kr.</span></div>
+              <div class="cm-freq__rlab cm-freq__norule cm-freq__rlab--keep" style="padding-top:26px;">What we offered</div>
+              <div class="cm-freq__band cm-freq__band--points" data-cover="All frequencies"><b>Points</b><span>Earned on every purchase. 1&nbsp;point = 1&nbsp;kr, for everyone.</span></div>
+              <div class="cm-freq__band cm-freq__band--rewards" data-cover="High frequency only"><b>Rewards</b><span>A choice of benefit past 1,000&nbsp;kr.</span></div>
             </div>
           </div>
 
