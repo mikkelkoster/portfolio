@@ -83,8 +83,30 @@ graphics. An earlier softer pink measured 2.54:1 and did not.
 ### Behaviour
 - **1 card at a time** navigation (next/prev moves exactly one card)
 - Active card is full opacity; card peeking at edge is `opacity: 0.35`
-- Drag/swipe supported on touch
+- Drag/swipe supported on touch — see below
 - **Never hardcode `opacity` on inner card elements** — the JS carousel owns opacity exclusively via `.is-peek` / `.is-hidden` classes on the outer `.cm-car__col`. Inline opacity on children will override the JS state silently and break the "active" appearance.
+
+### Swipe
+All three carousels — the page carousel, the testimonials, and every
+`initCmCarousel` instance — go through one `attachSwipe(track, opts)` helper at
+the top of the first `<script>` block. They are all inline in `index.html`, so
+unlike the two scene files there is no payload argument for duplicating it.
+
+Things it has to get right, each of which was once wrong:
+- **Track `touchmove`, not just start and end.** Without it the track never
+  moves under the finger, so a swipe gives no sign it registered.
+- **Lock the axis in the first 10px.** A vertical page scroll that drifts
+  sideways used to count as a deliberate swipe. Vertical gestures are handed
+  straight back to the page and never `preventDefault`ed.
+- **Commit on distance OR velocity.** A flat distance threshold ignores a fast
+  short flick, which is how people actually swipe.
+- **`onStart` fires at the axis lock, not at touchstart.** It stops any
+  animation in flight; firing it on touchstart means a tap freezes a slide
+  mid-way, because a tap never reaches commit or cancel.
+- Tracks need `touch-action: pan-y` so the browser hands horizontal gestures
+  over before it starts scrolling.
+- Each carousel keeps a `gen` counter its animation frame checks, so an
+  interrupted slide stops writing `transform` under the finger.
 
 ### Skeleton loading
 - Every carousel image has a `<div class="cm-skeleton">` sibling (z-index 2) before the `<img>` (z-index 1)

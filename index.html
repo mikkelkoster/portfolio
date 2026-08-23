@@ -1324,6 +1324,7 @@
       display: flex;
       gap: 16px;
       will-change: transform;
+      touch-action: pan-y;
     }
     /* Each column = card image + static caption, slides together             */
     /* Formula: 3 cards fill the content area (viewport − 2×64px padding)   */
@@ -1727,6 +1728,7 @@
       gap: 16px;
       will-change: transform;
       align-items: stretch;
+      touch-action: pan-y;
     }
     .t-col {
       flex: 0 0 min(calc(100vw - 240px), 1150px);
@@ -3607,6 +3609,7 @@
       gap: 24px;
       will-change: transform;
       cursor: grab;
+      touch-action: pan-y;
     }
     .cm-car__track:active { cursor: grabbing; }
     /* Image-card carousels: ~1.4 visible + peek */
@@ -5474,6 +5477,68 @@
        document.timeline; setTimeout uses OS timers.)
     ───────────────────────────────────────────────────── */
 
+    /* ── Swipe ─────────────────────────────────────────────
+       All three carousels share this. They used to listen for touchstart and
+       touchend only, which reads the finger's start and end but nothing in
+       between: the track never moved under the finger, so a swipe gave no
+       sign it had registered, and a diagonal page scroll that drifted 50px
+       sideways counted as a deliberate swipe.
+
+       Tracking touchmove fixes both. The first 10px decide the axis; a
+       vertical gesture is handed straight back to the page, and a horizontal
+       one drags the track live. Commit is distance OR velocity, so a fast
+       short flick advances — the old flat 50px threshold ignored those.
+       Pairs with `touch-action: pan-y` on the tracks. */
+    function attachSwipe(track, opts) {
+      const AXIS_LOCK = 10;
+      let x0 = 0, y0 = 0, t0 = 0, xLock = 0, axis = '', live = false;
+
+      track.addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) { live = false; return; }
+        live = true; axis = '';
+        x0 = e.touches[0].clientX;
+        y0 = e.touches[0].clientY;
+        t0 = performance.now();
+      }, { passive: true });
+
+      track.addEventListener('touchmove', e => {
+        if (!live) return;
+        const x = e.touches[0].clientX;
+        const dx = x - x0;
+        const dy = e.touches[0].clientY - y0;
+        if (!axis) {
+          if (Math.abs(dx) < AXIS_LOCK && Math.abs(dy) < AXIS_LOCK) return;
+          axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+          if (axis === 'y') { live = false; return; }   // the page's gesture
+          xLock = x;
+          // onStart stops any animation in flight, so it fires here rather
+          // than on touchstart: a tap that never moves would otherwise freeze
+          // a slide it is never going to finish
+          if (opts.onStart) opts.onStart();
+        }
+        e.preventDefault();
+        opts.onDrag(x - xLock);   // measured from the lock, not the touch
+      }, { passive: false });
+
+      track.addEventListener('touchend', e => {
+        if (!live) return;
+        live = false;
+        if (axis !== 'x') return;
+        const dx = e.changedTouches[0].clientX - x0;
+        const w  = (track.parentElement && track.parentElement.offsetWidth) || track.offsetWidth || 1;
+        const far   = Math.abs(dx) > Math.min(70, w * 0.18);
+        const flick = (performance.now() - t0) < 300 && Math.abs(dx) > 24;
+        if (far || flick) opts.onCommit(dx < 0 ? 1 : -1);
+        else opts.onCancel();
+      });
+
+      track.addEventListener('touchcancel', () => {
+        if (!live) return;
+        live = false;
+        if (axis === 'x') opts.onCancel();
+      });
+    }
+
     /* ── 1. Nav scroll ─────────────────────────────────── */
     const nav  = document.getElementById('nav');
     const hero = document.querySelector('.hero');
@@ -5708,12 +5773,18 @@
         return Math.max(1, Math.floor(track.parentElement.offsetWidth / colWidth()));
       }
 
+      // bumped when a drag starts, so an in-flight frame loop stops writing
+      // transform underneath the finger
+      let gen = 0;
+
       function goTo(index) {
         if (animating) return;
         animating = true;
+        const g = ++gen;
         const from = offsetX, to = -(index * colWidth());
         const dur = 600, t0 = performance.now();
         function frame() {
+          if (g !== gen) return;
           const p = Math.min((performance.now() - t0) / dur, 1);
           offsetX = from + (to - from) * easeOutQuart(p);
           track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
@@ -5772,14 +5843,16 @@
         track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
       });
 
-      // Touch support
-      track.addEventListener('touchstart', e => {
-        touchStartX = e.touches[0].clientX; touchStartOffset = offsetX;
-      }, { passive: true });
-      track.addEventListener('touchend', e => {
-        const delta = e.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(delta) > 50) { goTo(delta < 0 ? Math.min(current + visibleCount(), total - visibleCount()) : Math.max(current - visibleCount(), 0)); }
-        else { goTo(current); }
+      // Touch support — pages by however many cards are on screen
+      attachSwipe(track, {
+        onStart:  () => { gen++; animating = false; touchStartOffset = offsetX; },
+        onDrag:   dx => { offsetX = touchStartOffset + dx; track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; },
+        onCommit: dir => {
+          const step = visibleCount();
+          goTo(dir > 0 ? Math.min(current + step, Math.max(0, total - step))
+                       : Math.max(current - step, 0));
+        },
+        onCancel: () => goTo(current)
       });
 
       // Re-evaluate on resize (e.g. switching to wide-screen 4-col layout)
@@ -5897,10 +5970,15 @@
         return cols[0].offsetWidth + gap;
       }
 
+      // bumped when a drag starts, so an in-flight frame loop stops writing
+      // transform underneath the finger
+      let gen = 0;
+
       function goTo(index) {
         if (animating) return;
         index = Math.max(0, Math.min(total - 1, index));
         animating = true;
+        const g = ++gen;
         const fromIdx = current;
         const toIdx   = index;
         const from = offsetX, to = -(index * colWidth());
@@ -5914,6 +5992,7 @@
         cols.forEach(col => col.classList.remove('is-peek'));
 
         (function frame() {
+          if (g !== gen) return;
           const p  = Math.min((performance.now() - t0) / dur, 1);
           const ep = easeOutQuart(p);
           offsetX = from + (to - from) * ep;
@@ -5975,13 +6054,11 @@
         offsetX = touchStartOffset + (e.clientX - touchStartX);
         track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
       });
-      track.addEventListener('touchstart', e => {
-        touchStartX = e.touches[0].clientX; touchStartOffset = offsetX;
-      }, { passive: true });
-      track.addEventListener('touchend', e => {
-        const delta = e.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(delta) > 50) goTo(delta < 0 ? current + 1 : current - 1);
-        else goTo(current);
+      attachSwipe(track, {
+        onStart:  () => { gen++; animating = false; touchStartOffset = offsetX; },
+        onDrag:   dx => { offsetX = touchStartOffset + dx; track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; },
+        onCommit: dir => goTo(current + dir),   // goTo clamps
+        onCancel: () => goTo(current)
       });
     })();
 
@@ -7570,12 +7647,18 @@
         function visCount() { return isVarWidth ? 1 : Math.max(1, Math.floor(track.parentElement.offsetWidth / colW())); }
         function snapX(idx) { return isVarWidth ? -(cols[idx]?.offsetLeft ?? 0) : -(idx * colW()); }
 
+        // bumped when a drag starts, so an in-flight frame loop stops writing
+        // transform underneath the finger
+        let gen = 0;
+
         function goTo(idx) {
           if (animating) return;
           animating = true;
+          const g = ++gen;
           const from = offsetX, to = snapX(idx);
           const dur = 540, t0 = performance.now();
           function frame() {
+            if (g !== gen) return;
             const p = Math.min((performance.now() - t0) / dur, 1);
             const e = 1 - Math.pow(1 - p, 4);
             offsetX = from + (to - from) * e;
@@ -7626,8 +7709,17 @@
         track.addEventListener('mousedown',  e => { dragging = true; tStartX = e.clientX; tStartOff = offsetX; track.style.transition = 'none'; });
         window.addEventListener('mouseup',   e => { if (!dragging) return; dragging = false; const d = e.clientX - tStartX; if (Math.abs(d) > 60) goTo(d < 0 ? Math.min(current + 1, total - 1) : Math.max(current - 1, 0)); else goTo(current); });
         window.addEventListener('mousemove', e => { if (!dragging) return; offsetX = tStartOff + (e.clientX - tStartX); track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; });
-        track.addEventListener('touchstart', e => { tStartX = e.touches[0].clientX; tStartOff = offsetX; }, { passive: true });
-        track.addEventListener('touchend',   e => { const d = e.changedTouches[0].clientX - tStartX; if (Math.abs(d) > 50) goTo(d < 0 ? Math.min(current + 1, total - 1) : Math.max(current - 1, 0)); else goTo(current); });
+        attachSwipe(track, {
+          onStart:  () => { gen++; animating = false; tStartOff = offsetX; },
+          onDrag:   dx => { offsetX = tStartOff + dx; track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; },
+          // last landing spot is total - visCount(), not total - 1, or the
+          // final swipe drags the track past its own end
+          onCommit: dir => {
+            const maxIdx = Math.max(0, total - visCount());
+            goTo(dir > 0 ? Math.min(current + 1, maxIdx) : Math.max(current - 1, 0));
+          },
+          onCancel: () => goTo(current)
+        });
         window.addEventListener('resize',    () => goTo(Math.min(current, Math.max(0, total - visCount()))));
       }
 
