@@ -131,6 +131,16 @@ window.STAGE_CONFIGS = {
       low:  [0.78, 0.42, 0.52],
       high: [1.00, 0.94, 0.95],
     },
+    /* The chrome that does not scroll with the page. Heights are in the
+       plate's own pixels, measured off the captures: the home screen's tab
+       bar is 125 tall at the foot, and both inner screens carry the same
+       94px nav header. Without these the bar travels off with the content
+       and the screen reads as a long picture being dragged, not an app. */
+    sticky: [
+      { edge: "bottom", px: 125 },
+      { edge: "top",    px: 94 },
+      { edge: "top",    px: 94 },
+    ],
     shots: [
       {
         // opens three-quarter from the left, creeping in and levelling out
@@ -145,10 +155,14 @@ window.STAGE_CONFIGS = {
         to:   { az: 12,  el: 6,   dist: 15.8,  tx: 0,    ty: 0,    roll: 1.2, key: 1, amb: 1 },
       },
       {
-        // high and near-frontal to close, the shortest page so it can travel
+        /* High to close, the shortest page so it can travel. It used to end
+           near-frontal at az -5, and a phone shot square-on has no body in
+           it — no rail, no thickness, no edge for the key to catch — so it
+           read as a screenshot laid on a pink card rather than as a device.
+           It stays off-axis the whole way now. */
         plate: 2, hold: 4.2, scroll: 0.85,
-        from: { az: 9,   el: 18,  dist: 18.9, tx: 0.1,  ty: -0.15, roll: -1.4, key: 1, amb: 1 },
-        to:   { az: -5,  el: 12,  dist: 17.2, tx: -0.1, ty: 0.1,   roll: 0.4,  key: 1, amb: 1 },
+        from: { az: 21,  el: 18,  dist: 18.9, tx: 0.1,  ty: -0.15, roll: -1.4, key: 1, amb: 1 },
+        to:   { az: 13,  el: 12,  dist: 17.2, tx: -0.1, ty: 0.1,   roll: 0.4,  key: 1, amb: 1 },
       },
     ],
   },

@@ -26,6 +26,7 @@ window.initPhoneStage = function (canvas, config) {
   const SHOTS = config.shots;
   const GROUND = config.ground;
   const MODEL_URL = config.model;
+  const STICKY = config.sticky || [];   // per-plate pinned bar, see buildSticky
 
   const THREE = window.THREE;
   const gsap = window.gsap;
@@ -407,7 +408,12 @@ window.initPhoneStage = function (canvas, config) {
      sniff — no error, no progress, a promise that never settles. Fetching
      the bytes and handing them to parse() is explicit and reports failure. */
   let screenMat = null;
+  const BEZEL = 0.028;        // of the screen's WIDTH
+  const RADIUS = 0.098;       // ditto — the display's corner, not the body's
   let screenMesh = null;
+  let overlayGeo = null;      // panel-UV clone, for the bezel and the strips
+  let bezelCanvas = null;     // gives the strips the panel's pixel dimensions
+  const stickyMeshes = [];    // one per plate, or null where a plate has none
   const phone = new THREE.Group();
   scene.add(phone);
 
@@ -466,14 +472,34 @@ window.initPhoneStage = function (canvas, config) {
     const ext = { x: bb.max.x - bb.min.x, y: bb.max.y - bb.min.y, z: bb.max.z - bb.min.z };
     const axes = ["x", "y", "z"].sort((a, b) => ext[b] - ext[a]);
     const AV = axes[0], AU = axes[1];         // longest = down the screen
-    const uv = new Float32Array(pos.count * 2);
+
+    /* Two sets of UVs off the same box.
+
+       PANEL is the plain 0..1 mapping, and it is what the bezel wants: the
+       bezel is drawn for the whole panel and punches its own window.
+
+       DISPLAY is inset by the bezel, and it is what the plate wants. Mapping
+       a plate across the whole panel puts its outer edge UNDER the bezel, so
+       the interface lost a slice off each side — a capture is of the display,
+       not of the panel the display sits in. The inset is BEZEL of the WIDTH
+       on all four sides, which in v is that same distance measured against
+       the height. */
+    const uvPanel = new Float32Array(pos.count * 2);
+    const uvDisplay = new Float32Array(pos.count * 2);
+    const bu = BEZEL, bv = BEZEL * (ext[AU] || 1) / (ext[AV] || 1);
     for (let i = 0; i < pos.count; i++) {
       const u = (pos["get" + AU.toUpperCase()](i) - bb.min[AU]) / (ext[AU] || 1);
       const v = (pos["get" + AV.toUpperCase()](i) - bb.min[AV]) / (ext[AV] || 1);
-      uv[i * 2] = u;
-      uv[i * 2 + 1] = v;
+      uvPanel[i * 2] = u;
+      uvPanel[i * 2 + 1] = v;
+      uvDisplay[i * 2] = (u - bu) / (1 - 2 * bu);
+      uvDisplay[i * 2 + 1] = (v - bv) / (1 - 2 * bv);
     }
-    geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+    geo.setAttribute("uv", new THREE.BufferAttribute(uvDisplay, 2));
+    /* The bezel needs its own geometry, not the screen's: they share a mesh
+       shape but no longer share UVs. */
+    overlayGeo = geo.clone();
+    overlayGeo.setAttribute("uv", new THREE.BufferAttribute(uvPanel, 2));
 
     screenMat = new THREE.MeshBasicMaterial({ color: 0x0b0d11, toneMapped: false });
     screenMesh.material = screenMat;
@@ -494,8 +520,6 @@ window.initPhoneStage = function (canvas, config) {
        Sharing the screen's geometry means it inherits the transform exactly,
        and polygonOffset biases it toward the viewer so it wins the depth
        test without needing to know which way the mesh's normals face. */
-    const BEZEL = 0.028;        // of the screen's WIDTH
-    const RADIUS = 0.098;       // ditto — the display's corner, not the body's
     const bez = document.createElement("canvas");
     bez.width = 512;
     bez.height = Math.round(512 / screenAspect);
@@ -537,7 +561,7 @@ window.initPhoneStage = function (canvas, config) {
     bezelTex.colorSpace = THREE.SRGBColorSpace;
     bezelTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     bezelTex.needsUpdate = true;
-    const bezel = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+    const bezel = new THREE.Mesh(overlayGeo, new THREE.MeshBasicMaterial({
       map: bezelTex,
       transparent: true,
       depthWrite: false,
@@ -547,7 +571,9 @@ window.initPhoneStage = function (canvas, config) {
       polygonOffsetUnits: -2,
     }));
     bezel.castShadow = false;
+    bezel.renderOrder = 2;
     screenMesh.add(bezel);
+    bezelCanvas = bez;
 
     /* The export's materials are LEFT ALONE, and that is a reversal of what
        the monitor stage does.
@@ -728,6 +754,72 @@ window.initPhoneStage = function (canvas, config) {
     return levels;
   }
 
+  /* ── the pinned bar ───────────────────────────────────────────────
+     A page scrolls under its own chrome: the tab bar at the foot of the home
+     screen and the nav header on the two inner screens do not travel with
+     the content. The plate is one flat capture, so scrolling it moves the
+     bar off with everything else and the screen reads as a long picture
+     being dragged rather than as an app.
+
+     The fix is a second quad over the same panel carrying only that strip,
+     cut from the plate at full resolution and parked at its edge. Static
+     geometry and a static texture — no per-frame canvas work, which is what
+     compositing the strip into the scrolling texture every frame would have
+     cost. It sits above the plate and below the bezel, so the bezel's
+     rounded corners still trim it. */
+  function buildSticky(tex, spec) {
+    if (!spec || !bezelCanvas || !overlayGeo) return null;
+    const img = tex.userData.img;
+    if (!img) return null;
+
+    const W = bezelCanvas.width, H = bezelCanvas.height;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const g = c.getContext("2d");
+
+    // the display window inside the bezel — the same rect the plate maps to
+    const inset = W * BEZEL;
+    const innerW = W - inset * 2, innerH = H - inset * 2;
+    // the plate is fitted to the display's WIDTH, so that is the scale
+    const scale = innerW / img.width;
+    const stripH = spec.px * scale;
+
+    if (spec.edge === "bottom") {
+      g.drawImage(img, 0, img.height - spec.px, img.width, spec.px,
+                  inset, inset + innerH - stripH, innerW, stripH);
+    } else {
+      /* The captures start at the app's own header — there is no status bar
+         in them — so pinning the strip flush to the top of the display puts
+         it straight under the Dynamic Island, which ate the title. Reserve
+         the island's band first and fill it by stretching the plate's top
+         row, which is the header's own background: the result reads as the
+         status-bar area the capture never had. The island itself is painted
+         by the bezel at renderOrder 2, so it still lands on top. */
+      const band = Math.max(0, H * 0.082 - inset);
+      g.drawImage(img, 0, 0, img.width, 1, inset, inset, innerW, band + 1);
+      g.drawImage(img, 0, 0, img.width, spec.px, inset, inset + band, innerW, stripH);
+    }
+
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    t.needsUpdate = true;
+    const m = new THREE.Mesh(overlayGeo, new THREE.MeshBasicMaterial({
+      map: t,
+      transparent: true,
+      depthWrite: false,
+      toneMapped: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
+    }));
+    m.castShadow = false;
+    m.renderOrder = 1;
+    m.visible = false;
+    screenMesh.add(m);
+    return m;
+  }
+
   /* Each plate is a whole page, not a screen. `window` is the fraction of it
      visible at once — screen width over screen height, against the image's
      own aspect — and it is what the scroll tween moves.
@@ -755,6 +847,7 @@ window.initPhoneStage = function (canvas, config) {
         tex.repeat.set(1, win);
         tex.offset.set(0, 1 - win);
         tex.userData.window = win;
+        tex.userData.img = img;      // buildSticky cuts its strip from this
         tex.needsUpdate = true;
         resolve(tex);
       };
@@ -807,6 +900,7 @@ window.initPhoneStage = function (canvas, config) {
     }
     // rewind to the top of the page for this shot
     plate.offset.y = 1 - plate.userData.window;
+    stickyMeshes.forEach((m, i) => { if (m) m.visible = i === index; });
   }
 
   /* The scroll itself. `travel` is how much of the remaining page the shot
@@ -956,6 +1050,8 @@ window.initPhoneStage = function (canvas, config) {
     .then(() => Promise.all(plateUrls.map(loadPlate)))
     .then((loaded) => {
       plates.push(...loaded);
+      // after the plates, because each strip is cut from its own plate
+      loaded.forEach((tex, i) => stickyMeshes.push(buildSticky(tex, STICKY[i])));
       start();
     })
     .catch((err) => {
