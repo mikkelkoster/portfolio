@@ -1648,6 +1648,43 @@
     .exp-item:last-child {
       border-bottom: 1px solid var(--slate-200);
     }
+    /* ── Collapsed list ───────────────────────────────────
+       The list opens on the six most recent roles; the rest arrive on
+       request. display:none keeps them out of layout entirely, so revealing
+       them animates row by row instead of shifting the page as one block. */
+    .exp-item--more { display: none; }
+    /* Separators are ::before top-lines plus a bottom border on :last-child.
+       While collapsed the real last child is hidden, so the bottom of the
+       list would have no rule — the last visible row carries it instead. */
+    .exp-list.is-clipped .exp-item--cut { border-bottom: 1px solid var(--slate-200); }
+    .exp-item--more.is-revealing {
+      display: flex;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    .exp-item--more.is-shown {
+      opacity: 1;
+      transform: none;
+      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 0.7, 0.3, 1);
+    }
+    .exp-actions {
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    /* Spent once the list is complete — a control that can only be pressed
+       once should not sit there afterwards looking pressable. */
+    #exp-show-all.is-spent {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .exp-item--more.is-revealing { opacity: 1; transform: none; }
+      .exp-item--more.is-shown { transition: none; }
+    }
+
     .exp-toggle { cursor: pointer; user-select: none; }
     .exp-item.is-open .exp-expand { cursor: pointer; }
     .exp-company-wrap { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 8px; }
@@ -4530,7 +4567,7 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0;"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
           LinkedIn
         </a>
-        <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--ghost btn--sm pill-nav__cv">CV</a>
+        <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--ghost btn--sm pill-nav__cv">Download CV</a>
         <a href="mailto:hello@mikkelkoster.com" class="btn btn--primary btn--sm pill-nav__cta">Get in touch</a>
         <a href="mailto:hello@mikkelkoster.com" class="pill-nav__mail" aria-label="Get in touch">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>
@@ -5158,7 +5195,7 @@
         <p class="section-label will-fade-left">Experience</p>
       </div>
 
-      <div class="exp-list">
+      <div class="exp-list is-clipped" id="exp-list">
 
         <!-- Formalize -->
         <div class="exp-item">
@@ -5292,7 +5329,7 @@
         </div>
 
         <!-- NoA Ignite -->
-        <div class="exp-item">
+        <div class="exp-item exp-item--cut">
           <div class="exp-row exp-toggle will-fade-up" data-delay="300">
             <div class="exp-company-wrap">
               <span class="exp-company">NoA Ignite</span>
@@ -5318,8 +5355,8 @@
         </div>
 
         <!-- Nodes -->
-        <div class="exp-item">
-          <div class="exp-row exp-toggle will-fade-up" data-delay="360">
+        <div class="exp-item exp-item--more">
+          <div class="exp-row exp-toggle">
             <div class="exp-company-wrap">
               <span class="exp-company">Nodes</span>
               <span class="exp-period">May 2013 – Jan 2014</span>
@@ -5344,8 +5381,8 @@
         </div>
 
         <!-- Thinkhouse -->
-        <div class="exp-item">
-          <div class="exp-row exp-toggle will-fade-up" data-delay="420">
+        <div class="exp-item exp-item--more">
+          <div class="exp-row exp-toggle">
             <div class="exp-company-wrap">
               <span class="exp-company">Thinkhouse</span>
               <span class="exp-period">Oct 2011 – Apr 2013</span>
@@ -5369,8 +5406,8 @@
           </div>
         </div>
         <!-- Riot Bernard -->
-        <div class="exp-item">
-          <div class="exp-row exp-toggle will-fade-up" data-delay="480">
+        <div class="exp-item exp-item--more">
+          <div class="exp-row exp-toggle">
             <div class="exp-company-wrap">
               <span class="exp-company">Riot Bernard</span>
               <span class="exp-period">Mar – Oct 2011</span>
@@ -5395,8 +5432,8 @@
           </div>
         </div>
         <!-- Wolff Olins -->
-        <div class="exp-item">
-          <div class="exp-row exp-toggle will-fade-up" data-delay="540">
+        <div class="exp-item exp-item--more">
+          <div class="exp-row exp-toggle">
             <div class="exp-company-wrap">
               <span class="exp-company">Wolff Olins</span>
               <span class="exp-period">Oct 2010 – Jan 2011</span>
@@ -5422,8 +5459,8 @@
         </div>
 
         <!-- The Kaospilots -->
-        <div class="exp-item">
-          <div class="exp-row exp-toggle will-fade-up" data-delay="600">
+        <div class="exp-item exp-item--more">
+          <div class="exp-row exp-toggle">
             <div class="exp-company-wrap">
               <span class="exp-company">The Kaospilots</span>
               <span class="exp-period">Aug 2008 – Jun 2011</span>
@@ -5449,8 +5486,9 @@
 
       </div>
 
-      <div style="margin-top: 24px;">
+      <div class="exp-actions">
         <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--secondary btn--sm">Download full CV</a>
+        <button type="button" class="btn btn--secondary btn--sm" id="exp-show-all" aria-expanded="false" aria-controls="exp-list">Show all experience</button>
       </div>
 
     </div>
@@ -5926,6 +5964,29 @@
         if (item.classList.contains('is-open')) closeExpItem(item);
       });
     });
+
+    /* ── Show all experience ───────────────────────────── */
+    (() => {
+      const btn  = document.getElementById('exp-show-all');
+      const list = document.getElementById('exp-list');
+      if (!btn || !list) return;
+      const hidden = [...list.querySelectorAll('.exp-item--more')];
+      if (!hidden.length) { btn.remove(); return; }
+
+      const STEP = 80;
+      btn.addEventListener('click', () => {
+        btn.setAttribute('aria-expanded', 'true');
+        list.classList.remove('is-clipped');
+        // Put every row into its start state first, then take ONE reflow for
+        // the batch — reading offsetHeight per row would flush layout five
+        // times and let the earlier rows animate before the later ones exist.
+        hidden.forEach(el => el.classList.add('is-revealing'));
+        void list.offsetHeight;
+        hidden.forEach((el, i) => setTimeout(() => el.classList.add('is-shown'), i * STEP));
+        btn.classList.add('is-spent');
+        setTimeout(() => btn.remove(), hidden.length * STEP + 800);
+      }, { once: true });
+    })();
 
     /* ── 12. Parallax on work card images ──────────────── */
     // Parallax removed — images use object-fit: contain so no crop buffer for movement
