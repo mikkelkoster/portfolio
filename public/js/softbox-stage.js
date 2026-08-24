@@ -478,17 +478,24 @@ window.initSoftboxStage = function (canvas, config) {
   });
   composer.addPass(bokeh);
 
-  /* Threshold at 1.0, not below it. Bloom runs before OutputPass, so it
-     sees LINEAR values — and the backdrop's own highs sit around 0.95
-     there, which means anything under 1.0 blooms the ground itself and
-     washes the whole card pale. Above 1.0 only genuinely clipping
-     highlights qualify, which is the strip light in the glass and off the
-     chamfers: exactly the things that should halate and nothing else. */
+  /* Threshold ABOVE 1.0, and that is the whole trick.
+
+     Bloom runs before OutputPass, so it sees linear values — and in linear
+     a white UI is 1.0, because that is where an sRGB texture tops out. The
+     plate is a huge sheet of near-white. So a threshold at or under 1.0
+     does not select highlights, it selects the interface: the screen
+     becomes a light source, veils the whole card and throws a halo off the
+     enclosure. Everything looked over-exposed because in effect it was.
+
+     Only a specular can exceed 1.0 — the strip light reflected in glass or
+     off a chamfer, lit by an environment at envMapIntensity 1.35. Putting
+     the threshold at 1.2 leaves the UI entirely alone and catches exactly
+     those, which is what should halate and nothing else. */
   const bloom = new THREE.UnrealBloomPass(
     new THREE.Vector2(256, 256),   // resized with the canvas
-    0.3,     // strength — a sheen on the highlights, not a glow around them
-    0.5,     // radius
-    1.0      // threshold
+    0.25,    // strength — a sheen on the highlights, not a glow around them
+    0.45,    // radius
+    1.2      // threshold
   );
   composer.addPass(bloom);
 
