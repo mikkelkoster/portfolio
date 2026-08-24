@@ -140,11 +140,17 @@ window.initSoftboxStage = function (canvas, config) {
        chamfers nothing to catch — a wide source reflected in a 2mm bevel is
        a wide, dim smear. The hard highlight running the length of a rail in
        a product film comes from a SMALL bright source, so that is what this
-       is: a slit, not a box, hot enough to clip. */
+       is: a slit, not a box.
+
+       Half opacity, not full. At 1.0 this clipped, and reflected in
+       polished aluminium a clipping environment IS a white body — the
+       Maersk enclosure washed out completely against its own backdrop and
+       read as a missing device. A slit only has to be brighter than the
+       softboxes around it, not brighter than the format allows. */
     const strip = g.createLinearGradient(0, 66, 0, 104);
     strip.addColorStop(0.00, "rgba(255,255,255,0)");
-    strip.addColorStop(0.42, "rgba(255,255,255,1)");
-    strip.addColorStop(0.58, "rgba(255,255,255,1)");
+    strip.addColorStop(0.42, "rgba(255,255,255,0.5)");
+    strip.addColorStop(0.58, "rgba(255,255,255,0.5)");
     strip.addColorStop(1.00, "rgba(255,255,255,0)");
     g.fillStyle = strip;
     g.fillRect(120, 66, 640, 38);
@@ -365,7 +371,7 @@ window.initSoftboxStage = function (canvas, config) {
   /* How far the backdrop falls off toward the frame edge. 0 is flat, which
      is what this was; much past 0.6 the corners go black and the card reads
      as a hole rather than a lit room. */
-  const VIGNETTE = 0.46;
+  const VIGNETTE = 0.2;
   const bgScene = new THREE.Scene();
   bgScene.background = new THREE.Color(GROUND.deep);
   bgScene.add(splats.mesh);
@@ -415,6 +421,12 @@ window.initSoftboxStage = function (canvas, config) {
           float r = length((vUv - 0.5) * vec2(1.0, 0.9)) * 1.45;
           float v = 1.0 - amount * smoothstep(start, 1.0, r);
           gl_FragColor = vec4(c * v, 1.0);
+          /* REQUIRED. three appends the colour-space conversion to its own
+             materials but not to a ShaderMaterial, so without this the
+             backdrop is written in linear and shown as sRGB — every ground
+             came out dark and desaturated the moment the MeshBasicMaterial
+             this replaced went away. */
+          #include <colorspace_fragment>
         }
       `,
     })
@@ -615,14 +627,14 @@ window.initSoftboxStage = function (canvas, config) {
        that decides whether the enclosure looks machined or moulded. Raised
        with the glass: a screen returning the room while the body beside it
        stays flat is worse than neither doing it. */
-    envMapIntensity: 1.7,
+    envMapIntensity: 1.35,
   });
 
   /* ── the device ─────────────────────────────────────────────────── */
   const device = new THREE.Group();
   scene.add(device);
 
-  const body = new THREE.Mesh(slab(BODY_W, BODY_H, BODY_R, BODY_D, BODY_BEVEL), aluminium(0.7));
+  const body = new THREE.Mesh(slab(BODY_W, BODY_H, BODY_R, BODY_D, BODY_BEVEL), aluminium(0.88));
   /* NOT offset back by half its depth.
      `slab()` calls geo.center(), so the body already straddles z = 0 and its
      front face lands at BODY_D/2 + bevel — which is exactly what GLASS_Z is
@@ -778,12 +790,12 @@ window.initSoftboxStage = function (canvas, config) {
   eye.position.set(0, SCREEN_H / 2 + BEZEL / 2, FACE_Z + 0.002);
   device.add(eye);
 
-  const arm = new THREE.Mesh(slab(ARM_W, ARM_H, 0.06, ARM_D, 0.02), aluminium(0.82));
+  const arm = new THREE.Mesh(slab(ARM_W, ARM_H, 0.06, ARM_D, 0.02), aluminium(0.95));
   arm.position.set(0, -BODY_H / 2 - ARM_H / 2 + DROP, ARM_Z);
   arm.castShadow = arm.receiveShadow = true;
   device.add(arm);
 
-  const foot = new THREE.Mesh(slab(ARM_W, BASE_D, 0.14, BASE_T, 0.018), aluminium(0.82));
+  const foot = new THREE.Mesh(slab(ARM_W, BASE_D, 0.14, BASE_T, 0.018), aluminium(0.95));
   foot.rotation.x = -Math.PI / 2;
   foot.position.set(0, BASE_Y, ARM_Z + BASE_FWD);
   foot.castShadow = foot.receiveShadow = true;

@@ -118,11 +118,17 @@ window.initPhoneStage = function (canvas, config) {
        chamfers nothing to catch — a wide source reflected in a 2mm bevel is
        a wide, dim smear. The hard highlight running the length of a rail in
        a product film comes from a SMALL bright source, so that is what this
-       is: a slit, not a box, hot enough to clip. */
+       is: a slit, not a box.
+
+       Half opacity, not full. At 1.0 this clipped, and reflected in
+       polished aluminium a clipping environment IS a white body — the
+       Maersk enclosure washed out completely against its own backdrop and
+       read as a missing device. A slit only has to be brighter than the
+       softboxes around it, not brighter than the format allows. */
     const strip = g.createLinearGradient(0, 66, 0, 104);
     strip.addColorStop(0.00, "rgba(255,255,255,0)");
-    strip.addColorStop(0.42, "rgba(255,255,255,1)");
-    strip.addColorStop(0.58, "rgba(255,255,255,1)");
+    strip.addColorStop(0.42, "rgba(255,255,255,0.5)");
+    strip.addColorStop(0.58, "rgba(255,255,255,0.5)");
     strip.addColorStop(1.00, "rgba(255,255,255,0)");
     g.fillStyle = strip;
     g.fillRect(120, 66, 640, 38);
@@ -343,7 +349,7 @@ window.initPhoneStage = function (canvas, config) {
   /* How far the backdrop falls off toward the frame edge. 0 is flat, which
      is what this was; much past 0.6 the corners go black and the card reads
      as a hole rather than a lit room. */
-  const VIGNETTE = 0.46;
+  const VIGNETTE = 0.2;
   const bgScene = new THREE.Scene();
   bgScene.background = new THREE.Color(GROUND.deep);
   bgScene.add(splats.mesh);
@@ -393,6 +399,12 @@ window.initPhoneStage = function (canvas, config) {
           float r = length((vUv - 0.5) * vec2(1.0, 0.9)) * 1.45;
           float v = 1.0 - amount * smoothstep(start, 1.0, r);
           gl_FragColor = vec4(c * v, 1.0);
+          /* REQUIRED. three appends the colour-space conversion to its own
+             materials but not to a ShaderMaterial, so without this the
+             backdrop is written in linear and shown as sRGB — every ground
+             came out dark and desaturated the moment the MeshBasicMaterial
+             this replaced went away. */
+          #include <colorspace_fragment>
         }
       `,
     })
