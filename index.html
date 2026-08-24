@@ -240,10 +240,19 @@
       .pill-nav__status {
         overflow: hidden;
         white-space: nowrap;
-        transition: max-width 0.42s cubic-bezier(0.22, 0.7, 0.3, 1),
-                    opacity 0.28s ease,
-                    padding 0.42s cubic-bezier(0.22, 0.7, 0.3, 1),
-                    margin 0.42s cubic-bezier(0.22, 0.7, 0.3, 1);
+        /* Shorter than it was, and all four on one curve.
+           max-width, padding and margin each force the flex row to re-solve
+           every frame, and the pill is centred with translateX(-50%) — so as
+           it grows its left edge travels too, and the contents slide while
+           they expand. That double motion is what reads as wonky, and the
+           less time it is on screen the less it shows. 0.42s gave it plenty
+           of time to be noticed; 0.26s reads as a swap rather than a move.
+           opacity leads slightly so the outgoing item is gone before the
+           width finishes closing. */
+        transition: max-width 0.26s cubic-bezier(0.32, 0.72, 0.35, 1),
+                    opacity 0.18s ease,
+                    padding 0.26s cubic-bezier(0.32, 0.72, 0.35, 1),
+                    margin 0.26s cubic-bezier(0.32, 0.72, 0.35, 1);
       }
       /* The negative margin cancels the flex GAP that a zero-width item still
          gets, and it has to match the gap of the container the item is
@@ -5743,12 +5752,13 @@
       if (x < min) return min + (x - min) * 0.32;
       return x;
     }
-    function throwSteps(v) {
-      const a = Math.abs(v);          // px/ms
-      if (a > 1.9) return 3;
-      if (a > 1.0) return 2;
-      return 1;
-    }
+    /* ONE item per swipe, always. This used to scale with velocity, and on a
+       real thumb that was wrong: a casual flick runs well over 1px/ms, so
+       almost every swipe jumped two or three cards and readers sailed past
+       the item they were reaching for. Velocity still shapes the move — it
+       decides how fast it lands — but not how far it goes. A swipe means
+       "next", whatever force it is thrown with. */
+    function throwSteps() { return 1; }
     function settleMs(distance, v) {
       const base  = 200 + Math.min(Math.abs(distance), 900) * 0.3;
       const eased = base / (1 + Math.min(Math.abs(v), 2.5) * 0.4);
@@ -5765,6 +5775,9 @@
          horizontal, which still leaves an ordinary vertical scroll to the
          page by a wide margin. */
       const X_BIAS = 0.75;
+      /* Vertical has to travel twice as far as horizontal before it wins —
+         see the branch below for why that asymmetry is safe. */
+      const VERT_LOCK = 16;
       let x0 = 0, y0 = 0, xLock = 0, axis = '', live = false;
       /* A short trail of recent samples. Velocity has to come from the END
          of the gesture, not from its average: a reader who drags slowly,
@@ -5811,9 +5824,24 @@
         const dx = x - x0;
         const dy = e.touches[0].clientY - y0;
         if (!axis) {
-          if (Math.abs(dx) < AXIS_LOCK && Math.abs(dy) < AXIS_LOCK) return;
-          axis = Math.abs(dx) > Math.abs(dy) * X_BIAS ? 'x' : 'y';
-          if (axis === 'y') { live = false; return; }   // the page's gesture
+          const ax = Math.abs(dx), ay = Math.abs(dy);
+          if (ax >= AXIS_LOCK && ax > ay * X_BIAS) {
+            axis = 'x';
+          } else if (ay >= VERT_LOCK && ay > ax * 1.4) {
+            axis = 'y'; live = false; return;             // clearly the page's
+          } else {
+            /* Undecided — keep watching.
+               Conceding to the page at the first 8px was throwing away real
+               swipes: a thumb almost always drifts a few pixels down as it
+               settles, and 9px of that was enough to hand the whole gesture
+               away before it had travelled at all.
+               Waiting costs nothing, because nothing is preventDefault-ed
+               while undecided — the page is free to scroll the entire time.
+               So the vertical bar is deliberately twice the horizontal one:
+               there is no penalty for letting a vertical gesture prove
+               itself, and a large penalty for guessing wrong. */
+            return;
+          }
           xLock = x;
           // onStart stops any animation in flight, so it fires here rather
           // than on touchstart: a tap that never moves would otherwise freeze
@@ -6167,23 +6195,32 @@
 
       // Touch support — pages by however many cards are on screen
       const maxIndex = () => Math.max(0, total - visibleCount());
-      const bounds   = () => ({ min: -(maxIndex() * colWidth()), max: 0 });
+      /* Measured once per gesture, not once per move. colWidth() runs
+         getComputedStyle and reads offsetWidth, so calling it from touchmove
+         forced a style recalc and a layout on every frame of every drag —
+         which is exactly the stutter you feel under a thumb. Nothing here
+         can change mid-gesture, so it is cached at the start. */
+      let dragMin = 0, dragMax = 0, dragColW = 0;
       attachSwipe(track, {
-        onStart:  () => { gen++; animating = false; touchStartOffset = offsetX; },
+        onStart:  () => {
+          gen++; animating = false; touchStartOffset = offsetX;
+          dragColW = colWidth();
+          dragMax = 0;
+          dragMin = -(maxIndex() * dragColW);
+        },
         onDrag:   dx => {
-          const b = bounds();
-          offsetX = rubber(touchStartOffset + dx, b.min, b.max);
+          offsetX = rubber(touchStartOffset + dx, dragMin, dragMax);
           track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
         },
         onCommit: (dir, v) => {
-          const step = visibleCount() * throwSteps(v);
+          const step = visibleCount() * throwSteps();
           const to = dir > 0 ? Math.min(current + step, maxIndex())
                              : Math.max(current - step, 0);
-          goTo(to, settleMs(-(to * colWidth()) - offsetX, v));
+          goTo(to, settleMs(-(to * dragColW) - offsetX, v));
         },
         /* Snapping back is a correction, not a move, so it lands quickly —
            and quicker still the harder it was thrown. */
-        onCancel: v => goTo(current, settleMs(-(current * colWidth()) - offsetX, v))
+        onCancel: v => goTo(current, settleMs(-(current * dragColW) - offsetX, v))
       });
 
       // Re-evaluate on resize (e.g. switching to wide-screen 4-col layout)
@@ -6468,19 +6505,23 @@
         offsetX = touchStartOffset + (e.clientX - touchStartX);
         track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
       });
-      const tBounds = () => ({ min: -((total - 1) * colWidth()), max: 0 });
+      /* Cached per gesture — see the page carousel for why. */
+      let tMin = 0, tColW = 0;
       attachSwipe(track, {
-        onStart:  () => { gen++; animating = false; touchStartOffset = offsetX; },
+        onStart:  () => {
+          gen++; animating = false; touchStartOffset = offsetX;
+          tColW = colWidth();
+          tMin = -((total - 1) * tColW);
+        },
         onDrag:   dx => {
-          const b = tBounds();
-          offsetX = rubber(touchStartOffset + dx, b.min, b.max);
+          offsetX = rubber(touchStartOffset + dx, tMin, 0);
           track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
         },
         onCommit: (dir, v) => {
-          const to = Math.max(0, Math.min(total - 1, current + dir * throwSteps(v)));
-          goTo(to, settleMs(-(to * colWidth()) - offsetX, v));   // goTo clamps too
+          const to = Math.max(0, Math.min(total - 1, current + dir * throwSteps()));
+          goTo(to, settleMs(-(to * tColW) - offsetX, v));   // goTo clamps too
         },
-        onCancel: v => goTo(current, settleMs(-(current * colWidth()) - offsetX, v))
+        onCancel: v => goTo(current, settleMs(-(current * tColW) - offsetX, v))
       });
     })();
 
@@ -8147,23 +8188,28 @@
 
         // Drag/swipe
         let tStartX = 0, tStartOff = 0, dragging = false;
+        let dragMin = 0, dragMax = 0, dragMaxIdx = 0;
         track.addEventListener('mousedown',  e => { dragging = true; tStartX = e.clientX; tStartOff = offsetX; track.style.transition = 'none'; });
         window.addEventListener('mouseup',   e => { if (!dragging) return; dragging = false; const d = e.clientX - tStartX; if (Math.abs(d) > 60) goTo(d < 0 ? Math.min(current + 1, total - 1) : Math.max(current - 1, 0), SWIPE_MS); else goTo(current, 220); });
         window.addEventListener('mousemove', e => { if (!dragging) return; offsetX = tStartOff + (e.clientX - tStartX); track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; });
         attachSwipe(track, {
-          onStart:  () => { gen++; animating = false; tStartOff = offsetX; },
+          onStart:  () => {
+            gen++; animating = false; tStartOff = offsetX;
+            /* Measured once per gesture — snapX() reads offsetLeft, and doing
+               that from touchmove forces a layout on every frame. */
+            dragMaxIdx = Math.max(0, total - visCount());
+            dragMin = snapX(dragMaxIdx);
+            dragMax = snapX(0);
+          },
           onDrag:   dx => {
-            const maxIdx = Math.max(0, total - visCount());
-            offsetX = rubber(tStartOff + dx, snapX(maxIdx), snapX(0));
+            offsetX = rubber(tStartOff + dx, dragMin, dragMax);
             track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
           },
           // last landing spot is total - visCount(), not total - 1, or the
           // final swipe drags the track past its own end
           onCommit: (dir, v) => {
-            const maxIdx = Math.max(0, total - visCount());
-            const step = throwSteps(v);
-            const to = dir > 0 ? Math.min(current + step, maxIdx)
-                               : Math.max(current - step, 0);
+            const to = dir > 0 ? Math.min(current + throwSteps(), dragMaxIdx)
+                               : Math.max(current - throwSteps(), 0);
             goTo(to, settleMs(snapX(to) - offsetX, v));
           },
           onCancel: v => goTo(current, settleMs(snapX(current) - offsetX, v))
