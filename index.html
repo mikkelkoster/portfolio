@@ -9,6 +9,15 @@
     (function(){
       var t = localStorage.getItem('mk-theme');
       if (t) document.documentElement.setAttribute('data-theme', t);
+      /* Marks that the card reveals can safely start hidden, before first
+         paint. They hide in CSS so the compositor owns the animation, and
+         this class is what makes that safe — it requires BOTH scripting and
+         IntersectionObserver, because those are the two things that have to
+         work for a hidden card ever to be shown again. Without either, the
+         rule never applies and every card is simply visible. */
+      if (typeof IntersectionObserver === 'function') {
+        document.documentElement.classList.add('js-anim');
+      }
     })();
   </script>
   <!-- Favicon -->
@@ -140,7 +149,31 @@
     /* Applied by JS after DOMContentLoaded so hero is visible on first paint */
     .will-fade       { opacity: 1; }
     .will-fade-left  { opacity: 1; }
+    /* Visible by default — if scripting never runs, every card just shows.
+       The hidden start is scoped to .js-anim, set before first paint. */
     .will-fade-scale { opacity: 1; }
+    .js-anim .will-fade-scale {
+      opacity: 0;
+      transform: translateY(48px) scale(0.96);
+      transition: opacity 0.9s cubic-bezier(0.22, 0.7, 0.3, 1),
+                  transform 0.9s cubic-bezier(0.22, 0.7, 0.3, 1);
+      will-change: opacity, transform;
+    }
+    .js-anim .will-fade-scale.is-revealed {
+      opacity: 1;
+      transform: none;
+      /* Arrived — stop asking the compositor to hold a layer for it. */
+      will-change: auto;
+    }
+    /* The same end state with no transition behind it — see the observer. */
+    .js-anim .will-fade-scale.is-settled {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .js-anim .will-fade-scale { opacity: 1; transform: none; transition: none; }
+    }
     .will-fade-up    { opacity: 1; }
 
 
@@ -6014,16 +6047,33 @@
     });
     document.querySelectorAll('.will-fade-up').forEach(el => ioUp.observe(el));
 
-    /* ── 6. .will-fade-scale — rise + gentle scale (cards) */
-    document.querySelectorAll('.will-fade-scale').forEach(el => {
-      el.style.opacity   = '0';
-      el.style.transform = 'translateY(48px) scale(0.96)';
-    });
+    /* ── 6. .will-fade-scale — rise + gentle scale (cards)
+       CSS, not tween(), and these are the one group that needs it.
+
+       tween() writes opacity and transform from a main-thread rAF callback
+       on every frame, so it only stays smooth while the main thread is free.
+       These cards are the exact place it is not: the case stages start
+       loading 700px before they are reached, so the Maersk card animates in
+       while three.js is being parsed and the Formalize scene is building its
+       environment and splats. Frames get missed and the entrance arrives
+       late and stutters — which is precisely why Matas, by which time all
+       that work is done, has always looked smoother than Maersk.
+
+       A CSS transition on opacity and transform is handed to the compositor
+       and keeps its timing regardless of what the main thread is doing. The
+       only main-thread work left is adding one class. */
     const ioScale = makeObserver((entries) => {
       entries.forEach(e => {
         if (!e.isIntersecting) return;
         const delay = parseInt(e.target.dataset.delay || '0', 10);
-        tween(e.target, { fy: 48, fs: 0.96, ts: 1, dur: 900, delay });
+        e.target.style.transitionDelay = delay + 'ms';
+        e.target.classList.add('is-revealed');
+        /* Belt and braces. Hiding these in CSS means a card that is never
+           transitioned stays invisible, and these cards are the centre of
+           the page — too costly a failure to leave to one mechanism. This
+           lands the same end state without a transition, so it is invisible
+           if the animation ran and a rescue if it did not. */
+        setTimeout(() => e.target.classList.add('is-settled'), delay + 1400);
         ioScale.unobserve(e.target);
       });
     }, { rootMargin: '-32px 0px', threshold: 0.05 });
