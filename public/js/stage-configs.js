@@ -45,7 +45,13 @@ window.STAGE_CONFIGS = {
     ground: {
       deep: 0x3f86af,
       low: [0.2, 0.47, 0.64],
-      high: [0.92, 0.96, 0.98],
+      /* The bright end of the sweep, and it is what the enclosure has to
+         stand against. At 0.92-0.98 it was effectively white, and a silver
+         device on white has no edge: measured, the body renders perfectly
+         well — force it to unlit green and 6.5% of the frame goes green —
+         it simply has the same value as the ground behind it and vanishes.
+         Dropping the top of the gradient is what gives it a silhouette. */
+      high: [0.60, 0.71, 0.80],
     },
     shots: [
       {
@@ -81,7 +87,9 @@ window.STAGE_CONFIGS = {
     ground: {
       deep: 0x4a6cae,
       low: [0.26, 0.4, 0.66],
-      high: [0.93, 0.95, 0.99],
+      /* Same reasoning as Maersk above: a silver device needs a ground
+         darker than it is. */
+      high: [0.62, 0.69, 0.82],
     },
     shots: [
       {
