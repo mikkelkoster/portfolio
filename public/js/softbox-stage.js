@@ -362,6 +362,10 @@ window.initSoftboxStage = function (canvas, config) {
      resolution and scaled up, the difference is invisible; the device, its
      screen and its edges still draw at full resolution over the top. */
   const BG_SCALE = 0.34;
+  /* How far the backdrop falls off toward the frame edge. 0 is flat, which
+     is what this was; much past 0.6 the corners go black and the card reads
+     as a hole rather than a lit room. */
+  const VIGNETTE = 0.46;
   const bgScene = new THREE.Scene();
   bgScene.background = new THREE.Color(GROUND.deep);
   bgScene.add(splats.mesh);
@@ -371,11 +375,48 @@ window.initSoftboxStage = function (canvas, config) {
   bgRT.texture.minFilter = THREE.LinearFilter;
   bgRT.texture.magFilter = THREE.LinearFilter;
   const bgCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  /* The composite is also where the backdrop gets its vignette, because the
+     backdrop is already passing through a fullscreen quad here and a shader
+     costs nothing extra at this point in the frame.
+
+     This is what a studio sweep does and what the reference has: the ground
+     stays lit where the device is and falls away toward the frame edge, so
+     the corners stop competing and the eye is pushed to the middle. It
+     multiplies, so it darkens the case colour rather than replacing it —
+     the per-case hue is what stops the three films reading as one asset
+     used three times, and it survives this untouched. */
   const bgQuadScene = new THREE.Scene();
   bgQuadScene.add(new THREE.Mesh(
     new THREE.PlaneGeometry(2, 2),
-    new THREE.MeshBasicMaterial({
-      map: bgRT.texture, depthTest: false, depthWrite: false, toneMapped: false,
+    new THREE.ShaderMaterial({
+      uniforms: {
+        map: { value: bgRT.texture },
+        amount: { value: VIGNETTE },
+        start: { value: 0.32 },
+      },
+      depthTest: false,
+      depthWrite: false,
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = vec4(position.xy, 0.0, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D map;
+        uniform float amount;
+        uniform float start;
+        varying vec2 vUv;
+        void main() {
+          vec3 c = texture2D(map, vUv).rgb;
+          /* Squashed slightly on y so the falloff follows the frame rather
+             than describing a circle inside a landscape card. */
+          float r = length((vUv - 0.5) * vec2(1.0, 0.9)) * 1.45;
+          float v = 1.0 - amount * smoothstep(start, 1.0, r);
+          gl_FragColor = vec4(c * v, 1.0);
+        }
+      `,
     })
   ));
 
@@ -452,9 +493,15 @@ window.initSoftboxStage = function (canvas, config) {
     slab(PL_W, PL_D, PL_R, PL_H, 0.02),
     new THREE.MeshStandardMaterial({
       color: 0x15191f,
-      roughness: 0.74,
+      /* Eased off 0.74/0.22, but only just. The note above still holds —
+         gloss here competes with the device and reads as plastic — so this
+         is not a polish, it is enough sheen for the new strip light to
+         describe the front bevel and lay a soft gradient across the top
+         face. That edge catching light is what says "surface" in the
+         reference; a mirror would say "showroom floor". */
+      roughness: 0.58,
       metalness: 0.05,
-      envMapIntensity: 0.22,
+      envMapIntensity: 0.38,
     })
   );
   plinth.rotation.x = -Math.PI / 2;
