@@ -91,7 +91,8 @@
       --avail:       #0E9F6E;
       --avail-line:  #9BDCC2;
       --avail-dark:  #34D399;
-      /* No green for the pill's TEXT — see .pill-nav__status. */
+      /* --avail-dark carries both the dot and the pill's status text; the
+         pill's ground is held opaque enough for it. See .pill-nav__status. */
       --slate-50:   #F8FAFC;
       --slate-100:  #F1F5F9;
       --slate-200:  #E2E8F0;
@@ -157,7 +158,14 @@
       pointer-events: none;
       transition: opacity 0.3s ease, transform 0.3s ease;
       /* backdrop-filter on the same element as transform — required for Safari */
-      background: rgba(15, 23, 41, 0.55);
+      /* 0.86, not 0.55. At 0.55 the pill's ground is whatever is behind it,
+         which is near-black over the hero but mid-grey over every light
+         section — and that is most of the page. That moving ground is what
+         forced the status text to be white. Holding the ground steady is
+         what lets it be green; see .pill-nav__status. Enough of the backdrop
+         still comes through to keep it a pill on the page rather than a bar
+         over it. */
+      background: rgba(15, 23, 41, 0.86);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 100px;
       backdrop-filter: blur(120px) saturate(2.5);
@@ -360,18 +368,20 @@
       padding-left: 16px;
       border-left: 1px solid rgba(255,255,255,0.18);
       font-size: 12.5px;
-      /* White, not green — and this is a contrast decision, not a taste one.
-         The pill is rgba(15,23,41,0.55), so its ground is whatever is behind
-         it: near-black over the hero, but mid-grey over every light section,
-         which is most of the page. Measured against that grey, the greens
-         land between 1.1:1 and 1.9:1, where 4.5:1 is the floor for text this
-         size. Every other label in the pill is white for exactly this reason.
+      /* Green, and it is the one label in the pill that is. White read as a
+         fourth piece of nav furniture; the whole point of this line is that
+         it is a state, so it gets the state's colour.
 
-         The DOT stays green and carries the signal. A 8px disc is a
-         non-text graphic, so it answers to the 3:1 floor rather than 4.5,
-         and it clears that on both grounds. The hero badge keeps green text
-         because its ground is fixed and dark — 9.6:1 there. */
-      color: rgba(255, 255, 255, 0.88);
+         This was white before for a real reason, not a timid one: at the old
+         0.55 alpha the pill's ground drifted with the page and the greens
+         measured 1.1:1 to 1.9:1 over the light sections, against a 4.5:1
+         floor for text this size. The fix was the ground, not the hue.
+         At 0.86 this green measures 6.2:1 over a light section and 9.3:1
+         over the hero — both clear.
+
+         The dot keeps the same value, so the line reads as one signal. */
+      color: var(--avail-dark);
+      font-weight: 500;
       white-space: nowrap;
     }
     .pill-nav__status .avail-dot { background: var(--avail-dark); }
