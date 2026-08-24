@@ -408,6 +408,12 @@ window.initPhoneStage = function (canvas, config) {
      sniff — no error, no progress, a promise that never settles. Fetching
      the bytes and handing them to parse() is explicit and reports failure. */
   let screenMat = null;
+  /* How much room the glass gives back. The single dial for the shaped
+     reflection: 0 removes it, past about 0.9 the softboxes start to
+     compete with the UI. */
+  const GLASS_ENV = 0.62;
+  let sheenTex = null, sheenMat = null;
+
   const BEZEL = 0.028;        // of the screen's WIDTH
   const RADIUS = 0.098;       // ditto — the display's corner, not the body's
   let screenMesh = null;
@@ -575,6 +581,69 @@ window.initPhoneStage = function (canvas, config) {
     screenMesh.add(bezel);
     bezelCanvas = bez;
 
+    /* ── the glass ────────────────────────────────────────────────────
+       What the phone was missing that the monitor already had: the panel
+       returned nothing at all, so it read as artwork applied to a shape
+       rather than as a screen behind glass.
+
+       Two layers. This one is the room — the softboxes and the horizon in
+       the environment, reflected as SHAPES, which is what says there is
+       glass in front of the pixels. Reflection only: a black base colour
+       adds nothing under additive blending, but a dielectric's specular is
+       not tinted by base colour, so the environment still comes through.
+       metalness 0 keeps Fresnel in play, so it stays quiet on the frontal
+       shots and arrives as the phone turns — a metal would sit at the same
+       brightness from every angle and read as a sticker. */
+    const glass = new THREE.Mesh(overlayGeo, new THREE.MeshPhysicalMaterial({
+      color: 0x000000,
+      metalness: 0,
+      roughness: 0.05,
+      envMapIntensity: GLASS_ENV,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -3,
+      polygonOffsetUnits: -3,
+    }));
+    glass.castShadow = false;
+    glass.renderOrder = 3;
+    screenMesh.add(glass);
+
+    /* The second layer: one soft bar raked across the panel, the moving
+       highlight the monitor drives from its own Fresnel term. Sized to the
+       whole panel rather than the display, because a softbox reflected in
+       a phone does not stop where the pixels stop — and over a bright UI
+       an additive highlight is nearly invisible, so it needs the black
+       surround to actually read on. */
+    const sheenC = document.createElement("canvas");
+    sheenC.width = 32; sheenC.height = 256;
+    const sg = sheenC.getContext("2d");
+    const grad = sg.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0.00, "rgba(255,255,255,0)");
+    grad.addColorStop(0.34, "rgba(255,255,255,0.16)");
+    grad.addColorStop(0.46, "rgba(255,255,255,0.62)");
+    grad.addColorStop(0.58, "rgba(255,255,255,0.16)");
+    grad.addColorStop(1.00, "rgba(255,255,255,0)");
+    sg.fillStyle = grad;
+    sg.fillRect(0, 0, 32, 256);
+    sheenTex = new THREE.CanvasTexture(sheenC);
+    sheenTex.colorSpace = THREE.SRGBColorSpace;
+    /* Clamped, or the far end of the sweep wraps a second bar back in. */
+    sheenTex.wrapS = sheenTex.wrapT = THREE.ClampToEdgeWrapping;
+    sheenMat = new THREE.MeshBasicMaterial({
+      map: sheenTex,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      toneMapped: false,
+    });
+    const sheen = new THREE.Mesh(overlayGeo, sheenMat);
+    sheen.castShadow = false;
+    sheen.renderOrder = 4;
+    screenMesh.add(sheen);
+
     /* ── the finish ───────────────────────────────────────────────────
        Every material in this export arrives at metalness 1, roughness 1, and
        that pair has no specular in it at all: fully rough metal returns the
@@ -626,7 +695,9 @@ window.initPhoneStage = function (canvas, config) {
       o.material.metalness = f.metalness;
       o.material.roughness = f.roughness;
       if (f.color !== undefined) o.material.color.setHex(f.color);
-      o.material.envMapIntensity = 1.15;
+      // raised with the glass — a screen returning the room while the rail
+      // beside it stays flat is worse than neither doing it
+      o.material.envMapIntensity = 1.5;
       o.material.needsUpdate = true;
     });
   }
@@ -917,6 +988,37 @@ window.initPhoneStage = function (canvas, config) {
     ambient.intensity = 0.16 + 0.2 * rig.amb;
     hemi.intensity = 0.14 + 0.26 * rig.amb;
     splats.mat.uniforms.uGain.value = 0.55 + 0.45 * rig.amb;
+
+    /* ── glass response ───────────────────────────────────────────────
+       Same two behaviours the monitor stage drives, for the same reason: a
+       screen is a picture behind a mirror, and which of the two you are
+       looking at depends on the angle. WHERE the bar sits moves with the
+       tangent of the view angle rather than linearly, because a reflected
+       light accelerates across a panel as the panel turns away — the
+       linear version reads as painted on. HOW STRONG it is follows
+       Fresnel, so the room takes over as the phone goes edge-on.
+
+       The exponent is 2.6 rather than Schlick's 5, as on the monitor: true
+       Fresnel is nearly flat until about 60 degrees off-axis and this
+       choreography never leaves ±25, so the exact curve would hold one
+       constant value through all three shots.
+
+       The ceiling is 0.09 and that is arithmetic, not taste. These plates
+       are mostly white cards on near-white ground, a few percent apart;
+       any uniform additive lift much above that clips both to the same
+       white and every card edge in the UI disappears at once. The bar
+       survives it by being narrow and by having the black surround to
+       read on. */
+    if (sheenMat && screenMesh) {
+      const n = new THREE.Vector3(0, 0, 1).applyQuaternion(screenMesh.getWorldQuaternion(new THREE.Quaternion()));
+      const eye = camera.position.clone().sub(screenMesh.getWorldPosition(new THREE.Vector3())).normalize();
+      const cosT = Math.abs(n.dot(eye));
+      const fres = 0.04 + 0.96 * Math.pow(1 - cosT, 2.6);
+      sheenTex.offset.y = THREE.MathUtils.clamp(
+        -Math.atan2(eye.x, Math.max(cosT, 0.08)) * 0.40, -0.46, 0.46
+      );
+      sheenMat.opacity = THREE.MathUtils.clamp(0.015 + fres * 0.55, 0.015, 0.09);
+    }
   }
 
   /* ── the plate, and the scroll through it ───────────────────────── */

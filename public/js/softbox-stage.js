@@ -39,6 +39,11 @@ window.initSoftboxStage = function (canvas, config) {
 
   const ALU = "#cdd2d9";
 
+  /* How much room the glass gives back. The single dial for the shaped
+     reflection: 0 removes it, and much past 0.8 the softboxes start to
+     compete with the UI on the wide shots. */
+  const GLASS_ENV = 0.5;
+
   /* The plinth. Deliberately shallow in Z — a deep slab eats the lower
      third of every frame and the display looks stranded on a runway. The
      fillet is small on purpose too: at any real radius the edge stops being
@@ -531,7 +536,11 @@ window.initSoftboxStage = function (canvas, config) {
     roughness: rough,
     metalness: 0.9,
     anisotropy: 0.6,
-    envMapIntensity: 1.35,
+    /* The aluminium's whole read is the environment, so this is the dial
+       that decides whether the enclosure looks machined or moulded. Raised
+       with the glass: a screen returning the room while the body beside it
+       stays flat is worse than neither doing it. */
+    envMapIntensity: 1.7,
   });
 
   /* ── the device ─────────────────────────────────────────────────── */
@@ -650,6 +659,34 @@ window.initSoftboxStage = function (canvas, config) {
   const glare = new THREE.Mesh(facePlane(GLASS_W, GLASS_H, GLASS_R), glareMat);
   glare.position.z = FACE_Z + 0.012;
   device.add(glare);
+
+  /* ── the glass itself ─────────────────────────────────────────────
+     The glare bar is one moving highlight. This is the rest of what glass
+     does: it returns the SHAPE of the room — the three softboxes and the
+     horizon in the environment — and those shapes are what separate a
+     panel that has glass in front of it from a panel that is a picture.
+
+     Reflection only, no diffuse. Black base colour contributes nothing
+     under additive blending, but a dielectric's specular is not tinted by
+     base colour, so the environment still comes through. Keeping
+     metalness at 0 is the whole point: a metal reflects roughly evenly at
+     every angle, where a dielectric follows Fresnel — about 4% head-on,
+     climbing as the surface turns away. That is the same curve the glare
+     bar's opacity is driven by, so the two agree rather than fight, and it
+     is why this stays out of the way on the shots that look straight at
+     the screen and arrives on the raking ones. */
+  const roomMat = new THREE.MeshPhysicalMaterial({
+    color: 0x000000,
+    metalness: 0,
+    roughness: 0.06,
+    envMapIntensity: GLASS_ENV,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const room = new THREE.Mesh(facePlane(GLASS_W, GLASS_H, GLASS_R), roomMat);
+  room.position.z = FACE_Z + 0.010;
+  device.add(room);
 
   /* The camera, centred in the top bezel. A one-line detail, but its
      absence is the kind of thing that reads as "not a real product" long
