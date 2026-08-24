@@ -2249,9 +2249,10 @@
       .hero__text { flex: 1 1 auto; justify-content: flex-end; }
       .hero__avail {
         order: -1;
-        align-self: stretch;
-        width: auto;
-        justify-content: center;
+        /* Hugs its text. Stretching it edge to edge made it a banner across
+           the top; shrink-wrapped and centred it reads as a badge again. */
+        align-self: center;
+        width: fit-content;
         margin: 0 0 auto;
         /* One line, whatever the handset. The phrase is fixed and long, so
            the type scales with the viewport rather than the pill wrapping —
@@ -4608,7 +4609,7 @@
       <a href="#" class="pill-nav__logo">Mikkel Køster</a>
       <p class="pill-nav__status">
         <span class="avail-dot" aria-hidden="true"></span>
-        <span class="pill-nav__status-full">Available for freelance &amp; fractional</span>
+        <span class="pill-nav__status-full">Available for freelance &amp; fractional work</span>
         <span class="pill-nav__status-short">Available for work</span>
       </p>
       <div class="pill-nav__buttons">
