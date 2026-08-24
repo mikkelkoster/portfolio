@@ -5936,12 +5936,18 @@
       // transform underneath the finger
       let gen = 0;
 
-      function goTo(index) {
+      /* Two speeds, on purpose. A button press is an indirect instruction and
+         can afford a considered move; a swipe is direct manipulation, and the
+         content has to keep up with the hand that just threw it. Settling a
+         flick over 600ms reads as the carousel thinking about it. */
+      const SWIPE_MS = 320, BUTTON_MS = 600;
+
+      function goTo(index, ms) {
         if (animating) return;
         animating = true;
         const g = ++gen;
         const from = offsetX, to = -(index * colWidth());
-        const dur = 600, t0 = performance.now();
+        const dur = ms || BUTTON_MS, t0 = performance.now();
         function frame() {
           if (g !== gen) return;
           const p = Math.min((performance.now() - t0) / dur, 1);
@@ -5993,8 +5999,8 @@
         if (!isDragging) return;
         isDragging = false;
         const delta = e.clientX - touchStartX;
-        if (Math.abs(delta) > 60) { goTo(delta < 0 ? Math.min(current + visibleCount(), total - visibleCount()) : Math.max(current - visibleCount(), 0)); }
-        else { goTo(current); }
+        if (Math.abs(delta) > 60) { goTo(delta < 0 ? Math.min(current + visibleCount(), total - visibleCount()) : Math.max(current - visibleCount(), 0), SWIPE_MS); }
+        else { goTo(current, 240); }
       });
       window.addEventListener('mousemove', e => {
         if (!isDragging) return;
@@ -6009,9 +6015,11 @@
         onCommit: dir => {
           const step = visibleCount();
           goTo(dir > 0 ? Math.min(current + step, Math.max(0, total - step))
-                       : Math.max(current - step, 0));
+                       : Math.max(current - step, 0), SWIPE_MS);
         },
-        onCancel: () => goTo(current)
+        /* Snapping back is a correction, not a move — quicker still, or the
+           carousel appears to consider the swipe before refusing it. */
+        onCancel: () => goTo(current, 240)
       });
 
       // Re-evaluate on resize (e.g. switching to wide-screen 4-col layout)
@@ -6199,7 +6207,13 @@
       // transform underneath the finger
       let gen = 0;
 
-      function goTo(index) {
+      /* Two speeds, on purpose. A button press is an indirect instruction and
+         can afford a considered move; a swipe is direct manipulation, and the
+         content has to keep up with the hand that just threw it. Settling a
+         flick over 600ms reads as the carousel thinking about it. */
+      const SWIPE_MS = 320, BUTTON_MS = 600;
+
+      function goTo(index, ms) {
         if (animating) return;
         index = Math.max(0, Math.min(total - 1, index));
         animating = true;
@@ -6207,7 +6221,7 @@
         const fromIdx = current;
         const toIdx   = index;
         const from = offsetX, to = -(index * colWidth());
-        const dur = 600, t0 = performance.now();
+        const dur = ms || BUTTON_MS, t0 = performance.now();
 
         // Snapshot starting opacities so we interpolate from whatever they are now
         const startOpacity = cols.map(col => parseFloat(col.style.opacity) || (col.classList.contains('is-peek') ? 0.3 : 1));
@@ -6271,8 +6285,8 @@
       window.addEventListener('mouseup', e => {
         if (!isDragging) return; isDragging = false;
         const delta = e.clientX - touchStartX;
-        if (Math.abs(delta) > 60) goTo(delta < 0 ? current + 1 : current - 1);
-        else goTo(current);
+        if (Math.abs(delta) > 60) goTo(delta < 0 ? current + 1 : current - 1, SWIPE_MS);
+        else goTo(current, 240);
       });
       window.addEventListener('mousemove', e => {
         if (!isDragging) return;
@@ -6282,8 +6296,8 @@
       attachSwipe(track, {
         onStart:  () => { gen++; animating = false; touchStartOffset = offsetX; },
         onDrag:   dx => { offsetX = touchStartOffset + dx; track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; },
-        onCommit: dir => goTo(current + dir),   // goTo clamps
-        onCancel: () => goTo(current)
+        onCommit: dir => goTo(current + dir, SWIPE_MS),   // goTo clamps
+        onCancel: () => goTo(current, 240)
       });
     })();
 
@@ -7892,12 +7906,15 @@
         // transform underneath the finger
         let gen = 0;
 
-        function goTo(idx) {
+        /* See the page carousel for why a swipe settles faster than a button. */
+        const SWIPE_MS = 300, BUTTON_MS = 540;
+
+        function goTo(idx, ms) {
           if (animating) return;
           animating = true;
           const g = ++gen;
           const from = offsetX, to = snapX(idx);
-          const dur = 540, t0 = performance.now();
+          const dur = ms || BUTTON_MS, t0 = performance.now();
           function frame() {
             if (g !== gen) return;
             const p = Math.min((performance.now() - t0) / dur, 1);
@@ -7948,7 +7965,7 @@
         // Drag/swipe
         let tStartX = 0, tStartOff = 0, dragging = false;
         track.addEventListener('mousedown',  e => { dragging = true; tStartX = e.clientX; tStartOff = offsetX; track.style.transition = 'none'; });
-        window.addEventListener('mouseup',   e => { if (!dragging) return; dragging = false; const d = e.clientX - tStartX; if (Math.abs(d) > 60) goTo(d < 0 ? Math.min(current + 1, total - 1) : Math.max(current - 1, 0)); else goTo(current); });
+        window.addEventListener('mouseup',   e => { if (!dragging) return; dragging = false; const d = e.clientX - tStartX; if (Math.abs(d) > 60) goTo(d < 0 ? Math.min(current + 1, total - 1) : Math.max(current - 1, 0), SWIPE_MS); else goTo(current, 220); });
         window.addEventListener('mousemove', e => { if (!dragging) return; offsetX = tStartOff + (e.clientX - tStartX); track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; });
         attachSwipe(track, {
           onStart:  () => { gen++; animating = false; tStartOff = offsetX; },
@@ -7957,9 +7974,9 @@
           // final swipe drags the track past its own end
           onCommit: dir => {
             const maxIdx = Math.max(0, total - visCount());
-            goTo(dir > 0 ? Math.min(current + 1, maxIdx) : Math.max(current - 1, 0));
+            goTo(dir > 0 ? Math.min(current + 1, maxIdx) : Math.max(current - 1, 0), SWIPE_MS);
           },
-          onCancel: () => goTo(current)
+          onCancel: () => goTo(current, 220)
         });
         window.addEventListener('resize',    () => goTo(Math.min(current, Math.max(0, total - visCount()))));
       }
