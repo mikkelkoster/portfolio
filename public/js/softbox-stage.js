@@ -466,18 +466,29 @@ window.initSoftboxStage = function (canvas, config) {
   scenePass.clear = false;
   composer.addPass(scenePass);
 
+  /* Aperture is the whole character of this, and it wants to be far
+     smaller than looks reasonable on paper. At 0.00021 the fall-off ate
+     the device as well as the ground and the shot read as soft rather than
+     shallow, which is worse than no depth of field at all — an out-of-focus
+     subject is a mistake, an out-of-focus background is a lens. */
   const bokeh = new THREE.BokehPass(scene, camera, {
     focus: 13,
-    aperture: 0.00021,
-    maxblur: 0.006,
+    aperture: 0.00005,
+    maxblur: 0.0032,
   });
   composer.addPass(bokeh);
 
+  /* Threshold at 1.0, not below it. Bloom runs before OutputPass, so it
+     sees LINEAR values — and the backdrop's own highs sit around 0.95
+     there, which means anything under 1.0 blooms the ground itself and
+     washes the whole card pale. Above 1.0 only genuinely clipping
+     highlights qualify, which is the strip light in the glass and off the
+     chamfers: exactly the things that should halate and nothing else. */
   const bloom = new THREE.UnrealBloomPass(
     new THREE.Vector2(256, 256),   // resized with the canvas
-    0.34,    // strength — a sheen on the highlights, not a glow around them
-    0.6,     // radius
-    0.86     // threshold: only what is nearly clipping blooms
+    0.3,     // strength — a sheen on the highlights, not a glow around them
+    0.5,     // radius
+    1.0      // threshold
   );
   composer.addPass(bloom);
 
