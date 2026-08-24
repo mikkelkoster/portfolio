@@ -216,12 +216,39 @@
     @media (max-width: 900px) {
       .pill-nav .pill-nav__linkedin,
       .pill-nav .pill-nav__cv,
-      .pill-nav .pill-nav__cta,
       .pill-nav .pill-nav__status-full { display: none; }
-      .pill-nav .pill-nav__mail { display: inline-flex; }
       .pill-nav .pill-nav__status-short { display: inline; }
       .pill-nav .pill-nav__status { padding-left: 0; border-left: 0; }
       .pill-nav .pill-nav__inner { gap: 12px; padding: 6px 6px 6px 16px; }
+
+      /* ── the pill's two states ──────────────────────────────────────
+         The desktop pill only exists once you have scrolled, so it can
+         always show the status. Here it is docked from the first frame,
+         while the hero's own badge is still on screen saying the same
+         thing — so at rest it is just a name and a CTA, and it takes over
+         the availability line only once that badge has gone.
+
+         Swapped on max-width and opacity rather than display, because
+         display does not animate and this has to cross-fade. Collapsed
+         items keep no width, so the pill hugs whatever is showing. */
+      .pill-nav__cta,
+      .pill-nav__mail,
+      .pill-nav__status {
+        overflow: hidden;
+        white-space: nowrap;
+        transition: max-width 0.42s cubic-bezier(0.22, 0.7, 0.3, 1),
+                    opacity 0.28s ease,
+                    margin 0.42s cubic-bezier(0.22, 0.7, 0.3, 1);
+      }
+      /* at rest: name + "Get in touch" */
+      .pill-nav .pill-nav__cta { display: inline-flex; max-width: 140px; opacity: 1; }
+      .pill-nav .pill-nav__mail { display: inline-flex; max-width: 0; opacity: 0; margin-left: -12px; pointer-events: none; }
+      .pill-nav .pill-nav__status { max-width: 0; opacity: 0; margin-left: -12px; }
+
+      /* past the hero badge: name + status + mail glyph */
+      .pill-nav.is-past-hero .pill-nav__cta { max-width: 0; opacity: 0; margin-left: -12px; pointer-events: none; }
+      .pill-nav.is-past-hero .pill-nav__mail { max-width: 40px; opacity: 1; margin-left: 0; pointer-events: auto; }
+      .pill-nav.is-past-hero .pill-nav__status { max-width: 220px; opacity: 1; margin-left: 0; }
     }
 
     @media (max-width: 768px) {
@@ -528,6 +555,7 @@
         radial-gradient(ellipse 40% 50% at 88% 80%, rgba(29, 78, 216, 0.16) 0%, transparent 55%),
         var(--dark);
       height: 100svh;
+      height: 100dvh;   /* see the mobile rule for why */
       min-height: 700px;
       overflow: hidden;
       position: relative;
@@ -2157,7 +2185,12 @@
 
     @media (max-width: 950px) {
       /* Hero — photo as full background, text overlays at bottom */
-      .hero { height: 100svh; min-height: 600px; overflow: hidden; position: relative; }
+      /* dvh, not svh. svh is the SMALL viewport height — the size with the
+         browser chrome showing — so the moment the chrome collapses the hero
+         is shorter than the screen and the white section below shows through
+         under it. dvh tracks the viewport as the chrome moves, so the image
+         fills whatever is actually visible. */
+      .hero { height: 100svh; height: 100dvh; min-height: 600px; overflow: hidden; position: relative; }
       .hero__inner {
         height: 100%;
         flex-direction: column;
@@ -6077,6 +6110,23 @@
         if (item.classList.contains('is-open')) closeExpItem(item);
       });
     });
+
+    /* ── The pill's availability line ───────────────────────
+       Only meaningful once the hero's own badge has left the screen —
+       until then the two say the same thing a few hundred pixels apart.
+       Watching the badge itself rather than a scroll threshold means it
+       stays correct whatever the hero's height does on a given device,
+       and dvh means that height moves as the browser chrome does. */
+    (() => {
+      const pill  = document.getElementById('pill-nav');
+      const badge = document.querySelector('.hero__avail');
+      if (!pill || !badge || !('IntersectionObserver' in window)) return;
+      const io = new IntersectionObserver(
+        ([e]) => pill.classList.toggle('is-past-hero', !e.isIntersecting),
+        { threshold: 0 }
+      );
+      io.observe(badge);
+    })();
 
     /* ── Show all experience ───────────────────────────── */
     (() => {
