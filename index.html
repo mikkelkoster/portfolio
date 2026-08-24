@@ -5710,7 +5710,15 @@
        short flick advances — the old flat 50px threshold ignored those.
        Pairs with `touch-action: pan-y` on the tracks. */
     function attachSwipe(track, opts) {
-      const AXIS_LOCK = 10;
+      const AXIS_LOCK = 8;
+      /* How far from horizontal a gesture can be and still count as a swipe.
+         A strict |dx| > |dy| gives the page anything past 45 degrees, and a
+         thumb dragged across a card that is 689px tall in an 812px viewport
+         arcs well past that — the swipe is simply lost, and the reader tries
+         again rather than reporting it. 0.75 accepts roughly 53 degrees off
+         horizontal, which still leaves an ordinary vertical scroll to the
+         page by a wide margin. */
+      const X_BIAS = 0.75;
       let x0 = 0, y0 = 0, t0 = 0, xLock = 0, axis = '', live = false;
 
       track.addEventListener('touchstart', e => {
@@ -5728,7 +5736,7 @@
         const dy = e.touches[0].clientY - y0;
         if (!axis) {
           if (Math.abs(dx) < AXIS_LOCK && Math.abs(dy) < AXIS_LOCK) return;
-          axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+          axis = Math.abs(dx) > Math.abs(dy) * X_BIAS ? 'x' : 'y';
           if (axis === 'y') { live = false; return; }   // the page's gesture
           xLock = x;
           // onStart stops any animation in flight, so it fires here rather
