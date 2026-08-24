@@ -1775,6 +1775,30 @@
       align-items: center;
       justify-content: center;
     }
+    /* The portrait sits on the hero's own ground rather than the slate the
+       other thumbnails use, and is contained rather than cropped — cover at
+       150px tall cuts the head off. */
+    .exp-expand-img--hero {
+      background:
+        radial-gradient(ellipse 80% 60% at 70% 30%, rgba(37, 99, 235, 0.32) 0%, transparent 65%),
+        radial-gradient(ellipse 55% 65% at 10% 85%, rgba(14, 165, 233, 0.12) 0%, transparent 55%),
+        var(--dark);
+      border-color: rgba(255, 255, 255, 0.10);
+    }
+    /* Scoped to the parent for (0,2,1). `.exp-expand-img--hero img` ties with
+       `.exp-expand-img img` on specificity and loses on source order, so the
+       plain version of this rule silently did nothing. */
+    .exp-expand-imgs .exp-expand-img--hero img {
+      object-fit: contain;
+      object-position: center top;
+    }
+    /* The one badge that is a state rather than a category. --avail is the
+       green for light grounds, but on this tint it reaches only 3.2:1 and
+       11px text answers to 4.5 — #057A55 measures 5.08:1 at rest and 4.72:1
+       against the hover fill. */
+    .exp-badge--avail { background: #ECFDF5; color: #057A55; }
+    .exp-item:hover .exp-badge--avail,
+    .exp-item.is-open .exp-badge--avail { background: #D1FAE5; }
     .exp-expand-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .exp-expand-text {
       font-size: 14px;
@@ -5247,12 +5271,38 @@
 
       <div class="exp-list is-clipped" id="exp-list">
 
-        <!-- Formalize -->
+        <!-- Freelance & fractional -->
         <div class="exp-item">
           <div class="exp-row exp-toggle will-fade-up" data-delay="0">
             <div class="exp-company-wrap">
+              <span class="exp-company">Freelance &amp; fractional</span>
+              <span class="exp-period">Sep 2026 – Now</span>
+            </div>
+            <div class="exp-detail">
+              <span class="exp-role">Product design and strategy</span>
+              <span class="exp-desc">Hands-on product design and product strategy &mdash; joining product teams directly, on a freelance or fractional basis.</span>
+            </div>
+            <div class="exp-row-right">
+              <span class="exp-badge exp-badge--avail">Available</span>
+              <svg class="exp-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="exp-expand">
+            <div class="exp-expand-inner">
+              <div class="exp-expand-imgs">
+                <div class="exp-expand-img exp-expand-img--hero"><img src="public/images/main/main-photo-mikkel.webp" alt="Mikkel Køster"></div>
+              </div>
+              <p class="exp-expand-text">I work hands-on across product design and product strategy &mdash; discovery and framing, concepts, high-fidelity design, and design systems. After eight years leading design teams, most recently building the function from zero at Formalize and leading a team of twelve at Maersk, I now take that work on directly rather than through a team. I am used to joining an existing setup and working the way it already works: the stack, the rituals and the constraints as they are, with very little onboarding. Engagements run from a few weeks on a specific problem to ongoing fractional design leadership.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Formalize -->
+        <div class="exp-item">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="60">
+            <div class="exp-company-wrap">
               <span class="exp-company">Formalize</span>
-              <span class="exp-period">Sep 2024 – Now</span>
+              <span class="exp-period">Sep 2024 – Sep 2026</span>
             </div>
             <div class="exp-detail">
               <span class="exp-role">Head of Product Design</span>
@@ -5275,7 +5325,7 @@
 
         <!-- Maersk -->
         <div class="exp-item">
-          <div class="exp-row exp-toggle will-fade-up" data-delay="60">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="120">
             <div class="exp-company-wrap">
               <span class="exp-company">Maersk</span>
               <span class="exp-period">Jul 2021 – Sep 2024</span>
@@ -5301,7 +5351,7 @@
 
         <!-- Sleepacy -->
         <div class="exp-item">
-          <div class="exp-row exp-toggle will-fade-up" data-delay="120">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="180">
             <div class="exp-company-wrap">
               <span class="exp-company">Sleepacy</span>
               <span class="exp-period">Jan – Jul 2021</span>
@@ -5327,7 +5377,7 @@
 
         <!-- 1508 -->
         <div class="exp-item exp-item--cut">
-          <div class="exp-row exp-toggle will-fade-up" data-delay="180">
+          <div class="exp-row exp-toggle will-fade-up" data-delay="240">
             <div class="exp-company-wrap">
               <span class="exp-company">1508</span>
               <span class="exp-period">Oct 2018 – Jan 2021</span>
