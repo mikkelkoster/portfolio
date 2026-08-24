@@ -240,13 +240,19 @@
                     opacity 0.28s ease,
                     margin 0.42s cubic-bezier(0.22, 0.7, 0.3, 1);
       }
+      /* The negative margin cancels the flex GAP that a zero-width item still
+         gets, and it has to match the gap of the container the item is
+         actually in — status sits in .pill-nav__inner at 12px, cta and mail
+         sit in .pill-nav__buttons at 4px. Using 12 for all three overpulled
+         the buttons row by 8px, so it measured NARROWER than the button
+         inside it and the CTA hung past the end of the pill. */
       /* at rest: name + "Get in touch" */
       .pill-nav .pill-nav__cta { display: inline-flex; max-width: 140px; opacity: 1; }
-      .pill-nav .pill-nav__mail { display: inline-flex; max-width: 0; opacity: 0; margin-left: -12px; pointer-events: none; }
+      .pill-nav .pill-nav__mail { display: inline-flex; max-width: 0; opacity: 0; margin-left: -4px; pointer-events: none; }
       .pill-nav .pill-nav__status { max-width: 0; opacity: 0; margin-left: -12px; }
 
       /* past the hero badge: name + status + mail glyph */
-      .pill-nav.is-past-hero .pill-nav__cta { max-width: 0; opacity: 0; margin-left: -12px; pointer-events: none; }
+      .pill-nav.is-past-hero .pill-nav__cta { max-width: 0; opacity: 0; margin-left: -4px; pointer-events: none; }
       .pill-nav.is-past-hero .pill-nav__mail { max-width: 40px; opacity: 1; margin-left: 0; pointer-events: auto; }
       .pill-nav.is-past-hero .pill-nav__status { max-width: 220px; opacity: 1; margin-left: 0; }
     }
@@ -1377,6 +1383,13 @@
       gap: 16px;
       will-change: transform;
       touch-action: pan-y;
+      /* A drag that starts on text selects text instead of swiping — worst
+         on the longest quote, where there is the most text to grab. The
+         gesture belongs to the carousel here, so nothing inside is
+         selectable. */
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
     /* Each column = card image + static caption, slides together             */
     /* Formula: 3 cards fill the content area (viewport − 2×64px padding)   */
@@ -1852,12 +1865,24 @@
       will-change: transform;
       align-items: stretch;
       touch-action: pan-y;
+      /* See .carousel-track — these are the longest text blocks on the page
+         and the ones a swipe most easily turns into a selection. */
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
     .t-col {
       flex: 0 0 min(calc(100vw - 240px), 1150px);
       flex-shrink: 0;
       min-width: 0;
       height: auto;
+      /* CSS owns the dim, not JS. The carousel used to interpolate every
+         card's opacity by hand each frame and clear the inline values on
+         completion — so an interrupted move, which is what every swipe does
+         to the one before it, left cards stranded at whatever partial value
+         they had reached. A class plus a transition cannot be interrupted
+         into a broken state. */
+      transition: opacity 0.34s ease;
     }
     .t-col.is-peek { opacity: 0.3; }
     /* Long quotes: shrink font so text fits within the fixed card height */
@@ -3783,6 +3808,9 @@
       will-change: transform;
       cursor: grab;
       touch-action: pan-y;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
     .cm-car__track:active { cursor: grabbing; }
     /* Image-card carousels: ~1.4 visible + peek */
@@ -6273,12 +6301,9 @@
         const from = offsetX, to = -(index * colWidth());
         const dur = ms || BUTTON_MS, t0 = performance.now();
 
-        // Snapshot starting opacities so we interpolate from whatever they are now
-        const startOpacity = cols.map(col => parseFloat(col.style.opacity) || (col.classList.contains('is-peek') ? 0.3 : 1));
-        const targetOpacity = cols.map((_, i) => (i === toIdx ? 1 : (i === toIdx - 1 || i === toIdx + 1 ? 0.3 : 0.3)));
-
-        // Remove classes so CSS doesn't fight inline styles during animation
-        cols.forEach(col => col.classList.remove('is-peek'));
+        /* Hand the dim to CSS immediately and let the class transition run
+           alongside the slide, rather than driving it frame by frame. */
+        updateState(toIdx);
 
         (function frame() {
           if (g !== gen) return;
@@ -6287,20 +6312,12 @@
           offsetX = from + (to - from) * ep;
           track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
 
-          // Interpolate each card's opacity in lockstep with the slide
-          cols.forEach((col, i) => {
-            col.style.opacity = (startOpacity[i] + (targetOpacity[i] - startOpacity[i]) * ep).toFixed(3);
-          });
-
           if (p < 1) {
             requestAnimationFrame(frame);
           } else {
             offsetX = to;
             track.style.transform = `translateX(${to}px)`;
-            // Hand back to CSS classes
-            cols.forEach(col => col.style.opacity = '');
             animating = false;
-            updateState(toIdx);
           }
         })();
 
