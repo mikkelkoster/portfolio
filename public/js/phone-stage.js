@@ -112,6 +112,21 @@ window.initPhoneStage = function (canvas, config) {
     box(700, 165, 165, 108, 0.52);  // secondary, upper right
     box(890, 250, 118, 66, 0.3);    // glint near the horizon
 
+    /* A narrow, very bright strip, and it is the single most important
+       thing in this map for how the enclosure reads. The three boxes above
+       are broad and soft, which lights the body evenly but gives the
+       chamfers nothing to catch — a wide source reflected in a 2mm bevel is
+       a wide, dim smear. The hard highlight running the length of a rail in
+       a product film comes from a SMALL bright source, so that is what this
+       is: a slit, not a box, hot enough to clip. */
+    const strip = g.createLinearGradient(0, 66, 0, 104);
+    strip.addColorStop(0.00, "rgba(255,255,255,0)");
+    strip.addColorStop(0.42, "rgba(255,255,255,1)");
+    strip.addColorStop(0.58, "rgba(255,255,255,1)");
+    strip.addColorStop(1.00, "rgba(255,255,255,0)");
+    g.fillStyle = strip;
+    g.fillRect(120, 66, 640, 38);
+
     const tex = new THREE.CanvasTexture(c);
     tex.mapping = THREE.EquirectangularReflectionMapping;
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -410,8 +425,13 @@ window.initPhoneStage = function (canvas, config) {
   let screenMat = null;
   /* How much room the glass gives back. The single dial for the shaped
      reflection: 0 removes it, past about 0.9 the softboxes start to
-     compete with the UI. */
-  const GLASS_ENV = 0.62;
+     compete with the UI.
+
+     Deliberately low, for the reason set out in softbox-stage.js: the
+     reference keeps its screens clean and puts the whole premium read into
+     the body. This stays as a hint that there is glass in front of the
+     pixels; the strip light does the rest. */
+  const GLASS_ENV = 0.24;
   let sheenTex = null, sheenMat = null;
 
   const BEZEL = 0.028;        // of the screen's WIDTH
@@ -593,8 +613,11 @@ window.initPhoneStage = function (canvas, config) {
        not tinted by base colour, so the environment still comes through.
        metalness 0 keeps Fresnel in play, so it stays quiet on the frontal
        shots and arrives as the phone turns — a metal would sit at the same
-       brightness from every angle and read as a sticker. */
-    const glass = new THREE.Mesh(overlayGeo, new THREE.MeshPhysicalMaterial({
+       brightness from every angle and read as a sticker.
+
+       Standard rather than Physical, for the frame budget — see the same
+       layer in softbox-stage.js for the measurement. */
+    const glass = new THREE.Mesh(overlayGeo, new THREE.MeshStandardMaterial({
       color: 0x000000,
       metalness: 0,
       roughness: 0.05,

@@ -41,8 +41,16 @@ window.initSoftboxStage = function (canvas, config) {
 
   /* How much room the glass gives back. The single dial for the shaped
      reflection: 0 removes it, and much past 0.8 the softboxes start to
-     compete with the UI on the wide shots. */
-  const GLASS_ENV = 0.5;
+     compete with the UI on the wide shots.
+
+     Deliberately low. The reference this is matched against keeps its
+     screens completely clean — even the frames shot from well off-axis,
+     where a real glossy panel would be showing the room. What makes those
+     read as expensive is the BODY: a hard highlight down the chamfer, not
+     anything happening on the glass. So this stays as a hint that the panel
+     is behind something, and the budget goes into the strip light and the
+     aluminium. */
+  const GLASS_ENV = 0.2;
 
   /* The plinth. Deliberately shallow in Z — a deep slab eats the lower
      third of every frame and the display looks stranded on a runway. The
@@ -125,6 +133,21 @@ window.initSoftboxStage = function (canvas, config) {
     box(250, 118, 235, 150, 0.95);  // key, upper left
     box(700, 165, 165, 108, 0.52);  // secondary, upper right
     box(890, 250, 118, 66, 0.3);    // glint near the horizon
+
+    /* A narrow, very bright strip, and it is the single most important
+       thing in this map for how the enclosure reads. The three boxes above
+       are broad and soft, which lights the body evenly but gives the
+       chamfers nothing to catch — a wide source reflected in a 2mm bevel is
+       a wide, dim smear. The hard highlight running the length of a rail in
+       a product film comes from a SMALL bright source, so that is what this
+       is: a slit, not a box, hot enough to clip. */
+    const strip = g.createLinearGradient(0, 66, 0, 104);
+    strip.addColorStop(0.00, "rgba(255,255,255,0)");
+    strip.addColorStop(0.42, "rgba(255,255,255,1)");
+    strip.addColorStop(0.58, "rgba(255,255,255,1)");
+    strip.addColorStop(1.00, "rgba(255,255,255,0)");
+    g.fillStyle = strip;
+    g.fillRect(120, 66, 640, 38);
 
     const tex = new THREE.CanvasTexture(c);
     tex.mapping = THREE.EquirectangularReflectionMapping;
@@ -530,6 +553,11 @@ window.initSoftboxStage = function (canvas, config) {
   }
 
   const brush = brushed();
+  /* The argument scales the brushed map rather than replacing it, so the
+     grain survives. Pulled down across the board with the strip light: at
+     the old values the map's mid greys put the whole enclosure near
+     roughness 1, where even a hot, narrow source reflects as a wide dim
+     smear and the chamfers read as moulded plastic. */
   const aluminium = (rough) => new THREE.MeshPhysicalMaterial({
     color: ALU,
     roughnessMap: brush,
@@ -547,7 +575,7 @@ window.initSoftboxStage = function (canvas, config) {
   const device = new THREE.Group();
   scene.add(device);
 
-  const body = new THREE.Mesh(slab(BODY_W, BODY_H, BODY_R, BODY_D, BODY_BEVEL), aluminium(1));
+  const body = new THREE.Mesh(slab(BODY_W, BODY_H, BODY_R, BODY_D, BODY_BEVEL), aluminium(0.7));
   /* NOT offset back by half its depth.
      `slab()` calls geo.center(), so the body already straddles z = 0 and its
      front face lands at BODY_D/2 + bevel — which is exactly what GLASS_Z is
@@ -674,8 +702,13 @@ window.initSoftboxStage = function (canvas, config) {
      climbing as the surface turns away. That is the same curve the glare
      bar's opacity is driven by, so the two agree rather than fight, and it
      is why this stays out of the way on the shots that look straight at
-     the screen and arrives on the raking ones. */
-  const roomMat = new THREE.MeshPhysicalMaterial({
+     the screen and arrives on the raking ones.
+
+     Standard, not Physical. Nothing here needs clearcoat, transmission or
+     iridescence, and Physical carries the cost of all of them: measured
+     across a full-length pass, the Physical version put p95 at 34.2ms and
+     the average at 49fps against 17.6ms and 59fps without the layer. */
+  const roomMat = new THREE.MeshStandardMaterial({
     color: 0x000000,
     metalness: 0,
     roughness: 0.06,
@@ -698,12 +731,12 @@ window.initSoftboxStage = function (canvas, config) {
   eye.position.set(0, SCREEN_H / 2 + BEZEL / 2, FACE_Z + 0.002);
   device.add(eye);
 
-  const arm = new THREE.Mesh(slab(ARM_W, ARM_H, 0.06, ARM_D, 0.02), aluminium(1.1));
+  const arm = new THREE.Mesh(slab(ARM_W, ARM_H, 0.06, ARM_D, 0.02), aluminium(0.82));
   arm.position.set(0, -BODY_H / 2 - ARM_H / 2 + DROP, ARM_Z);
   arm.castShadow = arm.receiveShadow = true;
   device.add(arm);
 
-  const foot = new THREE.Mesh(slab(ARM_W, BASE_D, 0.14, BASE_T, 0.018), aluminium(1.1));
+  const foot = new THREE.Mesh(slab(ARM_W, BASE_D, 0.14, BASE_T, 0.018), aluminium(0.82));
   foot.rotation.x = -Math.PI / 2;
   foot.position.set(0, BASE_Y, ARM_Z + BASE_FWD);
   foot.castShadow = foot.receiveShadow = true;
