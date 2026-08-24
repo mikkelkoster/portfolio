@@ -5722,6 +5722,39 @@
        one drags the track live. Commit is distance OR velocity, so a fast
        short flick advances — the old flat 50px threshold ignored those.
        Pairs with `touch-action: pan-y` on the tracks. */
+    /* ── Carousel motion ────────────────────────────────────
+       Three behaviours that separate a carousel you can throw from one that
+       merely advances, all shared by every carousel on the page.
+
+       RESISTANCE. Dragging past the first or last item keeps moving, at
+       roughly a third of your finger, and springs back on release. Without
+       it the track simply refuses at the ends, which reads as broken rather
+       than as a limit.
+
+       THROW. A hard flick carries more than one item. Fixing the step at
+       one makes a fast gesture feel identical to a slow one, which is the
+       main thing that makes a carousel feel cheap.
+
+       SETTLE. The time to land is a function of how far there is to go and
+       how hard it was thrown, not a constant. A long throw that takes the
+       same 320ms as a short nudge reads as a slideshow. */
+    function rubber(x, min, max) {
+      if (x > max) return max + (x - max) * 0.32;
+      if (x < min) return min + (x - min) * 0.32;
+      return x;
+    }
+    function throwSteps(v) {
+      const a = Math.abs(v);          // px/ms
+      if (a > 1.9) return 3;
+      if (a > 1.0) return 2;
+      return 1;
+    }
+    function settleMs(distance, v) {
+      const base  = 200 + Math.min(Math.abs(distance), 900) * 0.3;
+      const eased = base / (1 + Math.min(Math.abs(v), 2.5) * 0.4);
+      return Math.round(Math.max(170, Math.min(560, eased)));
+    }
+
     function attachSwipe(track, opts) {
       const AXIS_LOCK = 8;
       /* How far from horizontal a gesture can be and still count as a swipe.
@@ -5732,14 +5765,44 @@
          horizontal, which still leaves an ordinary vertical scroll to the
          page by a wide margin. */
       const X_BIAS = 0.75;
-      let x0 = 0, y0 = 0, t0 = 0, xLock = 0, axis = '', live = false;
+      let x0 = 0, y0 = 0, xLock = 0, axis = '', live = false;
+      /* A short trail of recent samples. Velocity has to come from the END
+         of the gesture, not from its average: a reader who drags slowly,
+         pauses, then flicks has thrown the track, and an average over the
+         whole gesture reports almost nothing. */
+      let trail = [];
+
+      const sample = (x, t) => {
+        trail.push({ x, t });
+        while (trail.length > 6) trail.shift();
+      };
+      /* px per ms over the last ~80ms of movement.
+         The window has to span real time before the number means anything:
+         two samples a fraction of a millisecond apart divide a large
+         distance by nearly zero and report a throw that never happened.
+         Below 10ms there is nothing to measure, so it reports no throw and
+         the gesture falls back to distance. Clamped at the top too — no
+         human flick exceeds 3px/ms, so anything above that is jitter. */
+      const velocity = () => {
+        if (trail.length < 2) return 0;
+        const last = trail[trail.length - 1];
+        let first = trail[0];
+        for (let i = trail.length - 1; i >= 0; i--) {
+          if (last.t - trail[i].t > 80) break;
+          first = trail[i];
+        }
+        const dt = last.t - first.t;
+        if (dt < 10) return 0;
+        const v = (last.x - first.x) / dt;
+        return Math.max(-3, Math.min(3, v));
+      };
 
       track.addEventListener('touchstart', e => {
         if (e.touches.length !== 1) { live = false; return; }
-        live = true; axis = '';
+        live = true; axis = ''; trail = [];
         x0 = e.touches[0].clientX;
         y0 = e.touches[0].clientY;
-        t0 = performance.now();
+        sample(x0, performance.now());
       }, { passive: true });
 
       track.addEventListener('touchmove', e => {
@@ -5758,6 +5821,7 @@
           if (opts.onStart) opts.onStart();
         }
         e.preventDefault();
+        sample(x, performance.now());
         opts.onDrag(x - xLock);   // measured from the lock, not the touch
       }, { passive: false });
 
@@ -5765,18 +5829,24 @@
         if (!live) return;
         live = false;
         if (axis !== 'x') return;
-        const dx = e.changedTouches[0].clientX - x0;
+        const x = e.changedTouches[0].clientX;
+        sample(x, performance.now());
+        const dx = x - x0;
+        const v  = velocity();                 // px/ms, signed
         const w  = (track.parentElement && track.parentElement.offsetWidth) || track.offsetWidth || 1;
-        const far   = Math.abs(dx) > Math.min(70, w * 0.18);
-        const flick = (performance.now() - t0) < 300 && Math.abs(dx) > 24;
-        if (far || flick) opts.onCommit(dx < 0 ? 1 : -1);
-        else opts.onCancel();
+        /* Either thrown hard enough or dragged far enough. The velocity gate
+           is what makes a short sharp flick work — waiting for distance
+           alone is the thing that feels unresponsive. */
+        const thrown = Math.abs(v) > 0.35;
+        const far    = Math.abs(dx) > Math.min(70, w * 0.18);
+        if (thrown || far) opts.onCommit(dx < 0 || v < 0 ? 1 : -1, Math.abs(v));
+        else opts.onCancel(Math.abs(v));
       });
 
       track.addEventListener('touchcancel', () => {
         if (!live) return;
         live = false;
-        if (axis === 'x') opts.onCancel();
+        if (axis === 'x') opts.onCancel(0);
       });
     }
 
@@ -6025,7 +6095,12 @@
       const SWIPE_MS = 320, BUTTON_MS = 600;
 
       function goTo(index, ms) {
-        if (animating) return;
+        /* No animating guard. Bailing out while a move is in flight means a
+           button pressed during one is silently dropped, and a reader who
+           taps twice gets one advance. The generation counter already makes
+           a new call safe: it kills the running frame loop, and `from` reads
+           the live offset, so the new move continues from wherever the old
+           one had got to rather than jumping. */
         animating = true;
         const g = ++gen;
         const from = offsetX, to = -(index * colWidth());
@@ -6091,17 +6166,24 @@
       });
 
       // Touch support — pages by however many cards are on screen
+      const maxIndex = () => Math.max(0, total - visibleCount());
+      const bounds   = () => ({ min: -(maxIndex() * colWidth()), max: 0 });
       attachSwipe(track, {
         onStart:  () => { gen++; animating = false; touchStartOffset = offsetX; },
-        onDrag:   dx => { offsetX = touchStartOffset + dx; track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; },
-        onCommit: dir => {
-          const step = visibleCount();
-          goTo(dir > 0 ? Math.min(current + step, Math.max(0, total - step))
-                       : Math.max(current - step, 0), SWIPE_MS);
+        onDrag:   dx => {
+          const b = bounds();
+          offsetX = rubber(touchStartOffset + dx, b.min, b.max);
+          track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
         },
-        /* Snapping back is a correction, not a move — quicker still, or the
-           carousel appears to consider the swipe before refusing it. */
-        onCancel: () => goTo(current, 240)
+        onCommit: (dir, v) => {
+          const step = visibleCount() * throwSteps(v);
+          const to = dir > 0 ? Math.min(current + step, maxIndex())
+                             : Math.max(current - step, 0);
+          goTo(to, settleMs(-(to * colWidth()) - offsetX, v));
+        },
+        /* Snapping back is a correction, not a move, so it lands quickly —
+           and quicker still the harder it was thrown. */
+        onCancel: v => goTo(current, settleMs(-(current * colWidth()) - offsetX, v))
       });
 
       // Re-evaluate on resize (e.g. switching to wide-screen 4-col layout)
@@ -6313,7 +6395,12 @@
       const SWIPE_MS = 320, BUTTON_MS = 600;
 
       function goTo(index, ms) {
-        if (animating) return;
+        /* No animating guard. Bailing out while a move is in flight means a
+           button pressed during one is silently dropped, and a reader who
+           taps twice gets one advance. The generation counter already makes
+           a new call safe: it kills the running frame loop, and `from` reads
+           the live offset, so the new move continues from wherever the old
+           one had got to rather than jumping. */
         index = Math.max(0, Math.min(total - 1, index));
         animating = true;
         const g = ++gen;
@@ -6381,11 +6468,19 @@
         offsetX = touchStartOffset + (e.clientX - touchStartX);
         track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
       });
+      const tBounds = () => ({ min: -((total - 1) * colWidth()), max: 0 });
       attachSwipe(track, {
         onStart:  () => { gen++; animating = false; touchStartOffset = offsetX; },
-        onDrag:   dx => { offsetX = touchStartOffset + dx; track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; },
-        onCommit: dir => goTo(current + dir, SWIPE_MS),   // goTo clamps
-        onCancel: () => goTo(current, 240)
+        onDrag:   dx => {
+          const b = tBounds();
+          offsetX = rubber(touchStartOffset + dx, b.min, b.max);
+          track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
+        },
+        onCommit: (dir, v) => {
+          const to = Math.max(0, Math.min(total - 1, current + dir * throwSteps(v)));
+          goTo(to, settleMs(-(to * colWidth()) - offsetX, v));   // goTo clamps too
+        },
+        onCancel: v => goTo(current, settleMs(-(current * colWidth()) - offsetX, v))
       });
     })();
 
@@ -7998,7 +8093,7 @@
         const SWIPE_MS = 300, BUTTON_MS = 540;
 
         function goTo(idx, ms) {
-          if (animating) return;
+          /* No animating guard — see the page carousel. */
           animating = true;
           const g = ++gen;
           const from = offsetX, to = snapX(idx);
@@ -8057,14 +8152,21 @@
         window.addEventListener('mousemove', e => { if (!dragging) return; offsetX = tStartOff + (e.clientX - tStartX); track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; });
         attachSwipe(track, {
           onStart:  () => { gen++; animating = false; tStartOff = offsetX; },
-          onDrag:   dx => { offsetX = tStartOff + dx; track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; },
+          onDrag:   dx => {
+            const maxIdx = Math.max(0, total - visCount());
+            offsetX = rubber(tStartOff + dx, snapX(maxIdx), snapX(0));
+            track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
+          },
           // last landing spot is total - visCount(), not total - 1, or the
           // final swipe drags the track past its own end
-          onCommit: dir => {
+          onCommit: (dir, v) => {
             const maxIdx = Math.max(0, total - visCount());
-            goTo(dir > 0 ? Math.min(current + 1, maxIdx) : Math.max(current - 1, 0), SWIPE_MS);
+            const step = throwSteps(v);
+            const to = dir > 0 ? Math.min(current + step, maxIdx)
+                               : Math.max(current - step, 0);
+            goTo(to, settleMs(snapX(to) - offsetX, v));
           },
-          onCancel: () => goTo(current, 220)
+          onCancel: v => goTo(current, settleMs(snapX(current) - offsetX, v))
         });
         window.addEventListener('resize',    () => goTo(Math.min(current, Math.max(0, total - visCount()))));
       }
