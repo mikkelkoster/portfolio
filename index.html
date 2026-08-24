@@ -340,7 +340,12 @@
          to the sentence. */
       align-self: flex-start;
       width: fit-content;
-      margin-top: 22px;
+      /* Above the headline, not under the tagline. .hero__text is a flex
+         column, so order does it without moving the node — which matters,
+         because the mobile rule pins the same element to the top of the
+         screen from the same position in the DOM. */
+      order: -1;
+      margin-bottom: 26px;
       padding: 8px 17px 8px 14px;
       border: 1px solid color-mix(in srgb, var(--avail-dark) 42%, transparent);
       border-radius: 100px;
