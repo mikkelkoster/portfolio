@@ -420,13 +420,14 @@ window.initSoftboxStage = function (canvas, config) {
              than describing a circle inside a landscape card. */
           float r = length((vUv - 0.5) * vec2(1.0, 0.9)) * 1.45;
           float v = 1.0 - amount * smoothstep(start, 1.0, r);
+          /* Linear out, deliberately. This used to need an explicit
+             <colorspace_fragment> — three appends the conversion to its own
+             materials but not to a ShaderMaterial — and without it every
+             ground rendered dark and desaturated. Inside the composer that
+             reverses: every pass writes to a target in linear working
+             space and OutputPass does the conversion exactly once at the
+             end, so encoding here would apply it twice. */
           gl_FragColor = vec4(c * v, 1.0);
-          /* REQUIRED. three appends the colour-space conversion to its own
-             materials but not to a ShaderMaterial, so without this the
-             backdrop is written in linear and shown as sRGB — every ground
-             came out dark and desaturated the moment the MeshBasicMaterial
-             this replaced went away. */
-          #include <colorspace_fragment>
         }
       `,
     })
@@ -434,16 +435,63 @@ window.initSoftboxStage = function (canvas, config) {
 
   /* autoClear off for the main pass, or it wipes the composite the instant
      the device starts drawing. */
+  /* ── the post chain ───────────────────────────────────────────────
+     What separates a render from a photograph, and the reason this scene
+     read as dated without it.
+
+     FOCUS. A camera has one focal plane and everything else falls off. A
+     renderer gives perfect sharpness everywhere for free, which is exactly
+     why perfect sharpness everywhere reads as CG. The focal plane tracks
+     rig.dist, so whatever the shot is looking at is what is sharp, and the
+     far end of the panel softens as the device turns away.
+
+     BLOOM. Highlights clamp at 1.0 and stop. Real glass and metal halate
+     around the hot spots, and that glow is most of what says "shot"
+     rather than "rendered". Thresholded high so it lives on the strip
+     light and the chamfers rather than washing the UI.
+
+     Tone mapping moves here too, and that is not optional: three only
+     applies it when drawing to the default framebuffer, so once every pass
+     renders to a target the materials stop tone mapping and OutputPass has
+     to do it. It now covers the backdrop as well, which used to bypass the
+     curve — the whole frame sits on one response, which is what a camera
+     does and the split never was. */
+  const composer = new THREE.EffectComposer(renderer);
+
+  const bgPass = new THREE.RenderPass(bgQuadScene, bgCam);
+  composer.addPass(bgPass);
+
+  /* clear off, or the device pass wipes the backdrop it sits on */
+  const scenePass = new THREE.RenderPass(scene, camera);
+  scenePass.clear = false;
+  composer.addPass(scenePass);
+
+  const bokeh = new THREE.BokehPass(scene, camera, {
+    focus: 13,
+    aperture: 0.00021,
+    maxblur: 0.006,
+  });
+  composer.addPass(bokeh);
+
+  const bloom = new THREE.UnrealBloomPass(
+    new THREE.Vector2(256, 256),   // resized with the canvas
+    0.34,    // strength — a sheen on the highlights, not a glow around them
+    0.6,     // radius
+    0.86     // threshold: only what is nearly clipping blooms
+  );
+  composer.addPass(bloom);
+
+  composer.addPass(new THREE.OutputPass());
+
   function renderFrame() {
     renderer.setRenderTarget(bgRT);
     renderer.clear();
     renderer.render(bgScene, camera);
     renderer.setRenderTarget(null);
-    renderer.clear();
-    renderer.render(bgQuadScene, bgCam);
-    renderer.autoClear = false;
-    renderer.render(scene, camera);
-    renderer.autoClear = true;
+    /* The focal plane rides the rig: the device is at the origin, so the
+       distance to it IS the focus distance for every shot. */
+    bokeh.uniforms.focus.value = rig.dist;
+    composer.render();
   }
 
   /* Back-to-front ordering, refreshed only when the view has actually
@@ -1230,6 +1278,17 @@ window.initSoftboxStage = function (canvas, config) {
       Math.max(2, Math.round(buf.x * BG_SCALE)),
       Math.max(2, Math.round(buf.y * BG_SCALE))
     );
+    /* The composer owns the frame now, so its targets have to track the
+       canvas or the post passes run at whatever size they were built at.
+       Bloom is deliberately fed the DRAWING BUFFER size rather than the CSS
+       size: it is the most fill-rate hungry thing in the chain, and it is a
+       blur — running its pyramid at the real pixel count buys nothing the
+       eye can see and costs the whole saving the pixel budget above just
+       made. */
+    composer.setSize(w, h);
+    const bb = renderer.getDrawingBufferSize(new THREE.Vector2());
+    bloom.setSize(Math.max(1, Math.round(bb.x * 0.5)), Math.max(1, Math.round(bb.y * 0.5)));
+
     camera.aspect = w / h;
     /* Widen the field of view as the frame narrows, so the device does not
        run out of the sides on a phone. */
