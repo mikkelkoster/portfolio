@@ -1439,11 +1439,6 @@
       display: flex;
       gap: 16px;
       will-change: transform;
-      touch-action: pan-y;
-      /* A drag that starts on text selects text instead of swiping — worst
-         on the longest quote, where there is the most text to grab. The
-         gesture belongs to the carousel here, so nothing inside is
-         selectable. */
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
@@ -1462,7 +1457,7 @@
       /* Matched to the settle. At 0.45s the dim finished well after the
          slide had stopped, so the cards kept fading once the movement was
          over — which reads as lag rather than as one motion. */
-      transition: opacity 0.3s ease;
+      transition: opacity 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
     }
     .carousel-col.is-peek   { opacity: 0.3 !important; }
     .carousel-col.is-hidden { opacity: 0; pointer-events: none; }
@@ -1913,6 +1908,45 @@
       padding-top: 2px;
     }
 
+
+    /* ── Carousels are native scroll containers ──────────────
+       Not a transform driven by touch handlers. Every reliability problem
+       these had came from re-implementing what the browser already does:
+       deciding whether a gesture is horizontal, cancelling the page's claim
+       on it in time, measuring throw velocity, easing the settle. Handing it
+       all back means the gesture is the platform's own — it never misses
+       one, momentum and rubber-banding come free, and a vertical scroll just
+       scrolls, because nothing intercepted it to decide otherwise.
+
+       touch-action: pan-y had to go with it. It told the browser this
+       element pans vertically and NOT horizontally, which is the exact
+       opposite of what a horizontal scroller needs.
+
+       scroll-behavior: smooth is what the arrows ride on; a finger is
+       unaffected by it. overscroll-behavior-x stops a swipe at the end
+       turning into the browser's back gesture. */
+    .carousel-track,
+    .t-track,
+    .cm-car__track {
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .carousel-track::-webkit-scrollbar,
+    .t-track::-webkit-scrollbar,
+    .cm-car__track::-webkit-scrollbar { display: none; }
+    .carousel-col,
+    .t-col,
+    .cm-car__col { scroll-snap-align: start; }
+    @media (prefers-reduced-motion: reduce) {
+      .carousel-track, .t-track, .cm-car__track { scroll-behavior: auto; }
+    }
+
     /* ── Testimonial ─────────────────────────────────── */
     /* ── TESTIMONIAL PEEK-CAROUSEL ──────────────────────── */
     .t-wrap {
@@ -1924,9 +1958,6 @@
       gap: 16px;
       will-change: transform;
       align-items: stretch;
-      touch-action: pan-y;
-      /* See .carousel-track — these are the longest text blocks on the page
-         and the ones a swipe most easily turns into a selection. */
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
@@ -1942,7 +1973,7 @@
          to the one before it, left cards stranded at whatever partial value
          they had reached. A class plus a transition cannot be interrupted
          into a broken state. */
-      transition: opacity 0.3s ease;
+      transition: opacity 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
     }
     .t-col.is-peek { opacity: 0.3; }
     /* Long quotes: shrink font so text fits within the fixed card height */
@@ -3913,7 +3944,6 @@
       gap: 24px;
       will-change: transform;
       cursor: grab;
-      touch-action: pan-y;
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
@@ -3923,7 +3953,7 @@
     .cm-car__col {
       flex: 0 0 calc(70% - 12px);
       flex-shrink: 0;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
       display: flex;
       flex-direction: column;
     }
@@ -4351,7 +4381,7 @@
     .cm-ds-card__img {
       display: block;
       width: auto;
-      height: auto;
+      height: 100%; /* definite height + width/height attrs = correct width reserved before load */
       max-height: 560px;
       max-width: 100%;
       object-fit: contain;
@@ -5803,193 +5833,77 @@
        document.timeline; setTimeout uses OS timers.)
     ───────────────────────────────────────────────────── */
 
-    /* ── Swipe ─────────────────────────────────────────────
-       All three carousels share this. They used to listen for touchstart and
-       touchend only, which reads the finger's start and end but nothing in
-       between: the track never moved under the finger, so a swipe gave no
-       sign it had registered, and a diagonal page scroll that drifted 50px
-       sideways counted as a deliberate swipe.
-
-       Tracking touchmove fixes both. The first 10px decide the axis; a
-       vertical gesture is handed straight back to the page, and a horizontal
-       one drags the track live. Commit is distance OR velocity, so a fast
-       short flick advances — the old flat 50px threshold ignored those.
-       Pairs with `touch-action: pan-y` on the tracks. */
-    /* The easing every carousel settles on. Matched to the feel of a thrown
-       object coming to rest: quick to leave, long tail. */
-    const CAROUSEL_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
-
-    /* Where the track actually is right now, mid-transition included.
-       A CSS transition does not tell you its progress, so the current
-       position has to be read off the composited matrix — needed the moment
-       a reader grabs a track that is still moving. One read per gesture. */
-    function trackX(track) {
-      const t = getComputedStyle(track).transform;
-      if (!t || t === 'none') return 0;
-      const m = t.match(/matrix.*\((.+)\)/);
-      if (!m) return 0;
-      const parts = m[1].split(', ').map(Number);
-      return parts.length > 6 ? parts[12] : parts[4];   // matrix3d vs matrix
-    }
-    /* Hand the move to the compositor and get off the main thread.
-       This used to be a requestAnimationFrame loop writing transform every
-       frame, which is smooth exactly while the main thread is free — and on
-       a case card it is not: the stages parse three.js and build scenes
-       while you are swiping. A transition keeps its timing regardless. */
-    function glideTo(track, x, ms) {
-      track.style.transition = `transform ${ms}ms ${CAROUSEL_EASE}`;
-      track.style.transform  = `translateX(${x.toFixed(2)}px)`;
-    }
-    /* Pin the track wherever it visually is and stop animating, so a drag
-       continues from there rather than snapping to the old target. */
-    function grabTrack(track) {
-      const x = trackX(track);
-      track.style.transition = 'none';
-      track.style.transform  = `translateX(${x.toFixed(2)}px)`;
-      return x;
-    }
-
-    /* ── Carousel motion ────────────────────────────────────
-       Three behaviours that separate a carousel you can throw from one that
-       merely advances, all shared by every carousel on the page.
-
-       RESISTANCE. Dragging past the first or last item keeps moving, at
-       roughly a third of your finger, and springs back on release. Without
-       it the track simply refuses at the ends, which reads as broken rather
-       than as a limit.
-
-       THROW. A hard flick carries more than one item. Fixing the step at
-       one makes a fast gesture feel identical to a slow one, which is the
-       main thing that makes a carousel feel cheap.
-
-       SETTLE. The time to land is a function of how far there is to go and
-       how hard it was thrown, not a constant. A long throw that takes the
-       same 320ms as a short nudge reads as a slideshow. */
-    function rubber(x, min, max) {
-      if (x > max) return max + (x - max) * 0.32;
-      if (x < min) return min + (x - min) * 0.32;
-      return x;
-    }
-    /* ONE item per swipe, always. This used to scale with velocity, and on a
-       real thumb that was wrong: a casual flick runs well over 1px/ms, so
-       almost every swipe jumped two or three cards and readers sailed past
-       the item they were reaching for. Velocity still shapes the move — it
-       decides how fast it lands — but not how far it goes. A swipe means
-       "next", whatever force it is thrown with. */
-    function throwSteps() { return 1; }
-    function settleMs(distance, v) {
-      const base  = 200 + Math.min(Math.abs(distance), 900) * 0.3;
-      const eased = base / (1 + Math.min(Math.abs(v), 2.5) * 0.4);
-      return Math.round(Math.max(170, Math.min(560, eased)));
-    }
-
-    function attachSwipe(track, opts) {
-      const AXIS_LOCK = 6;
-      /* How far from horizontal a gesture can be and still count as a swipe.
-         A strict |dx| > |dy| gives the page anything past 45 degrees, and a
-         thumb dragged across a card that is 689px tall in an 812px viewport
-         arcs well past that — the swipe is simply lost, and the reader tries
-         again rather than reporting it. 0.75 accepts roughly 53 degrees off
-         horizontal, which still leaves an ordinary vertical scroll to the
-         page by a wide margin. */
-      const X_BIAS = 0.75;
-
-      let x0 = 0, y0 = 0, xLock = 0, axis = '', live = false;
-      /* A short trail of recent samples. Velocity has to come from the END
-         of the gesture, not from its average: a reader who drags slowly,
-         pauses, then flicks has thrown the track, and an average over the
-         whole gesture reports almost nothing. */
-      let trail = [];
-
-      const sample = (x, t) => {
-        trail.push({ x, t });
-        while (trail.length > 6) trail.shift();
-      };
-      /* px per ms over the last ~80ms of movement.
-         The window has to span real time before the number means anything:
-         two samples a fraction of a millisecond apart divide a large
-         distance by nearly zero and report a throw that never happened.
-         Below 10ms there is nothing to measure, so it reports no throw and
-         the gesture falls back to distance. Clamped at the top too — no
-         human flick exceeds 3px/ms, so anything above that is jitter. */
-      const velocity = () => {
-        if (trail.length < 2) return 0;
-        const last = trail[trail.length - 1];
-        let first = trail[0];
-        for (let i = trail.length - 1; i >= 0; i--) {
-          if (last.t - trail[i].t > 80) break;
-          first = trail[i];
+    /* ── Carousels ─────────────────────────────────────────
+       The tracks scroll natively with CSS scroll-snap. A JS gesture layer
+       used to move them, and it could never match the platform: it fought
+       the browser for the touch, dropped frames doing layout reads inside
+       touchmove, and stalled whenever a gesture interrupted a transition.
+       Native scrolling gets the finger, the momentum and the snap for free.
+       What is left in JS is the chrome. */
+    /* Wires the chrome around a native scroll carousel: dots, arrows and
+       whatever each one dims. It never moves the track itself — the browser
+       does that — it only reports where the scroll has landed. */
+    function snapCarousel({ track, cols, prev, next, perPage, onIndex }) {
+      const page     = () => (perPage ? perPage() : 1);
+      const maxIndex = () => Math.max(0, cols.length - page());
+      /* Position comes off the columns, not off a column width.
+         The design-system carousel has columns of DIFFERENT widths, so
+         scrollLeft / firstColumnWidth drifts further out with every item —
+         it lost the entire second half of that carousel. Measuring each
+         column's own offset is correct for equal and unequal widths alike,
+         and it only runs on a scroll frame. */
+      const originOf = i => cols[i].offsetLeft - cols[0].offsetLeft;
+      const indexNow = () => {
+        const x = track.scrollLeft;
+        let best = 0, bestD = Infinity;
+        for (let i = 0; i < cols.length; i++) {
+          const d = Math.abs(originOf(i) - x);
+          if (d < bestD) { bestD = d; best = i; }
         }
-        const dt = last.t - first.t;
-        if (dt < 10) return 0;
-        const v = (last.x - first.x) / dt;
-        return Math.max(-3, Math.min(3, v));
+        return Math.min(best, maxIndex());
       };
-
-      track.addEventListener('touchstart', e => {
-        if (e.touches.length !== 1) { live = false; return; }
-        live = true; axis = ''; trail = [];
-        x0 = e.touches[0].clientX;
-        y0 = e.touches[0].clientY;
-        sample(x0, performance.now());
-      }, { passive: true });
-
-      track.addEventListener('touchmove', e => {
-        if (!live) return;
-        const x = e.touches[0].clientX;
-        const dx = x - x0;
-        const dy = e.touches[0].clientY - y0;
-        if (!axis) {
-          /* Decide on the first movement, and decide fast.
-             An earlier version deferred while the two axes were close, on the
-             reasoning that waiting is free because nothing is prevented yet.
-             It is not free. With touch-action: pan-y the browser may claim
-             the touch for scrolling the moment it sees vertical movement,
-             and once it has, preventDefault is ignored for the rest of the
-             gesture — the swipe is dead however clearly horizontal it later
-             becomes. On the tall cards that is most gestures, which is why
-             whole carousels felt stuck rather than merely unreliable.
-             So: decide at the first 6px, and let the bias do the work
-             instead of the delay. */
-          const ax = Math.abs(dx), ay = Math.abs(dy);
-          if (ax < AXIS_LOCK && ay < AXIS_LOCK) return;
-          axis = ax > ay * X_BIAS ? 'x' : 'y';
-          if (axis === 'y') { live = false; return; }     // the page's gesture
-          xLock = x;
-          // onStart stops any animation in flight, so it fires here rather
-          // than on touchstart: a tap that never moves would otherwise freeze
-          // a slide it is never going to finish
-          if (opts.onStart) opts.onStart();
+      /* An arrow press commits its destination straight away. Nearest-column
+         alone only changes answer once the scroll is half done, so the card
+         being left behind held full colour for the first half of the move and
+         then faded after it had already stopped — the lag you could see.
+         While `pending` is set the reported index is the destination, so the
+         dim runs alongside the slide as one motion. */
+      let pending = -1, release = 0;
+      const settle = () => { pending = -1; clearTimeout(release); };
+      let queued = 0;
+      const sync = () => {
+        queued = 0;
+        if (pending >= 0) {
+          if (Math.abs(track.scrollLeft - originOf(pending)) > 2) { onIndex(pending); return; }
+          settle();
         }
-        e.preventDefault();
-        sample(x, performance.now());
-        opts.onDrag(x - xLock);   // measured from the lock, not the touch
-      }, { passive: false });
-
-      track.addEventListener('touchend', e => {
-        if (!live) return;
-        live = false;
-        if (axis !== 'x') return;
-        const x = e.changedTouches[0].clientX;
-        sample(x, performance.now());
-        const dx = x - x0;
-        const v  = velocity();                 // px/ms, signed
-        const w  = (track.parentElement && track.parentElement.offsetWidth) || track.offsetWidth || 1;
-        /* Either thrown hard enough or dragged far enough. The velocity gate
-           is what makes a short sharp flick work — waiting for distance
-           alone is the thing that feels unresponsive. */
-        const thrown = Math.abs(v) > 0.35;
-        const far    = Math.abs(dx) > Math.min(70, w * 0.18);
-        if (thrown || far) opts.onCommit(dx < 0 || v < 0 ? 1 : -1, Math.abs(v));
-        else opts.onCancel(Math.abs(v));
-      });
-
-      track.addEventListener('touchcancel', () => {
-        if (!live) return;
-        live = false;
-        if (axis === 'x') opts.onCancel(0);
-      });
+        onIndex(indexNow());
+      };
+      const schedule = () => { if (!queued) queued = requestAnimationFrame(sync); };
+      /* passive: this listener never blocks the scroll it is watching */
+      track.addEventListener('scroll', schedule, { passive: true });
+      window.addEventListener('resize', schedule, { passive: true });
+      /* A finger or wheel takes precedence over an arrow still in flight. */
+      track.addEventListener('touchstart', settle, { passive: true });
+      track.addEventListener('wheel', settle, { passive: true });
+      /* Arrows land on a real column rather than moving a fixed distance,
+         so they stay in step with the snap points at any column width. */
+      const go = dir => {
+        const i = Math.max(0, Math.min(maxIndex(), indexNow() + dir * page()));
+        pending = i;
+        clearTimeout(release);
+        release = setTimeout(settle, 800); /* never strand the index if the scroll is cut short */
+        onIndex(i);
+        track.scrollTo({ left: originOf(i) });
+      };
+      if (prev) prev.addEventListener('click', () => go(-1));
+      if (next) next.addEventListener('click', () => go(1));
+      sync();
+      return { sync, indexNow, maxIndex };
     }
+
+
+
 
     /* ── 1. Nav scroll ─────────────────────────────────── */
     const nav  = document.getElementById('nav');
@@ -6214,18 +6128,15 @@
     .observe(document.getElementById('stats-row'));
 
     /* ── 10. Carousel ──────────────────────────────────── */
-    (function () {
-      const track      = document.getElementById('carousel-track');
-      const btnPrev    = document.getElementById('carousel-prev');
-      const btnNext    = document.getElementById('carousel-next');
-      const dotsWrap   = document.getElementById('carousel-dots');
-      const cols       = Array.from(track.querySelectorAll('.carousel-col'));
-      const total      = cols.length;
-      let current      = 0;
-      let animating    = false;
-      let offsetX      = 0;
+    (() => {
+      const track    = document.getElementById('carousel-track');
+      const dotsWrap = document.getElementById('carousel-dots');
+      const btnPrev  = document.getElementById('carousel-prev');
+      const btnNext  = document.getElementById('carousel-next');
+      if (!track) return;
+      const cols  = Array.from(track.querySelectorAll('.carousel-col'));
+      const total = cols.length;
 
-      // Build dots
       for (let i = 0; i < total; i++) {
         const d = document.createElement('span');
         d.className = 'carousel-dot';
@@ -6233,116 +6144,31 @@
       }
       const dots = Array.from(dotsWrap.querySelectorAll('.carousel-dot'));
 
-      function colWidth() {
-        const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 0;
-        return cols[0].offsetWidth + gap;
-      }
+      /* How many fit at once — the arrows page by this, and it is what the
+         last valid index is measured against. */
+      const visibleCount = () => {
+        const cs = getComputedStyle(track);
+        const gap = parseFloat(cs.columnGap || cs.gap) || 0;
+        const w = cols[0].offsetWidth + gap;
+        return w ? Math.max(1, Math.floor((track.clientWidth + gap) / w)) : 1;
+      };
 
-      function visibleCount() {
-        return Math.max(1, Math.floor(track.parentElement.offsetWidth / colWidth()));
-      }
-
-      // bumped when a drag starts, so an in-flight frame loop stops writing
-      // transform underneath the finger
-      let gen = 0;
-
-      /* Two speeds, on purpose. A button press is an indirect instruction and
-         can afford a considered move; a swipe is direct manipulation, and the
-         content has to keep up with the hand that just threw it. Settling a
-         flick over 600ms reads as the carousel thinking about it. */
-      const SWIPE_MS = 320, BUTTON_MS = 600;
-
-      /* No guard against re-entry. Bailing out while a move is in flight
-         means a button pressed during one is silently dropped, and a reader
-         who taps twice gets one advance. Retargeting a running transition is
-         safe: the browser interpolates from wherever it currently is. */
-      function goTo(index, ms) {
-        offsetX = -(index * colWidth());
-        glideTo(track, offsetX, ms || BUTTON_MS);
-        updateVisibility(index);
-      }
-
-      function updateVisibility(idx) {
-        const visible = visibleCount();
-        cols.forEach((col, i) => {
-          const offset = i - idx;
-          if (offset === -1 || offset === visible) {
-            col.classList.add('is-peek');
-            col.classList.remove('is-hidden');
-          } else if (offset >= 0 && offset < visible) {
-            col.classList.remove('is-peek', 'is-hidden');
-          } else {
-            col.classList.add('is-hidden');
-            col.classList.remove('is-peek');
-          }
-        });
-        const maxIdx = total - visibleCount();
-        btnPrev.disabled = idx === 0;
-        btnNext.disabled = idx >= maxIdx;
-        current = idx;
-        dots.forEach((dot, i) => {
-          dot.classList.toggle('is-active', i >= idx && i < idx + visibleCount());
-        });
-      }
-
-      // Init
-      updateVisibility(0);
-
-      btnPrev.addEventListener('click', () => { if (current > 0) goTo(Math.max(0, current - visibleCount())); });
-      btnNext.addEventListener('click', () => { if (current < total - visibleCount()) goTo(Math.min(total - visibleCount(), current + visibleCount())); });
-
-      // Swipe / drag support
-      let touchStartX = 0, touchStartOffset = 0, isDragging = false;
-      track.addEventListener('mousedown', e => {
-        isDragging = true; touchStartX = e.clientX; touchStartOffset = offsetX = grabTrack(track);
-      });
-      window.addEventListener('mouseup', e => {
-        if (!isDragging) return;
-        isDragging = false;
-        const delta = e.clientX - touchStartX;
-        if (Math.abs(delta) > 60) { goTo(delta < 0 ? Math.min(current + visibleCount(), total - visibleCount()) : Math.max(current - visibleCount(), 0), SWIPE_MS); }
-        else { goTo(current, 240); }
-      });
-      window.addEventListener('mousemove', e => {
-        if (!isDragging) return;
-        offsetX = touchStartOffset + (e.clientX - touchStartX);
-        track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-      });
-
-      // Touch support — pages by however many cards are on screen
-      const maxIndex = () => Math.max(0, total - visibleCount());
-      /* Measured once per gesture, not once per move. colWidth() runs
-         getComputedStyle and reads offsetWidth, so calling it from touchmove
-         forced a style recalc and a layout on every frame of every drag —
-         which is exactly the stutter you feel under a thumb. Nothing here
-         can change mid-gesture, so it is cached at the start. */
-      let dragMin = 0, dragMax = 0, dragColW = 0;
-      attachSwipe(track, {
-        onStart:  () => {
-          gen++; animating = false; touchStartOffset = offsetX;
-          dragColW = colWidth();
-          dragMax = 0;
-          dragMin = -(maxIndex() * dragColW);
-        },
-        onDrag:   dx => {
-          offsetX = rubber(touchStartOffset + dx, dragMin, dragMax);
-          track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-        },
-        onCommit: (dir, v) => {
-          const step = visibleCount() * throwSteps();
-          const to = dir > 0 ? Math.min(current + step, maxIndex())
-                             : Math.max(current - step, 0);
-          goTo(to, settleMs(-(to * dragColW) - offsetX, v));
-        },
-        /* Snapping back is a correction, not a move, so it lands quickly —
-           and quicker still the harder it was thrown. */
-        onCancel: v => goTo(current, settleMs(-(current * dragColW) - offsetX, v))
-      });
-
-      // Re-evaluate on resize (e.g. switching to wide-screen 4-col layout)
-      window.addEventListener('resize', () => {
-        const clamped = Math.min(current, Math.max(0, total - visibleCount()));
-        goTo(clamped);
+      snapCarousel({
+        track, cols, prev: btnPrev, next: btnNext, perPage: visibleCount,
+        onIndex: (idx) => {
+          const vis = visibleCount();
+          const maxIdx = Math.max(0, total - vis);
+          cols.forEach((col, i) => {
+            const offset = i - idx;
+            /* The card past the last visible one is dimmed rather than
+               hidden, so the row reads as continuing off the edge. */
+            col.classList.toggle('is-peek', offset === -1 || offset === vis);
+            col.classList.toggle('is-hidden', offset < -1 || offset > vis);
+          });
+          dots.forEach((d, i) => d.classList.toggle('is-active', i >= idx && i < idx + vis));
+          btnPrev.disabled = idx <= 0;
+          btnNext.disabled = idx >= maxIdx;
+        }
       });
     })();
 
@@ -6522,18 +6348,15 @@
     })();
 
     // ── TESTIMONIAL PEEK-CAROUSEL ─────────────────────────
-    (() => {
-      const track   = document.getElementById('t-track');
+        (() => {
+      const track    = document.getElementById('t-track');
       const dotsWrap = document.getElementById('t-dots');
-      const btnPrev = document.getElementById('t-prev');
-      const btnNext = document.getElementById('t-next');
-      const cols    = Array.from(track.querySelectorAll('.t-col'));
-      const total   = cols.length;
-      let current   = 0;
-      let animating = false;
-      let offsetX   = 0;
+      const btnPrev  = document.getElementById('t-prev');
+      const btnNext  = document.getElementById('t-next');
+      if (!track) return;
+      const cols  = Array.from(track.querySelectorAll('.t-col'));
+      const total = cols.length;
 
-      // Build dots
       for (let i = 0; i < total; i++) {
         const d = document.createElement('span');
         d.className = 't-dot' + (i === 0 ? ' is-active' : '');
@@ -6541,7 +6364,7 @@
       }
       const dots = Array.from(dotsWrap.querySelectorAll('.t-dot'));
 
-      // Auto-shrink font for cards with long quotes (>420 chars)
+      // Long quotes get a smaller face so the card does not run away
       cols.forEach(col => {
         const q = col.querySelector('.testimonial-quote');
         if (q && q.textContent.trim().length > 420) {
@@ -6549,88 +6372,14 @@
         }
       });
 
-      function colWidth() {
-        const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 0;
-        return cols[0].offsetWidth + gap;
-      }
-
-      // bumped when a drag starts, so an in-flight frame loop stops writing
-      // transform underneath the finger
-      let gen = 0;
-
-      /* Two speeds, on purpose. A button press is an indirect instruction and
-         can afford a considered move; a swipe is direct manipulation, and the
-         content has to keep up with the hand that just threw it. Settling a
-         flick over 600ms reads as the carousel thinking about it. */
-      const SWIPE_MS = 320, BUTTON_MS = 600;
-
-      /* No guard against re-entry — see the page carousel. Retargeting a
-         running transition is safe; the browser interpolates from wherever
-         it currently is. */
-      function goTo(index, ms) {
-        index = Math.max(0, Math.min(total - 1, index));
-        const toIdx = index;
-        offsetX = -(index * colWidth());
-        /* The dim is a class with its own CSS transition, so it rides
-           alongside the slide instead of being driven frame by frame. */
-        updateState(toIdx);
-        glideTo(track, offsetX, ms || BUTTON_MS);
-
-        // Update dots and buttons immediately
-        current = toIdx;
-        dots.forEach((dot, i) => dot.classList.toggle('is-active', i === toIdx));
-        btnPrev.disabled = toIdx === 0;
-        btnNext.disabled = toIdx >= total - 1;
-      }
-
-      function updateState(idx) {
-        current = idx;
-        cols.forEach((col, i) => {
-          col.classList.toggle('is-peek', i === idx + 1 || i === idx - 1);
-        });
-        dots.forEach((dot, i) => dot.classList.toggle('is-active', i === idx));
-        btnPrev.disabled = idx === 0;
-        btnNext.disabled = idx >= total - 1;
-      }
-
-      updateState(0);
-
-      btnPrev.addEventListener('click', () => goTo(current - 1));
-      btnNext.addEventListener('click', () => goTo(current + 1));
-
-      // Drag / swipe support
-      let touchStartX = 0, touchStartOffset = 0, isDragging = false;
-      track.addEventListener('mousedown', e => {
-        isDragging = true; touchStartX = e.clientX; touchStartOffset = offsetX = grabTrack(track);
-      });
-      window.addEventListener('mouseup', e => {
-        if (!isDragging) return; isDragging = false;
-        const delta = e.clientX - touchStartX;
-        if (Math.abs(delta) > 60) goTo(delta < 0 ? current + 1 : current - 1, SWIPE_MS);
-        else goTo(current, 240);
-      });
-      window.addEventListener('mousemove', e => {
-        if (!isDragging) return;
-        offsetX = touchStartOffset + (e.clientX - touchStartX);
-        track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-      });
-      /* Cached per gesture — see the page carousel for why. */
-      let tMin = 0, tColW = 0;
-      attachSwipe(track, {
-        onStart:  () => {
-          touchStartOffset = offsetX = grabTrack(track);
-          tColW = colWidth();
-          tMin = -((total - 1) * tColW);
-        },
-        onDrag:   dx => {
-          offsetX = rubber(touchStartOffset + dx, tMin, 0);
-          track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-        },
-        onCommit: (dir, v) => {
-          const to = Math.max(0, Math.min(total - 1, current + dir * throwSteps()));
-          goTo(to, settleMs(-(to * tColW) - offsetX, v));   // goTo clamps too
-        },
-        onCancel: v => goTo(current, settleMs(-(current * tColW) - offsetX, v))
+      snapCarousel({
+        track, cols, prev: btnPrev, next: btnNext,
+        onIndex: (idx) => {
+          cols.forEach((col, i) => col.classList.toggle('is-peek', i !== idx));
+          dots.forEach((d, i) => d.classList.toggle('is-active', i === idx));
+          btnPrev.disabled = idx <= 0;
+          btnNext.disabled = idx >= total - 1;
+        }
       });
     })();
 
@@ -8218,58 +7967,27 @@
         const dotsWrap= document.getElementById(prefix + '-dots');
         if (!track || !btnPrev || !btnNext || !dotsWrap) return;
 
-        const cols    = Array.from(track.querySelectorAll('.cm-car__col'));
-        const total   = cols.length;
-        let current   = 0, animating = false, offsetX = 0;
+        const cols  = Array.from(track.querySelectorAll('.cm-car__col'));
+        const total = cols.length;
 
         // Build dots
-        cols.forEach((_, i) => {
+        cols.forEach(() => {
           const d = document.createElement('span');
           d.className = 'cm-car__dot';
           dotsWrap.appendChild(d);
         });
         const dots = Array.from(dotsWrap.querySelectorAll('.cm-car__dot'));
 
+        /* The design-system carousel has columns of differing widths, so a
+           fixed page size would drift. It advances one at a time. */
         const isVarWidth = cols.some(c => c.classList.contains('cm-car__col--ds'));
-        function colW() { return cols[0].offsetWidth + (parseInt(window.getComputedStyle(track).gap) || 24); }
-        function visCount() { return isVarWidth ? 1 : Math.max(1, Math.floor(track.parentElement.offsetWidth / colW())); }
-        function snapX(idx) { return isVarWidth ? -(cols[idx]?.offsetLeft ?? 0) : -(idx * colW()); }
-
-        // bumped when a drag starts, so an in-flight frame loop stops writing
-        // transform underneath the finger
-        let gen = 0;
-
-        /* See the page carousel for why a swipe settles faster than a button. */
-        const SWIPE_MS = 300, BUTTON_MS = 540;
-
-        /* Compositor-driven, and no guard against re-entry — see the page
-           carousel for both. */
-        function goTo(idx, ms) {
-          offsetX = snapX(idx);
-          glideTo(track, offsetX, ms || BUTTON_MS);
-          updateVis(idx);
-        }
-
-        function updateVis(idx) {
-          const vis = visCount();
-          const maxIdx = Math.max(0, total - vis);
-          cols.forEach((col, i) => {
-            const offset = i - idx;
-            if (!isVarWidth && (offset === -1 || offset === vis)) {
-              col.classList.add('is-peek'); col.classList.remove('is-hidden');
-            } else if (offset >= 0 && offset < vis) {
-              col.classList.remove('is-peek', 'is-hidden');
-            } else if (!isVarWidth) {
-              col.classList.add('is-hidden'); col.classList.remove('is-peek');
-            } else {
-              col.classList.remove('is-peek', 'is-hidden'); // var-width: never dim/hide
-            }
-          });
-          btnPrev.disabled = idx === 0;
-          btnNext.disabled = idx >= maxIdx;
-          current = idx;
-          dots.forEach((d, i) => d.classList.toggle('is-active', i >= idx && i < idx + vis));
-        }
+        const visCount = () => {
+          if (isVarWidth) return 1;
+          const cs = getComputedStyle(track);
+          const gap = parseFloat(cs.columnGap || cs.gap) || 0;
+          const w = cols[0].offsetWidth + gap;
+          return w ? Math.max(1, Math.floor((track.clientWidth + gap) / w)) : 1;
+        };
 
         // Mark already-cached images as loaded immediately
         track.querySelectorAll('img').forEach(img => {
@@ -8280,39 +7998,28 @@
           }
         });
 
-        updateVis(0);
-        btnPrev.addEventListener('click', () => { if (current > 0) goTo(Math.max(0, current - 1)); });
-        btnNext.addEventListener('click', () => { if (current < total - visCount()) goTo(Math.min(total - visCount(), current + 1)); });
-
-        // Drag/swipe
-        let tStartX = 0, tStartOff = 0, dragging = false;
-        let dragMin = 0, dragMax = 0, dragMaxIdx = 0;
-        track.addEventListener('mousedown',  e => { dragging = true; tStartX = e.clientX; tStartOff = offsetX = grabTrack(track); });
-        window.addEventListener('mouseup',   e => { if (!dragging) return; dragging = false; const d = e.clientX - tStartX; if (Math.abs(d) > 60) goTo(d < 0 ? Math.min(current + 1, total - 1) : Math.max(current - 1, 0), SWIPE_MS); else goTo(current, 220); });
-        window.addEventListener('mousemove', e => { if (!dragging) return; offsetX = tStartOff + (e.clientX - tStartX); track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; });
-        attachSwipe(track, {
-          onStart:  () => {
-            tStartOff = offsetX = grabTrack(track);
-            /* Measured once per gesture — snapX() reads offsetLeft, and doing
-               that from touchmove forces a layout on every frame. */
-            dragMaxIdx = Math.max(0, total - visCount());
-            dragMin = snapX(dragMaxIdx);
-            dragMax = snapX(0);
-          },
-          onDrag:   dx => {
-            offsetX = rubber(tStartOff + dx, dragMin, dragMax);
-            track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-          },
-          // last landing spot is total - visCount(), not total - 1, or the
-          // final swipe drags the track past its own end
-          onCommit: (dir, v) => {
-            const to = dir > 0 ? Math.min(current + throwSteps(), dragMaxIdx)
-                               : Math.max(current - throwSteps(), 0);
-            goTo(to, settleMs(snapX(to) - offsetX, v));
-          },
-          onCancel: v => goTo(current, settleMs(snapX(current) - offsetX, v))
+        snapCarousel({
+          track, cols, prev: btnPrev, next: btnNext, perPage: visCount,
+          onIndex: (idx) => {
+            const vis = visCount();
+            const maxIdx = Math.max(0, total - vis);
+            cols.forEach((col, i) => {
+              const offset = i - idx;
+              if (!isVarWidth && (offset === -1 || offset === vis)) {
+                col.classList.add('is-peek'); col.classList.remove('is-hidden');
+              } else if (offset >= 0 && offset < vis) {
+                col.classList.remove('is-peek', 'is-hidden');
+              } else if (!isVarWidth) {
+                col.classList.add('is-hidden'); col.classList.remove('is-peek');
+              } else {
+                col.classList.remove('is-peek', 'is-hidden');   // var-width: never dim
+              }
+            });
+            dots.forEach((d, i) => d.classList.toggle('is-active', i >= idx && i < idx + vis));
+            btnPrev.disabled = idx <= 0;
+            btnNext.disabled = idx >= maxIdx;
+          }
         });
-        window.addEventListener('resize',    () => goTo(Math.min(current, Math.max(0, total - visCount()))));
       }
 
       // Case content switching + carousel init
