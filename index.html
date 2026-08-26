@@ -1459,7 +1459,10 @@
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      transition: opacity 0.45s ease;
+      /* Matched to the settle. At 0.45s the dim finished well after the
+         slide had stopped, so the cards kept fading once the movement was
+         over — which reads as lag rather than as one motion. */
+      transition: opacity 0.3s ease;
     }
     .carousel-col.is-peek   { opacity: 0.3 !important; }
     .carousel-col.is-hidden { opacity: 0; pointer-events: none; }
@@ -1939,7 +1942,7 @@
          to the one before it, left cards stranded at whatever partial value
          they had reached. A class plus a transition cannot be interrupted
          into a broken state. */
-      transition: opacity 0.34s ease;
+      transition: opacity 0.3s ease;
     }
     .t-col.is-peek { opacity: 0.3; }
     /* Long quotes: shrink font so text fits within the fixed card height */
@@ -5766,6 +5769,40 @@
        one drags the track live. Commit is distance OR velocity, so a fast
        short flick advances — the old flat 50px threshold ignored those.
        Pairs with `touch-action: pan-y` on the tracks. */
+    /* The easing every carousel settles on. Matched to the feel of a thrown
+       object coming to rest: quick to leave, long tail. */
+    const CAROUSEL_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
+
+    /* Where the track actually is right now, mid-transition included.
+       A CSS transition does not tell you its progress, so the current
+       position has to be read off the composited matrix — needed the moment
+       a reader grabs a track that is still moving. One read per gesture. */
+    function trackX(track) {
+      const t = getComputedStyle(track).transform;
+      if (!t || t === 'none') return 0;
+      const m = t.match(/matrix.*\((.+)\)/);
+      if (!m) return 0;
+      const parts = m[1].split(', ').map(Number);
+      return parts.length > 6 ? parts[12] : parts[4];   // matrix3d vs matrix
+    }
+    /* Hand the move to the compositor and get off the main thread.
+       This used to be a requestAnimationFrame loop writing transform every
+       frame, which is smooth exactly while the main thread is free — and on
+       a case card it is not: the stages parse three.js and build scenes
+       while you are swiping. A transition keeps its timing regardless. */
+    function glideTo(track, x, ms) {
+      track.style.transition = `transform ${ms}ms ${CAROUSEL_EASE}`;
+      track.style.transform  = `translateX(${x.toFixed(2)}px)`;
+    }
+    /* Pin the track wherever it visually is and stop animating, so a drag
+       continues from there rather than snapping to the old target. */
+    function grabTrack(track) {
+      const x = trackX(track);
+      track.style.transition = 'none';
+      track.style.transform  = `translateX(${x.toFixed(2)}px)`;
+      return x;
+    }
+
     /* ── Carousel motion ────────────────────────────────────
        Three behaviours that separate a carousel you can throw from one that
        merely advances, all shared by every carousel on the page.
@@ -6174,26 +6211,13 @@
          flick over 600ms reads as the carousel thinking about it. */
       const SWIPE_MS = 320, BUTTON_MS = 600;
 
+      /* No guard against re-entry. Bailing out while a move is in flight
+         means a button pressed during one is silently dropped, and a reader
+         who taps twice gets one advance. Retargeting a running transition is
+         safe: the browser interpolates from wherever it currently is. */
       function goTo(index, ms) {
-        /* No animating guard. Bailing out while a move is in flight means a
-           button pressed during one is silently dropped, and a reader who
-           taps twice gets one advance. The generation counter already makes
-           a new call safe: it kills the running frame loop, and `from` reads
-           the live offset, so the new move continues from wherever the old
-           one had got to rather than jumping. */
-        animating = true;
-        const g = ++gen;
-        const from = offsetX, to = -(index * colWidth());
-        const dur = ms || BUTTON_MS, t0 = performance.now();
-        function frame() {
-          if (g !== gen) return;
-          const p = Math.min((performance.now() - t0) / dur, 1);
-          offsetX = from + (to - from) * easeOutQuart(p);
-          track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-          if (p < 1) { requestAnimationFrame(frame); }
-          else { offsetX = to; track.style.transform = `translateX(${to}px)`; animating = false; }
-        }
-        frame();
+        offsetX = -(index * colWidth());
+        glideTo(track, offsetX, ms || BUTTON_MS);
         updateVisibility(index);
       }
 
@@ -6229,8 +6253,7 @@
       // Swipe / drag support
       let touchStartX = 0, touchStartOffset = 0, isDragging = false;
       track.addEventListener('mousedown', e => {
-        isDragging = true; touchStartX = e.clientX; touchStartOffset = offsetX;
-        track.style.transition = 'none';
+        isDragging = true; touchStartX = e.clientX; touchStartOffset = offsetX = grabTrack(track);
       });
       window.addEventListener('mouseup', e => {
         if (!isDragging) return;
@@ -6500,40 +6523,17 @@
          flick over 600ms reads as the carousel thinking about it. */
       const SWIPE_MS = 320, BUTTON_MS = 600;
 
+      /* No guard against re-entry — see the page carousel. Retargeting a
+         running transition is safe; the browser interpolates from wherever
+         it currently is. */
       function goTo(index, ms) {
-        /* No animating guard. Bailing out while a move is in flight means a
-           button pressed during one is silently dropped, and a reader who
-           taps twice gets one advance. The generation counter already makes
-           a new call safe: it kills the running frame loop, and `from` reads
-           the live offset, so the new move continues from wherever the old
-           one had got to rather than jumping. */
         index = Math.max(0, Math.min(total - 1, index));
-        animating = true;
-        const g = ++gen;
-        const fromIdx = current;
-        const toIdx   = index;
-        const from = offsetX, to = -(index * colWidth());
-        const dur = ms || BUTTON_MS, t0 = performance.now();
-
-        /* Hand the dim to CSS immediately and let the class transition run
-           alongside the slide, rather than driving it frame by frame. */
+        const toIdx = index;
+        offsetX = -(index * colWidth());
+        /* The dim is a class with its own CSS transition, so it rides
+           alongside the slide instead of being driven frame by frame. */
         updateState(toIdx);
-
-        (function frame() {
-          if (g !== gen) return;
-          const p  = Math.min((performance.now() - t0) / dur, 1);
-          const ep = easeOutQuart(p);
-          offsetX = from + (to - from) * ep;
-          track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-
-          if (p < 1) {
-            requestAnimationFrame(frame);
-          } else {
-            offsetX = to;
-            track.style.transform = `translateX(${to}px)`;
-            animating = false;
-          }
-        })();
+        glideTo(track, offsetX, ms || BUTTON_MS);
 
         // Update dots and buttons immediately
         current = toIdx;
@@ -6560,8 +6560,7 @@
       // Drag / swipe support
       let touchStartX = 0, touchStartOffset = 0, isDragging = false;
       track.addEventListener('mousedown', e => {
-        isDragging = true; touchStartX = e.clientX; touchStartOffset = offsetX;
-        track.style.transition = 'none';
+        isDragging = true; touchStartX = e.clientX; touchStartOffset = offsetX = grabTrack(track);
       });
       window.addEventListener('mouseup', e => {
         if (!isDragging) return; isDragging = false;
@@ -6578,7 +6577,7 @@
       let tMin = 0, tColW = 0;
       attachSwipe(track, {
         onStart:  () => {
-          gen++; animating = false; touchStartOffset = offsetX;
+          touchStartOffset = offsetX = grabTrack(track);
           tColW = colWidth();
           tMin = -((total - 1) * tColW);
         },
@@ -8202,22 +8201,11 @@
         /* See the page carousel for why a swipe settles faster than a button. */
         const SWIPE_MS = 300, BUTTON_MS = 540;
 
+        /* Compositor-driven, and no guard against re-entry — see the page
+           carousel for both. */
         function goTo(idx, ms) {
-          /* No animating guard — see the page carousel. */
-          animating = true;
-          const g = ++gen;
-          const from = offsetX, to = snapX(idx);
-          const dur = ms || BUTTON_MS, t0 = performance.now();
-          function frame() {
-            if (g !== gen) return;
-            const p = Math.min((performance.now() - t0) / dur, 1);
-            const e = 1 - Math.pow(1 - p, 4);
-            offsetX = from + (to - from) * e;
-            track.style.transform = `translateX(${offsetX.toFixed(2)}px)`;
-            if (p < 1) { requestAnimationFrame(frame); }
-            else { offsetX = to; track.style.transform = `translateX(${to}px)`; animating = false; }
-          }
-          frame();
+          offsetX = snapX(idx);
+          glideTo(track, offsetX, ms || BUTTON_MS);
           updateVis(idx);
         }
 
@@ -8258,12 +8246,12 @@
         // Drag/swipe
         let tStartX = 0, tStartOff = 0, dragging = false;
         let dragMin = 0, dragMax = 0, dragMaxIdx = 0;
-        track.addEventListener('mousedown',  e => { dragging = true; tStartX = e.clientX; tStartOff = offsetX; track.style.transition = 'none'; });
+        track.addEventListener('mousedown',  e => { dragging = true; tStartX = e.clientX; tStartOff = offsetX = grabTrack(track); });
         window.addEventListener('mouseup',   e => { if (!dragging) return; dragging = false; const d = e.clientX - tStartX; if (Math.abs(d) > 60) goTo(d < 0 ? Math.min(current + 1, total - 1) : Math.max(current - 1, 0), SWIPE_MS); else goTo(current, 220); });
         window.addEventListener('mousemove', e => { if (!dragging) return; offsetX = tStartOff + (e.clientX - tStartX); track.style.transform = `translateX(${offsetX.toFixed(2)}px)`; });
         attachSwipe(track, {
           onStart:  () => {
-            gen++; animating = false; tStartOff = offsetX;
+            tStartOff = offsetX = grabTrack(track);
             /* Measured once per gesture — snapX() reads offsetLeft, and doing
                that from touchmove forces a layout on every frame. */
             dragMaxIdx = Math.max(0, total - visCount());
