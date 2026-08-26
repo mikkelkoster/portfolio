@@ -1946,6 +1946,16 @@
     @media (prefers-reduced-motion: reduce) {
       .carousel-track, .t-track, .cm-car__track { scroll-behavior: auto; }
     }
+    /* Every card rests inset from the left, but the last one had nothing after
+       it to scroll into, so it stopped with its right edge exactly on the
+       viewport edge and read as cut off. Trailing padding gives the scroll the
+       extra travel to finish with the same margin it started with. (A flex
+       spacer would have the row's gap added to it; padding does not.) */
+    @media (max-width: 900px) {
+      .carousel-track,
+      .t-track { padding-right: 20px; }
+      .cm-car__track { padding-right: 24px; }
+    }
 
     /* ── Testimonial ─────────────────────────────────── */
     /* ── TESTIMONIAL PEEK-CAROUSEL ──────────────────────── */
@@ -2259,6 +2269,13 @@
       flex-wrap: wrap;
       gap: 16px;
     }
+    /* The pill is fixed from 900px down, so the last footer rows scroll
+       underneath it. Clear its 40px height plus its 4px offset and the safe
+       area, and leave a gap under the final line. This has to sit after the
+       rule above — a media query adds no specificity, so source order decides. */
+    @media (max-width: 900px) {
+      .footer__bottom { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+    }
     .footer__name {
       font-family: 'Fraunces', serif;
       font-weight: 600;
@@ -2398,7 +2415,9 @@
       /* Footer */
       .footer__top      { padding: 48px 0 40px; }
       .footer__headline { font-size: 52px; letter-spacing: -1.5px; }
-      .footer__cta-email { font-size: 20px; }
+      /* The container stacks here, but align-self: flex-end on the link kept
+         it pinned right on its own row. */
+      .footer__cta-email { font-size: 20px; align-self: flex-start; }
       /* Stack headline + email on smaller tablets */
       .footer__top .container { flex-direction: column; align-items: flex-start; gap: 32px; }
       .footer__headline { white-space: normal; }
@@ -2528,6 +2547,11 @@
       .exp-period { font-size: 12px; }
       .exp-company { font-size: 15px; }
       .exp-badge { margin-top: 4px; justify-self: start; }
+      /* A 180px portrait beside the copy leaves the text three or four words
+         wide on a phone. Stack instead, photo first. */
+      .exp-expand-inner { grid-template-columns: 1fr; gap: 16px; padding: 4px 12px 24px; }
+      .exp-expand-imgs { width: 100%; }
+      .exp-expand-img { width: 100%; height: 220px; border-radius: 12px; }
 
       /* Testimonial carousel */
       .t-wrap { padding-top: var(--section-y); padding-left: 20px; }
@@ -4287,11 +4311,15 @@
       line-height: 1.4;
       display: flex;
       gap: 12px;
-      align-items: center;
+      align-items: flex-start;
     }
+    /* Centring put the dot in the middle of the whole item, so on a two-line
+       entry it floated between the lines. Offset it to the optical centre of
+       the first line instead: half the line box, less half the dot. */
     .cm-transform-list li::before {
       content: '';
       width: 6px; height: 6px;
+      margin-top: calc((1.4em - 6px) / 2);
       border-radius: 3px;
       background: #dc2626;
       flex-shrink: 0;
@@ -4620,6 +4648,10 @@
       .cm-work-spread-img { width: 140px; height: 88px; }
       .cm-svg-spread { grid-template-columns: 1fr; gap: 32px; }
       .cm-car-wrap { padding-left: 24px !important; }
+      /* 80px a side leaves the screenshots too small to read on a phone. */
+      .cm-section--dark[style*="padding:80px"] { padding: 48px 16px !important; }
+      .fp-grid { gap: 10px; }
+      .fp-card { border-radius: 10px; }
       .cm-car-wrap--ds { padding-left: 24px !important; }
       /* Component cards: let them grow near full viewport so UI shots stay legible */
       .cm-car__col--ds { flex: 0 0 auto; max-width: calc(100vw - 64px); }
@@ -4628,6 +4660,7 @@
       .cm-ds-card .cm-skeleton { min-width: 220px; min-height: 160px; }
       [style*="padding:0 0 0 80px"],
       [style*="padding:0 0 16px 80px"] { padding-left: 24px !important; }
+      [style*="padding:0 80px 40px"] { padding: 0 24px 32px !important; }
 
       /* ── Close / Result section ── */
       .cm-close-headline { font-size: 26px; margin-bottom: 28px; }
@@ -4659,6 +4692,10 @@
         min-height: 0;
         flex-direction: row;
         align-items: center;
+        /* The row inherits centring from the desktop column layout. A long
+           item fills the row and hides it; a short one drifts to the middle
+           while its neighbours start at the left edge. */
+        justify-content: flex-start;
         text-align: left;
         gap: 16px;
         padding: 20px 24px;
@@ -4667,7 +4704,10 @@
       .cm-finding__text { max-width: none; font-size: 14px; }
 
       /* ── Matas: themes + old/new stack ── */
-      #modal-content-matas .cm-themes-section { padding: 56px 24px; }
+      #modal-content-matas .cm-themes-section { padding: 56px 24px; text-align: left; }
+      #modal-content-matas .cm-themes-section .cm-label { justify-content: flex-start; }
+      #modal-content-matas .cm-themes-section .cm-headline,
+      #modal-content-matas .cm-themes-section .cm-body { margin-left: 0; margin-right: 0; }
       .cm-themes { grid-template-columns: 1fr; gap: 14px; margin-top: 36px; }
       .cm-theme { padding: 28px 24px; }
       .cm-theme img { height: 100px; margin-bottom: 18px; }
@@ -5084,7 +5124,7 @@
             <div>
               <h3 class="case__title">Matas</h3>
               <p class="case__challenge">Rebuilt Denmark's largest loyalty programme from transactional to relationship — and redesigned the app around it.</p>
-              <p class="case__body">Explored the programme directions, built the prototypes and high-fidelity screens, and ran 5 rounds of user testing — taking the concepts and the design decisions to the CEO and the steering committee. 1.5 million members, and 150 screens across every member journey.</p>
+              <p class="case__body">Explored the programme directions, built the prototypes and high-fidelity screens, and ran five rounds of user testing — taking the concepts and the design decisions to the CEO and the steering committee. 1.5 million members, and 150 screens across every member journey.</p>
             </div>
             <div class="case__footer-stacked">
               <div class="case__tags">
@@ -5280,7 +5320,7 @@
           </div>
           <div class="beyond-card__content">
             <h4 class="beyond-card__title">High trust, low ego</h4>
-            <p class="beyond-card__body">Work takes up too much of your life to spend it with people who make it miserable. The culture I care about building is one where we bring a bit of ourselves to work. Where we tell stories, form real relationships, and show up for each other. Vulnerability creates safety. Safety creates the conditions for genuinely great work.</p>
+            <p class="beyond-card__body">Work takes up too much of your life to spend it with people who make it miserable. The culture I care about building is one where we bring a bit of ourselves to work. Where we tell stories, form real relationships, and show up for each other. Vulnerability creates safety. Safety creates the conditions for the best work people have in them.</p>
           </div>
         </div>
 
@@ -5291,7 +5331,7 @@
           </div>
           <div class="beyond-card__content">
             <h4 class="beyond-card__title">Guardian of positivism</h4>
-            <p class="beyond-card__body">Someone once called me a guardian of positivism — I'll take it. I genuinely believe that energy is contagious, and that a team with the right attitude consistently outperforms one without it. "Yes, and..." over "no." I've finished 3 Ironmans and race competitively in Master A. The "never, ever give up" attitude that gets you across that finish line is the same one that keeps a team moving when things get hard.</p>
+            <p class="beyond-card__body">Someone once called me a guardian of positivism — I'll take it. I believe energy is contagious, and that a team with the right attitude consistently outperforms one without it. "Yes, and..." over "no." I've finished three Ironmans and race competitively in Master A. The "never, ever give up" attitude that gets you across that finish line is the same one that keeps a team moving when things get hard.</p>
           </div>
         </div>
 
@@ -5302,7 +5342,7 @@
           </div>
           <div class="beyond-card__content">
             <h4 class="beyond-card__title">Craft and care</h4>
-            <p class="beyond-card__body">I'm fascinated by things that are excessively well made — in the digital and physical world. When you can feel that someone truly cared about making an experience as good as it could possibly be. That's what I want to build. Not for the sense of accomplishment — but because users choose you over the competition when you genuinely solve something in their lives.</p>
+            <p class="beyond-card__body">I'm fascinated by things that are excessively well made — in the digital and physical world. When you can feel that someone truly cared about making an experience as good as it could possibly be. That's what I want to build. Not for the sense of accomplishment — but because users choose you over the competition when you solve something real in their lives.</p>
           </div>
         </div>
       </div>
@@ -6533,7 +6573,7 @@
         ══════════════════════════════════════════════ -->
         <div class="cm-section--light" style="padding-top:80px;background:#f8fafc;">
           <p class="cm-label" data-n="03"><span>The Challenge</span></p>
-          <h3 class="cm-headline" style="max-width:760px;">1 platform, 3 user types, no design foundation — inside an engineering-led organisation.</h3>
+          <h3 class="cm-headline" style="max-width:760px;">One platform, three user types, no design foundation — inside an engineering-led organisation.</h3>
 
           <div class="cm-challenge-grid">
             <div class="cm-challenge-card">
@@ -6558,7 +6598,7 @@
             </div>
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-users-three"></i></div>
-              <p class="cm-challenge-title">1 platform, 3 user types</p>
+              <p class="cm-challenge-title">One platform, three user types</p>
               <p class="cm-challenge-body">Customer Service, Shippers, Consignees — fundamentally different needs, one undifferentiated experience.</p>
             </div>
             <div class="cm-challenge-card">
@@ -7006,7 +7046,7 @@
             </div>
             <div>
               <p style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#E11D48;margin-bottom:10px;">My Role</p>
-              <p style="font-size:14px;color:var(--body);line-height:1.65;">Lead UX Designer. I explored several programme directions, built the prototypes and high-fidelity screens, ran 5 rounds of user testing, and took the concepts and design decisions to the CEO and the steering committee.</p>
+              <p style="font-size:14px;color:var(--body);line-height:1.65;">Lead UX Designer. I explored several programme directions, built the prototypes and high-fidelity screens, ran five rounds of user testing, and took the concepts and design decisions to the CEO and the steering committee.</p>
             </div>
           </div>
         </div>
@@ -7050,7 +7090,7 @@
         <div class="cm-section--light">
           <p class="cm-label" data-n="02"><span>What Research Revealed</span></p>
           <h3 class="cm-headline" style="max-width:680px;">Members told us the problems went deeper than the app.</h3>
-          <p class="cm-body" style="max-width:680px;margin-bottom:40px;">9 findings came out of research across member segments.</p>
+          <p class="cm-body" style="max-width:680px;margin-bottom:40px;">Nine findings came out of research across member segments.</p>
 
           <div class="cm-findings">
             <div class="cm-finding">
@@ -7095,7 +7135,7 @@
         <div class="cm-section--light cm-themes-section">
           <p class="cm-label"><span>The turn</span></p>
           <h3 class="cm-headline">So what should the new club be like?</h3>
-          <p class="cm-body">Members had told us what was broken. The same research told us what they wanted instead, and those 3 answers set the brief for the whole redesign.</p>
+          <p class="cm-body">Members had told us what was broken. The same research told us what they wanted instead, and those three answers set the brief for the whole redesign.</p>
           <div class="cm-themes">
             <div class="cm-theme">
               <img src="public/images/matas/matas-club-value.svg" alt="" aria-hidden="true" width="169" height="150">
@@ -7127,7 +7167,7 @@
         ══════════════════════════════════════════════ -->
         <div class="cm-section--light">
           <p class="cm-label" data-n="03"><span>The Challenge</span></p>
-          <h3 class="cm-headline" style="max-width:760px;">1 programme had to work for 2 very different kinds of member.</h3>
+          <h3 class="cm-headline" style="max-width:760px;">One programme had to work for two very different kinds of member.</h3>
           <p class="cm-body" style="max-width:680px;margin-bottom:40px;">Frequency splits members into groups that want opposite things. Serving both inside one programme was the hard part.</p>
 
           <div class="cm-spend">
@@ -7159,7 +7199,7 @@
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-scales"></i></div>
               <p class="cm-challenge-title">Points vs rewards</p>
-              <p class="cm-challenge-body">2 parallel loyalty mechanics: simple points for lower tiers, choice-based rewards for high-frequency members</p>
+              <p class="cm-challenge-body">Two parallel loyalty mechanics: simple points for lower tiers, choice-based rewards for high-frequency members</p>
             </div>
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-device-mobile"></i></div>
@@ -7403,7 +7443,7 @@
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-clock"></i></div>
               <p class="cm-challenge-title">Design as afterthought</p>
-              <p class="cm-challenge-body">No full-time designers. 1–2 part-time freelancers pulled in occasionally for complex tasks.</p>
+              <p class="cm-challenge-body">No full-time designers. One or two part-time freelancers pulled in occasionally for complex tasks.</p>
             </div>
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-warning"></i></div>
@@ -7413,7 +7453,7 @@
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-x-circle"></i></div>
               <p class="cm-challenge-title">A failed first attempt</p>
-              <p class="cm-challenge-body">1 previous design-system effort had already failed. The second had to stick.</p>
+              <p class="cm-challenge-body">One previous design-system effort had already failed. The second had to stick.</p>
             </div>
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-brain"></i></div>
@@ -7437,7 +7477,7 @@
             </div>
             <div class="cm-challenge-card">
               <div class="cm-challenge-icon"><i class="ph ph-squares-four"></i></div>
-              <p class="cm-challenge-title">2 products, 1 bar</p>
+              <p class="cm-challenge-title">Two products, one bar</p>
               <p class="cm-challenge-body">Formalize and Whistleblower Software both needed the same standard of craft.</p>
             </div>
             <div class="cm-challenge-card">
