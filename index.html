@@ -175,6 +175,40 @@
       .js-anim .will-fade-scale { opacity: 1; transform: none; transition: none; }
     }
     .will-fade-up    { opacity: 1; }
+    /* Same treatment as .will-fade-scale above, and for the same reason.
+       These used to run through tween(), which writes opacity and transform
+       from a main-thread rAF callback every frame. Twenty-five of them
+       overlap around the case section, competing with three.js parsing and
+       scene building for the same thread — so the reveals stuttered exactly
+       where the page is busiest. A transition is handed to the compositor
+       and holds its timing no matter what the main thread is doing.
+       No will-change here: promoting 25 elements at once costs more in
+       layer memory than it saves, and a transition on opacity/transform
+       gets promoted for its duration anyway. */
+    .js-anim .will-fade-up {
+      opacity: 0;
+      transform: translateY(36px);
+      transition: opacity 0.8s cubic-bezier(0.22, 0.7, 0.3, 1),
+                  transform 0.8s cubic-bezier(0.22, 0.7, 0.3, 1);
+    }
+    .js-anim .will-fade-up.is-revealed { opacity: 1; transform: none; }
+    .js-anim .will-fade-up.is-settled  { opacity: 1; transform: none; transition: none; }
+
+    .js-anim .will-fade-left {
+      opacity: 0;
+      transform: translateX(-18px);
+      transition: opacity 0.65s cubic-bezier(0.22, 0.7, 0.3, 1),
+                  transform 0.65s cubic-bezier(0.22, 0.7, 0.3, 1);
+    }
+    .js-anim .will-fade-left.is-revealed { opacity: 1; transform: none; }
+    .js-anim .will-fade-left.is-settled  { opacity: 1; transform: none; transition: none; }
+    @media (max-width: 768px) {
+      .js-anim .will-fade-left { transform: translateY(16px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .js-anim .will-fade-up,
+      .js-anim .will-fade-left { opacity: 1; transform: none; transition: none; }
+    }
 
 
     /* ════════════════════════════════════════════════════
@@ -268,24 +302,43 @@
          Swapped on max-width and opacity rather than display, because
          display does not animate and this has to cross-fade. Collapsed
          items keep no width, so the pill hugs whatever is showing. */
-      .pill-nav__cta,
-      .pill-nav__mail,
-      .pill-nav__status {
+      /* Scoped to .pill-nav for (0,2,0). Unscoped this ties with .btn, which
+         is later in the file, so the CTA silently took .btn's transition and
+         collapsed with no width animation at all — half the swap was
+         animating and half was snapping. */
+      .pill-nav .pill-nav__cta,
+      .pill-nav .pill-nav__mail,
+      .pill-nav .pill-nav__status {
         overflow: hidden;
         white-space: nowrap;
-        /* Shorter than it was, and all four on one curve.
-           max-width, padding and margin each force the flex row to re-solve
-           every frame, and the pill is centred with translateX(-50%) — so as
-           it grows its left edge travels too, and the contents slide while
-           they expand. That double motion is what reads as wonky, and the
-           less time it is on screen the less it shows. 0.42s gave it plenty
-           of time to be noticed; 0.26s reads as a swap rather than a move.
-           opacity leads slightly so the outgoing item is gone before the
-           width finishes closing. */
-        transition: max-width 0.26s cubic-bezier(0.32, 0.72, 0.35, 1),
-                    opacity 0.18s ease,
-                    padding 0.26s cubic-bezier(0.32, 0.72, 0.35, 1),
-                    margin 0.26s cubic-bezier(0.32, 0.72, 0.35, 1);
+        /* Sequenced, not simultaneous — this is what makes it read as one
+           object changing rather than two things happening at once.
+
+           max-width, padding and margin each force the flex row to re-solve,
+           and the pill is centred with translateX(-50%), so as an item grows
+           the pill's left edge travels too. Animating the words at the same
+           time meant text sliding inside a box that was itself moving. The
+           previous pass shortened everything to 0.26s to give that less time
+           to be seen, which hid it rather than fixed it.
+
+           Now the outgoing words leave first, the box resizes while it is
+           empty, and the incoming words fade up once it has settled. Nothing
+           slides while it is legible, so the box can take its time. */
+        transition: max-width 0.34s cubic-bezier(0.32, 0.72, 0.35, 1),
+                    padding  0.34s cubic-bezier(0.32, 0.72, 0.35, 1),
+                    margin   0.34s cubic-bezier(0.32, 0.72, 0.35, 1),
+                    opacity  0.14s ease;
+      }
+      /* The arriving item in each state: hold, let the box finish, then fade
+         up. Everything else keeps the quick undelayed fade above, which is
+         the leaving half of the same swap. */
+      .pill-nav.is-past-hero .pill-nav__mail,
+      .pill-nav.is-past-hero .pill-nav__status,
+      .pill-nav:not(.is-past-hero) .pill-nav__cta {
+        transition: max-width 0.34s cubic-bezier(0.32, 0.72, 0.35, 1),
+                    padding  0.34s cubic-bezier(0.32, 0.72, 0.35, 1),
+                    margin   0.34s cubic-bezier(0.32, 0.72, 0.35, 1),
+                    opacity  0.22s ease 0.20s;
       }
       /* The negative margin cancels the flex GAP that a zero-width item still
          gets, and it has to match the gap of the container the item is
@@ -6067,15 +6120,15 @@
     }
 
     /* ── 5. .will-fade-up — smooth upward fade (text, rows) */
-    document.querySelectorAll('.will-fade-up').forEach(el => {
-      el.style.opacity   = '0';
-      el.style.transform = 'translateY(36px)';
-    });
+    /* The hidden start comes from CSS gated on .js-anim, set before first
+       paint — no inline styles to write, and nothing to undo. */
     const ioUp = makeObserver((entries) => {
       entries.forEach(e => {
         if (!e.isIntersecting) return;
         const delay = parseInt(e.target.dataset.delay || '0', 10);
-        tween(e.target, { fy: 36, dur: 800, delay });
+        e.target.style.transitionDelay = delay + 'ms';
+        e.target.classList.add('is-revealed');
+        setTimeout(() => e.target.classList.add('is-settled'), delay + 1300);
         ioUp.unobserve(e.target);
       });
     });
@@ -6129,18 +6182,11 @@
     document.querySelectorAll('.will-fade').forEach(el => ioFade.observe(el));
 
     /* ── 8. .will-fade-left — label slide from left (fade up on mobile) ── */
-    document.querySelectorAll('.will-fade-left').forEach(el => {
-      el.style.opacity   = '0';
-      el.style.transform = isMobile ? 'translateY(16px)' : 'translateX(-18px)';
-    });
     const ioLeft = makeObserver((entries) => {
       entries.forEach(e => {
         if (!e.isIntersecting) return;
-        if (isMobile) {
-          tween(e.target, { fy: 16, dur: 600, delay: 0 });
-        } else {
-          tween(e.target, { fx: -18, dur: 650, delay: 0 });
-        }
+        e.target.classList.add('is-revealed');
+        setTimeout(() => e.target.classList.add('is-settled'), 1100);
         ioLeft.unobserve(e.target);
       });
     }, { rootMargin: '-32px 0px', threshold: 0.1 });
@@ -6285,7 +6331,7 @@
           pill.classList.toggle('is-past-hero', past);
           clearTimeout(settle);
           if (past) {
-            settle = setTimeout(() => pill.classList.add('is-settled'), 320);
+            settle = setTimeout(() => pill.classList.add('is-settled'), 580);
           } else {
             pill.classList.remove('is-settled');
           }
@@ -8203,6 +8249,18 @@
 
       const handles = new Map();
       const starting = new WeakSet();
+      /* Building a stage is heavy, synchronous main-thread work: a WebGL
+         context, a scene, a PMREM environment, materials and textures. Only
+         one film ever RUNS at a time (see below), but nothing stopped two
+         from BUILDING at once — the 700px pre-load margin is wide enough
+         that two cards cross it within a few hundred milliseconds of each
+         other on a phone, and the second build landed right on top of the
+         first card's entrance. That is the stutter.
+
+         This chain lets each stage finish and paint a frame before the next
+         one starts. The pre-load margin still buys the head start; it is
+         now spent one scene at a time. */
+      let initChain = Promise.resolve();
 
       const io = new IntersectionObserver(
         (entries) => {
@@ -8212,7 +8270,8 @@
             if (entry.isIntersecting) {
               if (!handle && !starting.has(el)) {
                 starting.add(el);
-                ensureLibs()
+                initChain = initChain
+                  .then(ensureLibs)
                   .then(() => {
                     const cfg = window.STAGE_CONFIGS[el.dataset.stage];
                     /* A card asks for a phone by carrying data-model. The
@@ -8232,16 +8291,27 @@
                         sticky: cfg.sticky,
                       }),
                     );
-                    // only reveal once there is a frame worth showing
-                    requestAnimationFrame(() =>
-                      requestAnimationFrame(() => {
+                    // only reveal once there is a frame worth showing, and
+                    // hold the chain until then so the next build waits
+                    return new Promise((done) => {
+                      let settled = false;
+                      const finish = () => {
+                        if (settled) return;
+                        settled = true;
                         el.classList.add("is-live");
                         queuePick();   // it may already be the one on screen
-                      }),
-                    );
+                        done();
+                      };
+                      requestAnimationFrame(() => requestAnimationFrame(finish));
+                      /* rAF is paused in a background tab, and the queue must
+                         not be left holding the next stage forever if the
+                         reader switches away mid-load. */
+                      setTimeout(finish, 1200);
+                    });
                   })
                   .catch(() => {
-                    /* poster stays; nothing to clean up */
+                    /* poster stays; nothing to clean up, and the chain must
+                       not break — a later card still needs to build. */
                   });
               }
             }
