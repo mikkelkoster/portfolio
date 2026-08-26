@@ -2036,6 +2036,18 @@
     }
     .testimonial-role { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 3px; }
     .testimonial-role--prev { color: rgba(255,255,255,0.3); margin-top: 1px; }
+    /* Name, role and tag are siblings now rather than the tag being nested
+       in a row with the name. That nesting is what put the badge BETWEEN the
+       name and the job title, which reads as though it belongs to neither.
+       As siblings their order can differ by breakpoint. Desktop keeps the
+       original line: name and tag together, role wrapped beneath. */
+    .testimonial-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0 8px;
+    }
+    .testimonial-meta .testimonial-role { flex: 0 0 100%; }
 
 
 
@@ -2489,11 +2501,45 @@
       /* Testimonial carousel */
       .t-wrap { padding-top: var(--section-y); padding-left: 20px; }
       .t-col { flex: 0 0 calc(100vw - 76px); height: auto; }
-      .t-card { padding: 36px 28px; border-radius: 20px; }
+      .t-card { padding: 26px 24px; border-radius: 20px; }
       .testimonial-quote,
       .t-card--long .testimonial-quote,
-      .t-card--emil .testimonial-quote { font-size: 13px; line-height: 1.5; margin-bottom: 24px; max-width: 100%; padding-right: 0; }
+      .t-card--emil .testimonial-quote { font-size: 13px; line-height: 1.5; margin-bottom: 20px; max-width: 100%; padding-right: 0; }
       .testimonial-mark { display: none; }
+
+      /* Every card is as tall as the tallest, so the longest quote sets the
+         height for all seven and the short ones sit in a lot of empty navy.
+         The author block is where that height is cheapest to win back. */
+      .testimonial-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+      }
+      /* The badge last, under the job title. Nested in a row with the name it
+         landed BETWEEN the name and the title, belonging to neither. */
+      .testimonial-meta .testimonial-name { order: 1; font-size: 13px; }
+      .testimonial-meta .testimonial-role { order: 2; flex: none; font-size: 12px; margin-top: 0; }
+      .testimonial-meta .testimonial-role--prev { order: 3; }
+      .testimonial-meta .testimonial-tag {
+        order: 4;
+        margin-top: 4px;
+        /* One row. Two-line badges were costing every card a line each. */
+        white-space: nowrap;
+        font-size: 10px;
+        padding: 2px 7px;
+      }
+      .testimonial-author { gap: 12px; align-items: center; }
+    }
+
+    /* Below about 360 the badge cannot share a row with the avatar at all:
+       "Cross-functional partner at Formalize" needs roughly 200px and only
+       ~128px is left beside a 56px avatar, so it hung 52px outside the card.
+       Stacking the author block gives it the card's full width instead,
+       which is what keeps it to the one row asked for rather than wrapping
+       it or shrinking the type past reading size. */
+    @media (max-width: 360px) {
+      .testimonial-author { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .testimonial-meta .testimonial-tag { font-size: 9px; }
       .t-footer { padding-right: 20px; }
 
       /* Product screens grid */
@@ -5250,11 +5296,11 @@
             <div class="testimonial-author">
               <a href="https://www.linkedin.com/in/e-holst-petersen/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-emil.webp" alt="Emil Holst Petersen" loading="lazy" width="420" height="420"></a>
               <div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div class="testimonial-meta">
                   <a href="https://www.linkedin.com/in/e-holst-petersen/" target="_blank" rel="noopener" class="testimonial-name">Emil Holst Petersen</a>
+                  <p class="testimonial-role">Head of Engineering, Formalize</p>
                   <span class="testimonial-tag">Cross-functional partner at Formalize</span>
                 </div>
-                <p class="testimonial-role">Head of Engineering, Formalize</p>
               </div>
             </div>
           </div>
@@ -5268,11 +5314,11 @@
             <div class="testimonial-author">
               <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-anders.webp" alt="Anders Tolborg" loading="lazy" width="800" height="800"></div>
               <div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div class="testimonial-meta">
                   <p class="testimonial-name">Anders Tolborg</p>
+                  <p class="testimonial-role">Principal Product Designer, Formalize</p>
                   <span class="testimonial-tag">Direct report at Formalize</span>
                 </div>
-                <p class="testimonial-role">Principal Product Designer, Formalize</p>
               </div>
             </div>
           </div>
@@ -5286,11 +5332,11 @@
             <div class="testimonial-author">
               <a href="https://www.linkedin.com/in/simon-svenstrup/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-simon.webp" alt="Simon la Fontaine Svenstrup" loading="lazy" width="800" height="800"></a>
               <div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div class="testimonial-meta">
                   <a href="https://www.linkedin.com/in/simon-svenstrup/" target="_blank" rel="noopener" class="testimonial-name">Simon la Fontaine Svenstrup</a>
+                  <p class="testimonial-role">Staff Product Manager, Formalize</p>
                   <span class="testimonial-tag">Cross-functional partner at Formalize</span>
                 </div>
-                <p class="testimonial-role">Staff Product Manager, Formalize</p>
               </div>
             </div>
           </div>
@@ -5304,12 +5350,12 @@
             <div class="testimonial-author">
               <a href="https://www.linkedin.com/in/patrick-rischel-24baba6/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-patrick.webp" alt="Patrick Rischel" loading="lazy" width="300" height="300"></a>
               <div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div class="testimonial-meta">
                   <a href="https://www.linkedin.com/in/patrick-rischel-24baba6/" target="_blank" rel="noopener" class="testimonial-name">Patrick Rischel</a>
+                  <p class="testimonial-role">Senior Digital Product Manager, Novo Nordisk</p>
+                  <p class="testimonial-role testimonial-role--prev">formerly Senior Platform Product Owner, Maersk</p>
                   <span class="testimonial-tag">Cross-functional partner at Maersk</span>
                 </div>
-                <p class="testimonial-role">Senior Digital Product Manager, Novo Nordisk</p>
-                <p class="testimonial-role testimonial-role--prev">formerly Senior Platform Product Owner, Maersk</p>
               </div>
             </div>
           </div>
@@ -5323,11 +5369,11 @@
             <div class="testimonial-author">
               <a href="https://www.linkedin.com/in/vikiolgod/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-viki.webp" alt="Viki Ølgod Frandsen" loading="lazy" width="800" height="800"></a>
               <div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div class="testimonial-meta">
                   <a href="https://www.linkedin.com/in/vikiolgod/" target="_blank" rel="noopener" class="testimonial-name">Viki Ølgod Frandsen</a>
+                  <p class="testimonial-role">Lead UX Researcher, Maersk</p>
                   <span class="testimonial-tag">Direct report at Maersk</span>
                 </div>
-                <p class="testimonial-role">Lead UX Researcher, Maersk</p>
               </div>
             </div>
           </div>
@@ -5341,11 +5387,11 @@
             <div class="testimonial-author">
               <a href="https://www.linkedin.com/in/leo-wan-ab0b38118/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-leo.webp" alt="Leo Wan" loading="lazy"></a>
               <div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div class="testimonial-meta">
                   <a href="https://www.linkedin.com/in/leo-wan-ab0b38118/" target="_blank" rel="noopener" class="testimonial-name">Leo Wan</a>
+                  <p class="testimonial-role">Lead Product Designer, Maersk</p>
                   <span class="testimonial-tag">Direct report at Maersk</span>
                 </div>
-                <p class="testimonial-role">Lead Product Designer, Maersk</p>
               </div>
             </div>
           </div>
@@ -5359,11 +5405,11 @@
             <div class="testimonial-author">
               <a href="https://www.linkedin.com/in/adam-voigt-038b08121/" target="_blank" rel="noopener" class="testimonial-avatar"><img src="public/images/main/main-testimonial-adam.webp" alt="Adam Voigt" loading="lazy"></a>
               <div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <div class="testimonial-meta">
                   <a href="https://www.linkedin.com/in/adam-voigt-038b08121/" target="_blank" rel="noopener" class="testimonial-name">Adam Voigt</a>
+                  <p class="testimonial-role">Senior Product UX Designer, IKEA</p>
                   <span class="testimonial-tag">Former colleague at 1508</span>
                 </div>
-                <p class="testimonial-role">Senior Product UX Designer, IKEA</p>
               </div>
             </div>
           </div>
@@ -5838,7 +5884,7 @@
     }
 
     function attachSwipe(track, opts) {
-      const AXIS_LOCK = 8;
+      const AXIS_LOCK = 6;
       /* How far from horizontal a gesture can be and still count as a swipe.
          A strict |dx| > |dy| gives the page anything past 45 degrees, and a
          thumb dragged across a card that is 689px tall in an 812px viewport
@@ -5847,9 +5893,7 @@
          horizontal, which still leaves an ordinary vertical scroll to the
          page by a wide margin. */
       const X_BIAS = 0.75;
-      /* Vertical has to travel twice as far as horizontal before it wins —
-         see the branch below for why that asymmetry is safe. */
-      const VERT_LOCK = 16;
+
       let x0 = 0, y0 = 0, xLock = 0, axis = '', live = false;
       /* A short trail of recent samples. Velocity has to come from the END
          of the gesture, not from its average: a reader who drags slowly,
@@ -5896,24 +5940,21 @@
         const dx = x - x0;
         const dy = e.touches[0].clientY - y0;
         if (!axis) {
+          /* Decide on the first movement, and decide fast.
+             An earlier version deferred while the two axes were close, on the
+             reasoning that waiting is free because nothing is prevented yet.
+             It is not free. With touch-action: pan-y the browser may claim
+             the touch for scrolling the moment it sees vertical movement,
+             and once it has, preventDefault is ignored for the rest of the
+             gesture — the swipe is dead however clearly horizontal it later
+             becomes. On the tall cards that is most gestures, which is why
+             whole carousels felt stuck rather than merely unreliable.
+             So: decide at the first 6px, and let the bias do the work
+             instead of the delay. */
           const ax = Math.abs(dx), ay = Math.abs(dy);
-          if (ax >= AXIS_LOCK && ax > ay * X_BIAS) {
-            axis = 'x';
-          } else if (ay >= VERT_LOCK && ay > ax * 1.4) {
-            axis = 'y'; live = false; return;             // clearly the page's
-          } else {
-            /* Undecided — keep watching.
-               Conceding to the page at the first 8px was throwing away real
-               swipes: a thumb almost always drifts a few pixels down as it
-               settles, and 9px of that was enough to hand the whole gesture
-               away before it had travelled at all.
-               Waiting costs nothing, because nothing is preventDefault-ed
-               while undecided — the page is free to scroll the entire time.
-               So the vertical bar is deliberately twice the horizontal one:
-               there is no penalty for letting a vertical gesture prove
-               itself, and a large penalty for guessing wrong. */
-            return;
-          }
+          if (ax < AXIS_LOCK && ay < AXIS_LOCK) return;
+          axis = ax > ay * X_BIAS ? 'x' : 'y';
+          if (axis === 'y') { live = false; return; }     // the page's gesture
           xLock = x;
           // onStart stops any animation in flight, so it fires here rather
           // than on touchstart: a tap that never moves would otherwise freeze
@@ -7128,12 +7169,12 @@
                   <div class="testimonial-author">
                     <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-patrick.webp" alt="Patrick Rischel" loading="lazy" width="300" height="300"></div>
                     <div>
-                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <div class="testimonial-meta">
                         <p class="testimonial-name">Patrick Rischel</p>
+                        <p class="testimonial-role">Senior Digital Product Manager, Novo Nordisk</p>
+                        <p class="testimonial-role testimonial-role--prev">formerly Senior Platform Product Owner, Maersk</p>
                         <span class="testimonial-tag">Cross-functional partner at Maersk</span>
                       </div>
-                      <p class="testimonial-role">Senior Digital Product Manager, Novo Nordisk</p>
-                      <p class="testimonial-role testimonial-role--prev">formerly Senior Platform Product Owner, Maersk</p>
                     </div>
                   </div>
                 </div>
@@ -7145,11 +7186,11 @@
                   <div class="testimonial-author">
                     <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-viki.webp" alt="Viki Ølgod Frandsen" loading="lazy" width="800" height="800"></div>
                     <div>
-                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <div class="testimonial-meta">
                         <p class="testimonial-name">Viki Ølgod Frandsen</p>
+                        <p class="testimonial-role">Lead UX Researcher, Maersk</p>
                         <span class="testimonial-tag">Direct report at Maersk</span>
                       </div>
-                      <p class="testimonial-role">Lead UX Researcher, Maersk</p>
                     </div>
                   </div>
                 </div>
@@ -7161,11 +7202,11 @@
                   <div class="testimonial-author">
                     <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-leo.webp" alt="Leo Wan" loading="lazy" width="251" height="251"></div>
                     <div>
-                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <div class="testimonial-meta">
                         <p class="testimonial-name">Leo Wan</p>
+                        <p class="testimonial-role">Lead Product Designer, Maersk</p>
                         <span class="testimonial-tag">Direct report at Maersk</span>
                       </div>
-                      <p class="testimonial-role">Lead Product Designer, Maersk</p>
                     </div>
                   </div>
                 </div>
@@ -7962,11 +8003,11 @@
                   <div class="testimonial-author">
                     <div class="testimonial-avatar" style="overflow:hidden;"><img src="public/images/main/main-testimonial-emil.webp" alt="Emil Holst Petersen" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" width="420" height="420"></div>
                     <div>
-                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <div class="testimonial-meta">
                         <p class="testimonial-name">Emil Holst Petersen</p>
+                        <p class="testimonial-role">Head of Engineering, Formalize</p>
                         <span class="testimonial-tag">Cross-functional partner</span>
                       </div>
-                      <p class="testimonial-role">Head of Engineering, Formalize</p>
                     </div>
                   </div>
                 </div>
@@ -7978,11 +8019,11 @@
                   <div class="testimonial-author">
                     <div class="testimonial-avatar" style="overflow:hidden;"><img src="public/images/main/main-testimonial-anders.webp" alt="Anders Tolborg" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" width="800" height="800"></div>
                     <div>
-                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <div class="testimonial-meta">
                         <p class="testimonial-name">Anders Tolborg</p>
+                        <p class="testimonial-role">Principal Product Designer, Formalize</p>
                         <span class="testimonial-tag">Direct report</span>
                       </div>
-                      <p class="testimonial-role">Principal Product Designer, Formalize</p>
                     </div>
                   </div>
                 </div>
@@ -7994,11 +8035,11 @@
                   <div class="testimonial-author">
                     <div class="testimonial-avatar" style="overflow:hidden;"><img src="public/images/main/main-testimonial-simon.webp" alt="Simon la Fontaine Svenstrup" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" width="800" height="800"></div>
                     <div>
-                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                      <div class="testimonial-meta">
                         <p class="testimonial-name">Simon la Fontaine Svenstrup</p>
+                        <p class="testimonial-role">Staff Product Manager, Formalize</p>
                         <span class="testimonial-tag">Cross-functional partner</span>
                       </div>
-                      <p class="testimonial-role">Staff Product Manager, Formalize</p>
                     </div>
                   </div>
                 </div>
