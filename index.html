@@ -310,6 +310,8 @@
          divider here, but without any of that separation the dot read as
          though it belonged to the name. */
       .pill-nav.is-past-hero .pill-nav__status { max-width: 220px; opacity: 1; margin-left: 4px; }
+      /* Move over — let the dot's halo out of the box. See the observer. */
+      .pill-nav.is-settled .pill-nav__status { overflow: visible; }
     }
 
     @media (max-width: 768px) {
@@ -6339,8 +6341,25 @@
       const pill  = document.getElementById('pill-nav');
       const badge = document.querySelector('.hero__avail');
       if (!pill || !badge || !('IntersectionObserver' in window)) return;
+      /* The status is clipped while its width animates, or the text spills
+         out of the pill on the way. But the dot's halo is a ring that
+         reaches about 11px past the dot at the top of its pulse, so a clip
+         tight to the content cuts it off — which is what you see once the
+         pill has settled. The clip is only needed DURING the move, so it is
+         lifted once the move is over. Removed immediately on the way back,
+         so the collapse is clipped from its first frame. */
+      let settle;
       const io = new IntersectionObserver(
-        ([e]) => pill.classList.toggle('is-past-hero', !e.isIntersecting),
+        ([e]) => {
+          const past = !e.isIntersecting;
+          pill.classList.toggle('is-past-hero', past);
+          clearTimeout(settle);
+          if (past) {
+            settle = setTimeout(() => pill.classList.add('is-settled'), 320);
+          } else {
+            pill.classList.remove('is-settled');
+          }
+        },
         { threshold: 0 }
       );
       io.observe(badge);
