@@ -175,6 +175,41 @@
       .js-anim .will-fade-scale { opacity: 1; transform: none; transition: none; }
     }
     .will-fade-up    { opacity: 1; }
+
+    /* ── Hero entrance ──────────────────────────────────
+       This was five tween() calls, the last of the JS-driven animations.
+       Three things were wrong with it. JS set opacity to 0 at runtime, so
+       the hero painted in full and then snapped away before animating —
+       that flash is most of what read as wonky. The tweens then wrote
+       styles from the main thread during the busiest moment of the whole
+       page load, with the hero image decoding and Fraunces still swapping
+       in. And it was slow and far: 52px over 1000ms per line, with the
+       tagline not starting until 600ms, so the entrance ran close to 1.7s.
+
+       The hidden state now comes from CSS before first paint, the motion
+       runs on the compositor, and it is shorter and travels less. The photo
+       settles out of a small scale rather than sliding 60px from the right,
+       which for a full-bleed portrait was a lot of movement to ask for. */
+    .js-anim .hero__enter,
+    .js-anim .hero__enter-photo {
+      opacity: 0;
+      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+      transition-delay: var(--enter, 0ms);
+      will-change: opacity, transform;
+    }
+    .js-anim .hero__enter       { transform: translateY(20px); }
+    .js-anim .hero__enter-photo { transform: scale(1.03); transition-duration: 0.95s; }
+    .js-anim .hero.is-entered .hero__enter,
+    .js-anim .hero.is-entered .hero__enter-photo {
+      opacity: 1;
+      transform: none;
+      will-change: auto;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .js-anim .hero__enter,
+      .js-anim .hero__enter-photo { opacity: 1; transform: none; transition: none; }
+    }
     /* Same treatment as .will-fade-scale above, and for the same reason.
        These used to run through tween(), which writes opacity and transform
        from a main-thread rAF callback every frame. Twenty-five of them
@@ -557,6 +592,19 @@
       width: 44px; height: 44px;
     }
     .pill-nav__mail:hover { background: var(--blue-dk); }
+
+    /* Down when there is more to show, up when it will collapse. Same glyph
+       as the rows, rotated rather than swapped, so the direction change is
+       part of the press rather than a second thing appearing. */
+    .exp-toggle { gap: 8px; }
+    .exp-toggle__chev {
+      flex-shrink: 0;
+      transition: transform 0.32s cubic-bezier(0.22, 0.7, 0.3, 1);
+    }
+    .exp-toggle[aria-expanded="true"] .exp-toggle__chev { transform: rotate(180deg); }
+    @media (prefers-reduced-motion: reduce) {
+      .exp-toggle__chev { transition: none; }
+    }
 
     .btn {
       display: inline-flex;
@@ -4972,25 +5020,25 @@
 
       <div class="hero__text">
         <div class="hero__headlines">
-          <div class="hero__line"><span class="hero__line-inner" id="hl1">Design at scale.</span></div>
-          <div class="hero__line"><span class="hero__line-inner" id="hl2">Player-coach.</span></div>
-          <div class="hero__line"><span class="hero__line-inner" id="hl3">Maker.</span></div>
+          <div class="hero__line"><span class="hero__line-inner hero__enter" style="--enter:140ms" id="hl1">Design at scale.</span></div>
+          <div class="hero__line"><span class="hero__line-inner hero__enter" style="--enter:210ms" id="hl2">Player-coach.</span></div>
+          <div class="hero__line"><span class="hero__line-inner hero__enter" style="--enter:280ms" id="hl3">Maker.</span></div>
         </div>
-        <p class="hero__tagline" id="hero-tagline">
+        <p class="hero__tagline hero__enter" style="--enter:360ms" id="hero-tagline">
           15 years in design, 8 of them leading teams. I've built design systems and products across agencies, scale-ups and in-house. I design and ship with AI, and I'm particular about craft and detail.
         </p>
-        <p class="hero__avail">
+        <p class="hero__avail hero__enter" style="--enter:80ms">
           <span class="avail-dot" aria-hidden="true"></span>
           Available for freelance and fractional work
         </p>
       </div>
 
-      <div class="hero__photo" id="hero-photo">
+      <div class="hero__photo hero__enter-photo" id="hero-photo">
         <img src="public/images/main/main-photo-mikkel.webp" alt="Mikkel Køster" class="hero__photo-img" fetchpriority="high">
       </div>
 
-      <span class="hero__corner hero__corner--left">Silkeborg, Denmark</span>
-      <span class="hero__corner hero__corner--right">Built with Claude · 2026</span>
+      <span class="hero__corner hero__corner--left hero__enter" style="--enter:520ms">Silkeborg, Denmark</span>
+      <span class="hero__corner hero__corner--right hero__enter" style="--enter:560ms">Built with Claude · 2026</span>
 
       <!-- Scroll indicator -->
       <div class="scroll-hint" id="scrollHint" aria-hidden="true">
@@ -5836,7 +5884,7 @@
             </div>
             <div class="exp-detail">
               <span class="exp-role">Intern</span>
-              <span class="exp-desc">4 months in London at one of the world's leading brand consultancies — American Express, Skype.</span>
+              <span class="exp-desc">4 months in London on brand work for American Express and Skype.</span>
             </div>
             <div class="exp-row-right">
               <span class="exp-badge">Agency</span>
@@ -5883,7 +5931,7 @@
 
       <div class="exp-actions">
         <a href="public/cv/mikkel-koster-cv.pdf" target="_blank" rel="noopener noreferrer" class="btn btn--primary btn--sm">Download full CV</a>
-        <button type="button" class="btn btn--secondary btn--sm" id="exp-show-all" aria-expanded="false" aria-controls="exp-list">Show all experience</button>
+        <button type="button" class="btn btn--secondary btn--sm exp-toggle" id="exp-show-all" aria-expanded="false" aria-controls="exp-list"><span class="exp-toggle__label">Show all experience</span><svg class="exp-toggle__chev" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
 
     </div>
@@ -6093,22 +6141,32 @@
     }
 
     /* ── 3. Hero entrance ──────────────────────────────── */
-    const isMobile = window.innerWidth <= 768;
-    // Set hidden state first, then animate in sequence
-    ['#hl1','#hl2','#hl3','#hero-tagline','#hero-photo'].forEach(s => {
-      const el = document.querySelector(s);
-      if (el) { el.style.opacity = '0'; el.style.transform = 'none'; }
-    });
-    tween(document.querySelector('#hl1'),          { fy: 52, dur: 1000, delay: 120 });
-    tween(document.querySelector('#hl2'),          { fy: 52, dur: 1000, delay: 250 });
-    tween(document.querySelector('#hl3'),          { fy: 52, dur: 1000, delay: 380 });
-    tween(document.querySelector('#hero-tagline'), { fy: 22, dur: 800,  delay: 600 });
-    // On mobile the photo is stacked below text — fade up instead of slide from right
-    if (isMobile) {
-      tween(document.querySelector('#hero-photo'), { fy: 32, fs: 0.97, ts: 1, dur: 1000, delay: 560 });
-    } else {
-      tween(document.querySelector('#hero-photo'), { fx: 60, fs: 0.97, ts: 1, dur: 1100, delay: 240 });
-    }
+    /* One class; the stagger lives in CSS as a per-element --enter delay.
+
+       Held until Fraunces is ready. The headline is set in it, and a face
+       swapping in halfway through the rise reflows the line under its own
+       animation — the other half of what made this look off. document.fonts
+       can resolve late or, behind a slow network, not for seconds, so 450ms
+       is the longest it will ever wait before going without it. */
+    (() => {
+      const hero = document.querySelector('.hero');
+      if (!hero) return;
+      let started = false;
+      const start = () => {
+        if (started) return;
+        started = true;
+        /* One frame, so the hidden state is a painted frame before the
+           transition begins — set them in the same frame and the browser
+           coalesces the two and skips the animation entirely. */
+        requestAnimationFrame(() => hero.classList.add('is-entered'));
+      };
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(start);
+        setTimeout(start, 450);
+      } else {
+        start();
+      }
+    })();
 
     /* ── 4. Scroll observer factory ────────────────────── */
     function makeObserver(handler, options = {}) {
@@ -6344,6 +6402,7 @@
     /* ── Show all experience ───────────────────────────── */
     (() => {
       const btn  = document.getElementById('exp-show-all');
+      const label = btn && btn.querySelector('.exp-toggle__label');
       const list = document.getElementById('exp-list');
       if (!btn || !list) return;
       const hidden = [...list.querySelectorAll('.exp-item--more')];
@@ -6401,7 +6460,7 @@
         busy = true;
         open = !open;
         btn.setAttribute('aria-expanded', String(open));
-        btn.textContent = open ? 'Collapse experience' : 'Show all experience';
+        label.textContent = open ? 'Collapse experience' : 'Show all experience';
         (open ? expand : collapse)();
         setTimeout(() => { busy = false; }, SPAN);
       });
