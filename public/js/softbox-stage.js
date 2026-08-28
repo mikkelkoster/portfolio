@@ -1220,7 +1220,12 @@ window.initSoftboxStage = function (canvas, config) {
        in an average frame rate — which is why this is expressed as a pixel
        budget rather than a device ratio. A small card still renders at the
        full device ratio; only a large one scales down. */
-    const PIXEL_BUDGET = 1.15e6;
+    /* Caller can raise this. The default suits a card roughly a third of
+       the page; a full-bleed one is over budget at 1x, and because the
+       floor is 1 it cannot scale down either — so it renders at 1x and
+       the browser upscales to the device ratio, which is what reads as a
+       blurred first shot. */
+    const PIXEL_BUDGET = config.pixelBudget || 1.15e6;
     renderer.setPixelRatio(Math.max(1, Math.min(
       Math.min(devicePixelRatio, 2), Math.sqrt(PIXEL_BUDGET / (w * h))
     )));

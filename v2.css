@@ -117,12 +117,16 @@ a { color: inherit; text-decoration: none; }
   max-width: 60ch;
 }
 .body { font-size: 18px; line-height: 1.6; color: var(--ink-70); margin: 0; max-width: 62ch; }
+/* margin-block, not margin. Plain `margin: 0` also zeroes the inline margins,
+   so putting .label and .wrap on the same element killed .wrap's auto
+   centring and the label sat at the window edge while the content beside it
+   was centred in the 1600 column. */
 .label {
   font-size: 14px;
   font-weight: 500;
   letter-spacing: 0;
   color: var(--ink);
-  margin: 0;
+  margin-block: 0;
 }
 .muted { color: var(--ink-40); }
 
@@ -355,7 +359,17 @@ a { color: inherit; text-decoration: none; }
 .xp__co { font-size: 19px; letter-spacing: -0.02em; }
 .xp__when, .xp__role { font-size: 16px; color: var(--ink-55); }
 .xp__role { color: var(--ink-70); }
-.xp__where { font-size: 14px; color: var(--ink-55); }
+/* Same pill as the tags under the client cards, so a category reads the same
+   way wherever it appears. */
+.xp__where {
+  font-size: 12px;
+  color: var(--ink-70);
+  background: var(--surface);
+  border-radius: 100px;
+  padding: 5px 11px;
+  justify-self: end;
+  white-space: nowrap;
+}
 
 /* ── Work ──────────────────────────────────────────────── */
 .cases { display: grid; gap: clamp(64px, 8vw, 120px); }
@@ -408,7 +422,7 @@ a { color: inherit; text-decoration: none; }
 .foot { padding-top: var(--sec); padding-bottom: 56px; }
 .foot__mail {
   display: inline-block;
-  font-size: clamp(28px, 4.6vw, 68px);
+  font-size: clamp(22px, 2.6vw, 40px);
   font-weight: 400;
   letter-spacing: -0.04em;
   line-height: 1.1;
@@ -504,7 +518,9 @@ a { color: inherit; text-decoration: none; }
 .xp__detail > div { overflow: hidden; }
 .xp[data-open="true"] .xp__detail { grid-template-rows: 1fr; }
 .xp__text {
-  margin: 18px 0 4px;
+  /* No top margin: .xp__body already provides it, and having both meant the
+     paragraph started 18px below the image it is supposed to sit level with. */
+  margin: 0;
   max-width: 68ch;
   font-size: 16px;
   line-height: 1.65;
@@ -649,8 +665,7 @@ a { color: inherit; text-decoration: none; }
    continuous white surface and still separates each quote. */
 .t-col { width: var(--col3); }
 .t-card {
-  background: var(--bg);
-  border: 1px solid var(--line);
+  background: var(--surface);
   border-radius: 18px;
   padding: 32px;
   height: 100%;
@@ -678,17 +693,23 @@ a { color: inherit; text-decoration: none; }
 
 /* Colour, as on the current site: these are the one warm thing in an
    otherwise grey section, and greyscaling them lost what they were for. */
-.xp__body { display: flex; gap: 28px; align-items: flex-start; margin: 18px 0 4px; }
+/* The image takes the date column's width and the gap matches the row's, so
+   the detail text starts exactly where the role column does above it —
+   240 + 190 + 40. Sized by the grid rather than by eye. */
+.xp__body { display: flex; gap: 40px; align-items: flex-start; margin: 18px 0 4px; }
 .xp__media {
-  width: 168px;
+  width: 190px;
   flex-shrink: 0;
   border-radius: 12px;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
+  /* Upper-biased: these are people and buildings, and a centred crop on a
+     full-length portrait framed the torso and cut the head off. */
+  object-position: center 18%;
   background: var(--surface);
 }
 @media (min-width: 860px) { .xp__body { margin-left: 240px; } .xp__text { margin-left: 0; } }
-@media (max-width: 859px) { .xp__body { flex-direction: column; gap: 16px; } .xp__media { width: 100%; max-width: 260px; } }
+@media (max-width: 859px) { .xp__body { flex-direction: column; gap: 16px; } .xp__media { width: 100%; max-width: 260px; aspect-ratio: 4 / 3; } }
 
 /* A break the author chose, not one the line length happened to produce.
    Only where there is room for two long lines — below that the heading wraps
@@ -699,3 +720,18 @@ a { color: inherit; text-decoration: none; }
 /* The stats end this section on a row of large numerals, which need more
    room beneath them than a paragraph would before the next label starts. */
 #about { padding-bottom: calc(var(--sec) * 1.45); }
+
+/* ── Beyond the work ───────────────────────────────────────
+   The original ran three tall image cards. Icons instead: the pictures were
+   decorative rather than evidence, and this says the same thing in a third
+   of the height. */
+.bey-grid { display: grid; gap: 56px 48px; }
+@media (min-width: 900px) { .bey-grid { grid-template-columns: repeat(3, 1fr); } }
+.bey__icon { color: var(--ink); margin-bottom: 22px; }
+.bey__t {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+.bey__b { font-size: 16px; line-height: 1.62; color: var(--ink-70); margin: 0; }

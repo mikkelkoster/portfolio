@@ -104,6 +104,11 @@
               ground: cfg.ground,
               model: modelUrl,
               sticky: cfg.sticky,
+              /* These films run the full width of the page here, not a third
+                 of it. The default budget pins a frame this size to 1x and
+                 the browser upscales it, which is what softened the wide
+                 opening shot. Enough for 1.5x at this size. */
+              pixelBudget: 3.2e6,
             }));
             return new Promise((done) => {
               let settled = false;
