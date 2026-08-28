@@ -31,7 +31,7 @@
      the type has to carry the composition. */
   --nav-h:      76px;
   --hero-pb:    clamp(48px, 8vh, 104px);
-  --maxw:       1440px;
+  --maxw:       1600px;
   --gutter:     48px;
   /* Where the content column's edge falls on any viewport: the gutter while
      the window is narrower than the column, and the leftover margin plus the
@@ -82,8 +82,11 @@ a { color: inherit; text-decoration: none; }
    negative tracking is what stops 100px+ type reading as
    shouty — it closes the letterspacing that large sizes
    otherwise open up. */
+/* Sized to the text column, not the window. The portrait takes 36% of the
+   hero, so 7.4vw overflowed and broke "Design at scale." across two lines —
+   the three statements only work as three lines. */
 .display {
-  font-size: clamp(44px, 7.4vw, 104px);
+  font-size: clamp(42px, 6.6vw, 112px);
   font-weight: 400;
   line-height: 1.05;
   letter-spacing: -0.04em;
@@ -127,7 +130,10 @@ a { color: inherit; text-decoration: none; }
    rest dropped to grey. Does the work a bold weight would do,
    without introducing a second weight. */
 .two-tone { color: var(--ink-55); }
-.two-tone strong { font-weight: 400; color: var(--ink); }
+/* Weight 500 as well as ink. Colour alone was a soft enough step that the
+   opening line did not clearly lead the paragraph — and 500 is the second of
+   the two weights the system already uses, so it costs nothing new. */
+.two-tone strong { font-weight: 500; color: var(--ink); }
 
 /* ── Buttons ───────────────────────────────────────────── */
 .btn {
@@ -274,14 +280,12 @@ a { color: inherit; text-decoration: none; }
   background: var(--green);
   flex-shrink: 0;
 }
-/* Bigger than .display, and only here — the case-study title stays at the
-   reference's 104px. The floor is 46px rather than the shared 44: at 390px
-   "Player-coach." is the longest line and 48px is where it starts to touch
-   the gutter. */
-.hero__display {
-  font-size: clamp(46px, 9.2vw, 132px);
-  margin-bottom: 34px;
-}
+/* No font-size here. This rule used to carry clamp(46px, 9.2vw, 132px),
+   which beat .display on specificity and source order — so the type scale
+   looked like it was being ignored. Its comment claimed it was the
+   case-study title, but .hero__display is the front page h1; the case title
+   is .display inside .case-hero. Size comes from the scale now. */
+.hero__display { margin-bottom: 34px; }
 .hero__lede { margin-bottom: 44px; }
 .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; }
 
@@ -554,10 +558,11 @@ a { color: inherit; text-decoration: none; }
   scroll-padding-inline: var(--edge);
 }
 .car-track::-webkit-scrollbar { display: none; }
-/* start, not stretch. Nothing is clipped now, so a long recommendation would
-   otherwise set the height of every card beside it — the same problem the
-   main build has with Emil's. Each card is its own height instead. */
-.car-track { align-items: start; }
+/* Stretch, so every card in a row is the same height. The trade is real and
+   deliberate: nothing is clipped, so the longest recommendation sets the
+   height and the shorter ones carry space above their author. Ragged card
+   bottoms were the alternative and read worse than the empty space does. */
+.car-track { align-items: stretch; }
 .car-track > * { scroll-snap-align: start; flex: 0 0 auto; }
 @media (prefers-reduced-motion: reduce) { .car-track { scroll-behavior: auto; } }
 
@@ -639,12 +644,13 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ── Testimonials ──────────────────────────────────────── */
-.t-section { background: var(--surface); }
+/* White, with the cards outlined instead. A tint band behind white cards
+   made the section a block of its own; a hairline keeps the page one
+   continuous white surface and still separates each quote. */
 .t-col { width: var(--col3); }
-/* White cards on the tint, so the section reads as one block and each card
-   lifts out of it without needing a border or a shadow. */
 .t-card {
   background: var(--bg);
+  border: 1px solid var(--line);
   border-radius: 18px;
   padding: 32px;
   height: 100%;
@@ -683,3 +689,13 @@ a { color: inherit; text-decoration: none; }
 }
 @media (min-width: 860px) { .xp__body { margin-left: 240px; } .xp__text { margin-left: 0; } }
 @media (max-width: 859px) { .xp__body { flex-direction: column; gap: 16px; } .xp__media { width: 100%; max-width: 260px; } }
+
+/* A break the author chose, not one the line length happened to produce.
+   Only where there is room for two long lines — below that the heading wraps
+   on its own and a forced break would leave a stray short line. */
+.brk { display: none; }
+@media (min-width: 900px) { .brk { display: inline; } }
+
+/* The stats end this section on a row of large numerals, which need more
+   room beneath them than a paragraph would before the next label starts. */
+#about { padding-bottom: calc(var(--sec) * 1.45); }
