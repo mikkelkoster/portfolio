@@ -351,9 +351,11 @@ a { color: inherit; text-decoration: none; }
 /* Block, not grid. The row itself carries the columns now — left as a grid
    here it placed .xp__detail in the second column, so an expanded paragraph
    wrapped inside 190px and ran 2662px tall. */
+/* No padding here — it belongs to the button. With it on .xp, the 30px band
+   above and below each row sat outside the click target, so the row only
+   responded on the text itself. */
 .xp {
   display: block;
-  padding-block: 30px;
   border-top: var(--rule) solid var(--line);
 }
 .xp__co { font-size: 19px; letter-spacing: -0.02em; }
@@ -496,7 +498,11 @@ a { color: inherit; text-decoration: none; }
   color: inherit;
   text-align: left;
   cursor: pointer;
+  padding-block: 30px;
+  transition: opacity .2s ease;
 }
+.xp__row:hover { opacity: 0.62; }
+@media (prefers-reduced-motion: reduce) { .xp__row { transition: none; } }
 @media (min-width: 860px) { .xp__row { grid-template-columns: 200px 190px 1fr auto 20px; } }
 @media (max-width: 859px) { .xp__row { grid-template-columns: 1fr auto; } }
 .xp__chev {
@@ -696,7 +702,7 @@ a { color: inherit; text-decoration: none; }
 /* The image takes the date column's width and the gap matches the row's, so
    the detail text starts exactly where the role column does above it —
    240 + 190 + 40. Sized by the grid rather than by eye. */
-.xp__body { display: flex; gap: 40px; align-items: flex-start; margin: 18px 0 4px; }
+.xp__body { display: flex; gap: 40px; align-items: flex-start; margin: 0 0 30px; }
 .xp__media {
   width: 190px;
   flex-shrink: 0;
@@ -725,7 +731,9 @@ a { color: inherit; text-decoration: none; }
    The original ran three tall image cards. Icons instead: the pictures were
    decorative rather than evidence, and this says the same thing in a third
    of the height. */
-.bey-grid { display: grid; gap: 56px 48px; }
+/* A wide column gap, because there is no card edge or rule separating these
+   — the space is the only thing telling them apart. */
+.bey-grid { display: grid; gap: 56px 88px; }
 @media (min-width: 900px) { .bey-grid { grid-template-columns: repeat(3, 1fr); } }
 .bey__icon { color: var(--ink); margin-bottom: 22px; }
 .bey__t {
