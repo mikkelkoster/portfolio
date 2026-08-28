@@ -24,6 +24,7 @@
      is the width of the window, and the gutter is small enough that
      the type has to carry the composition. */
   --nav-h:      76px;
+  --hero-pb:    clamp(48px, 8vh, 104px);
   --gutter:     48px;
   --sec:        156px;      /* vertical rhythm between sections */
   --rule:       1px;
@@ -173,11 +174,47 @@ a { color: inherit; text-decoration: none; }
 .hero {
   min-height: calc(100vh - var(--nav-h));
   min-height: calc(100svh - var(--nav-h));
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 36%);
+  align-items: center;
+  gap: 48px;
   padding-top: clamp(40px, 7vh, 88px);
-  padding-bottom: clamp(48px, 8vh, 104px);
+  padding-bottom: var(--hero-pb);
+}
+.hero__text { display: flex; flex-direction: column; align-items: flex-start; }
+
+/* Stretches to the hero's full height and stands on the base of a tint
+   panel. The panel is what gives the cut-out a ground — free on white it
+   floated, with nothing to stand on. Contained rather than bleeding past
+   the padding, so the rounded corners stay intact. */
+.hero__figure {
+  align-self: stretch;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--surface);
+  border-radius: 20px;
+  overflow: hidden;
+  min-height: 0;
+}
+.hero__figure img {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: grayscale(1) contrast(1.03);
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    align-content: center;
+    gap: 8px;
+  }
+  /* Below the copy, and only as tall as it needs to be — a full-height
+     figure on a phone would push the words off the screen. */
+  .hero__figure { align-self: auto; height: clamp(260px, 34vh, 380px); margin-top: 24px; }
 }
 /* Hugs its content, so it stays a badge rather than a bar. The left
    padding runs a little tighter than the right: a round dot sits
@@ -223,36 +260,8 @@ a { color: inherit; text-decoration: none; }
 
    Greyscale so the page holds one colour story: the only hue is the
    blue on things you can press, and the product UI inside the films. */
-.portrait {
-  background: var(--surface);
-  border-radius: 20px;
-  overflow: hidden;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  aspect-ratio: 0.62;
-}
-/* cover, not contain. The cut-out carries a lot of transparent
-   margin, so contain scaled the whole plate down to fit and left him
-   small with the tint showing all round; bottom-aligning it in a
-   square then framed his legs. cover crops the empty margin away and
-   fills the frame, and the crop lands on the body rather than the
-   plate. */
-.portrait img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 14%;
-  filter: grayscale(1) contrast(1.03);
-}
-.about__grid { display: grid; gap: 48px; align-items: start; }
-@media (min-width: 900px) {
-  .about__grid { grid-template-columns: minmax(260px, 34%) 1fr; gap: 72px; }
-}
-@media (max-width: 899px) {
-  .portrait { aspect-ratio: 4 / 3; }
-  .portrait img { object-position: center 10%; }
-}
+
+
 
 /* ── Meta list (label over value) ──────────────────────── */
 .meta { display: grid; gap: 40px; }
@@ -286,11 +295,14 @@ a { color: inherit; text-decoration: none; }
   border-top: var(--rule) solid var(--line);
   align-items: start;
 }
-@media (min-width: 860px) { .row { grid-template-columns: 88px 300px 1fr; } }
+/* Title and body share the space rather than the title taking a fixed 300px.
+   The body starts further right and runs wider, which stops the row from
+   sitting in the left third with a page of white beside it. */
+@media (min-width: 860px) { .row { grid-template-columns: 88px 1fr 1.4fr; } }
 @media (max-width: 859px) { .row { grid-template-columns: 1fr; gap: 12px; padding-block: 32px; } }
 .row__n { font-size: 14px; color: var(--ink-25); font-variant-numeric: tabular-nums; }
 .row__t { font-size: clamp(22px, 2.2vw, 30px); font-weight: 400; letter-spacing: -0.03em; margin: 0; }
-.row__b { color: var(--ink-70); font-size: 17px; line-height: 1.6; margin: 0; max-width: 58ch; }
+.row__b { color: var(--ink-70); font-size: 17px; line-height: 1.6; margin: 0; max-width: 62ch; }
 .rows { border-bottom: var(--rule) solid var(--line); }
 
 /* ── Experience rows ───────────────────────────────────── */
