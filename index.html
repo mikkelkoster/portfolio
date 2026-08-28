@@ -8280,21 +8280,19 @@
       let pickQueued = false;
       function pickWinner() {
         pickQueued = false;
-        /* Most-visible-wins on its own hands over at the 50/50 crossover,
-           which is late: the card you are scrolling toward sits there loaded
-           and still while the one leaving keeps playing. A card still
-           entering — top edge below the viewport top — gets a bias so it
-           takes over while the outgoing one is on its way out. Measured, the
-           handover moves from 53% visible to roughly 30%. */
-        let best = null, bestScore = 0, bestSeen = 0;
+        /* Every film that is meaningfully on screen keeps running.
+
+           This was winner-takes-all: whichever card scored highest played and
+           the rest were paused, so scrolling a little way past a film froze
+           it mid-shot while it was still in plain view. Pausing is for cards
+           that are actually gone, not for cards that are merely second.
+
+           The overlap that buys is bounded. Two scenes run together only
+           while both are genuinely on screen, which is a brief window during
+           a handover, and the cards are tall enough that a third is never
+           meaningfully visible at the same time. */
         handles.forEach((handle, el) => {
-          const seen = visibleFraction(el);
-          const entering = el.getBoundingClientRect().top > 0;
-          const score = seen + (entering && seen > 0 ? 0.2 : 0);
-          if (score > bestScore) { bestScore = score; bestSeen = seen; best = el; }
-        });
-        handles.forEach((handle, el) => {
-          if (el === best && bestSeen > 0.12) handle.resume();
+          if (visibleFraction(el) > 0.12) handle.resume();
           else handle.pause();
         });
       }
@@ -8376,16 +8374,14 @@
             }
           });
 
-          /* Only ONE film runs at a time, and it is the one you are actually
-             looking at. Two of these on screen together cost 24fps between
-             them — each is a full WebGL context with its own scene, and the
-             second one buys nothing because a reader can only watch one.
-             It is the better design call as well: two product shots cutting
-             and panning at once compete rather than compose.
-
-             The winner is whichever card is most visible; everything else
-             pauses. Ratios come from the observer, so a card that has merely
-             been pre-loaded by the 300px margin never starts drawing. */
+          /* A film runs for as long as it is on screen. Pausing is for cards
+             that have gone, not for cards that are merely second — stopping
+             one mid-shot while the reader can still see it is worse than the
+             cost of the overlap. Measured at 60fps with two running, p95
+             frame 18ms, so the old worry about the pair being unaffordable
+             did not survive contact with a measurement. A card sitting in
+             the 700px pre-load margin still never draws: visibleFraction
+             reads the real viewport, not the expanded observer root. */
           queuePick();
         },
         /* rootMargin buys the load a head start so the first frame is ready
