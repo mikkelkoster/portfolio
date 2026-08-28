@@ -11,7 +11,8 @@
 :root {
   --ink:        #121212;
   --ink-70:     rgba(0,0,0,0.62);
-  --ink-40:     rgba(0,0,0,0.40);
+  --ink-55:     rgba(0,0,0,0.55);   /* #737373 on white — 4.6:1, reads as body */
+  --ink-40:     rgba(0,0,0,0.40);   /* #999999 — 2.85:1. Labels and values only */
   --ink-25:     rgba(0,0,0,0.25);
   --bg:         #ffffff;
   --surface:    #f7f7f7;
@@ -22,6 +23,7 @@
   /* Near edge-to-edge, not a centred column. The width of the page
      is the width of the window, and the gutter is small enough that
      the type has to carry the composition. */
+  --nav-h:      76px;
   --gutter:     48px;
   --sec:        156px;      /* vertical rhythm between sections */
   --rule:       1px;
@@ -107,7 +109,7 @@ a { color: inherit; text-decoration: none; }
 /* The two-tone paragraph: the sentence that matters in ink, the
    rest dropped to grey. Does the work a bold weight would do,
    without introducing a second weight. */
-.two-tone { color: var(--ink-40); }
+.two-tone { color: var(--ink-55); }
 .two-tone strong { font-weight: 400; color: var(--ink); }
 
 /* ── Buttons ───────────────────────────────────────────── */
@@ -142,7 +144,7 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 76px;
+  height: var(--nav-h);
   background: rgba(255,255,255,0.86);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -154,10 +156,29 @@ a { color: inherit; text-decoration: none; }
 .nav__links { display: flex; align-items: center; gap: 28px; }
 .nav__link { font-size: 15px; color: var(--ink-70); transition: color .2s ease; }
 .nav__link:hover { color: var(--ink); }
-@media (max-width: 720px) { .nav__link--hide { display: none; } }
+/* The nav is three items and stays three items; the CV link drops first
+   if a phone runs out of room. */
+@media (max-width: 560px) { .nav__link { display: none; } }
 
 /* ── Hero ──────────────────────────────────────────────── */
-.hero { padding-top: clamp(72px, 11vh, 150px); }
+/* Fills the first screen. The nav is sticky and therefore still in flow,
+   so its height comes off the top or the hero would push the fold down by
+   exactly that much. svh rather than vh: on mobile vh is the LARGEST
+   viewport, so a hero sized to it sits partly under the browser chrome on
+   load and only fits once the chrome retracts.
+
+   min-height, not height — on a short window the content simply makes the
+   section taller and the page scrolls, and the padding stops the centring
+   from pushing the badge up under the nav. */
+.hero {
+  min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100svh - var(--nav-h));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: clamp(40px, 7vh, 88px);
+  padding-bottom: clamp(48px, 8vh, 104px);
+}
 /* Hugs its content, so it stays a badge rather than a bar. The left
    padding runs a little tighter than the right: a round dot sits
    optically further from the edge than a letter does at the same
@@ -172,13 +193,24 @@ a { color: inherit; text-decoration: none; }
   padding: 9px 16px 9px 14px;
   background: var(--surface);
   border-radius: 100px;
+  /* .hero is a flex column, and a flex item stretches to the cross axis by
+     default — inline-flex does not save it. Without this the badge runs the
+     full width of the page. */
+  align-self: flex-start;
 }
 .hero__dot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--blue);
   flex-shrink: 0;
 }
-.hero__display { margin-bottom: 34px; }
+/* Bigger than .display, and only here — the case-study title stays at the
+   reference's 104px. The floor is 46px rather than the shared 44: at 390px
+   "Player-coach." is the longest line and 48px is where it starts to touch
+   the gutter. */
+.hero__display {
+  font-size: clamp(46px, 9.2vw, 132px);
+  margin-bottom: 34px;
+}
 .hero__lede { margin-bottom: 44px; }
 .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; }
 
@@ -228,7 +260,7 @@ a { color: inherit; text-decoration: none; }
 @media (min-width: 860px) { .meta--3 { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 859px) { .meta { grid-template-columns: repeat(2, 1fr); gap: 32px 24px; } }
 .meta__k { font-size: 14px; font-weight: 500; margin: 0 0 6px; }
-.meta__v { font-size: 18px; color: var(--ink-40); margin: 0; }
+.meta__v { font-size: 18px; color: var(--ink-55); margin: 0; }
 
 /* ── Stats ─────────────────────────────────────────────── */
 .stats { display: grid; gap: 44px 24px; }
@@ -242,7 +274,9 @@ a { color: inherit; text-decoration: none; }
   margin: 0 0 12px;
   font-variant-numeric: tabular-nums;
 }
-.stat__l { font-size: 15px; color: var(--ink-40); margin: 0; max-width: 20ch; }
+/* No max-width: a 20ch cap broke "Years of design experience" onto a second
+   line even where the column had room for it. The grid column is the limit. */
+.stat__l { font-size: 15px; color: var(--ink-55); margin: 0; }
 
 /* ── Numbered rows (how I work / experience) ───────────── */
 .row {
@@ -270,7 +304,7 @@ a { color: inherit; text-decoration: none; }
 @media (min-width: 860px) { .xp { grid-template-columns: 200px 190px 1fr auto; } }
 @media (max-width: 859px) { .xp { grid-template-columns: 1fr; } }
 .xp__co { font-size: 19px; letter-spacing: -0.02em; }
-.xp__when, .xp__role { font-size: 16px; color: var(--ink-40); }
+.xp__when, .xp__role { font-size: 16px; color: var(--ink-55); }
 .xp__role { color: var(--ink-70); }
 .xp__where { font-size: 14px; color: var(--ink-25); }
 
@@ -316,7 +350,7 @@ a { color: inherit; text-decoration: none; }
   max-width: 20ch;
 }
 .quote__who { font-size: 15px; margin: 0; }
-.quote__role { font-size: 15px; color: var(--ink-40); margin: 0; }
+.quote__role { font-size: 15px; color: var(--ink-55); margin: 0; }
 .quotes { display: grid; gap: 56px; }
 @media (min-width: 900px) { .quotes { grid-template-columns: repeat(2, 1fr); gap: 72px 64px; } }
 .quotes .quote { max-width: none; }

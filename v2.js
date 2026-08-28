@@ -125,3 +125,49 @@
 
     document.querySelectorAll("[data-stage]").forEach((el) => io.observe(el));
   })();
+
+
+  /* ── Count up on entry ─────────────────────────────────
+     The real number is in the HTML, so with no JS — or with
+     reduced motion — the page states the fact rather than a
+     zero it never leaves. Zeroing happens here, at init, well
+     before the section is in view.
+
+     Writing textContent from rAF is main-thread work, but it
+     is four elements for a second and there is no compositor
+     equivalent for counting. */
+  (() => {
+    const els = [...document.querySelectorAll('[data-count]')];
+    if (!els.length || !('IntersectionObserver' in window)) return;
+
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;                       // leave the real numbers alone
+
+    const out = t => 1 - Math.pow(1 - t, 4);  // quart-out, same curve as the reveal
+    const DUR = 1100;
+
+    const render = (el, v) => {
+      el.textContent = v + (el.dataset.suffix || '');
+    };
+    els.forEach(el => render(el, 0));
+
+    const run = (el) => {
+      const target = parseFloat(el.dataset.count);
+      const t0 = performance.now();
+      const frame = (now) => {
+        const p = Math.min((now - t0) / DUR, 1);
+        render(el, Math.round(out(p) * target));
+        if (p < 1) requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    };
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        run(e.target);
+        io.unobserve(e.target);
+      });
+    }, { threshold: 0.5 });
+    els.forEach(el => io.observe(el));
+  })();
