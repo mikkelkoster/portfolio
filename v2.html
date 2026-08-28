@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mikkel Køster — Design Leader</title>
+<meta name="description" content="Product design and product strategy, hands-on. 15 years in design, 8 of them leading teams.">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
+<link rel="stylesheet" href="v2.css">
+</head>
+<body>
+<script>
+  /* Before first paint, and only when there is something to drive the
+     transitions — otherwise the hidden state would be permanent. */
+  if (typeof IntersectionObserver === 'function') {
+    document.documentElement.classList.add('js-anim');
+  }
+</script>
+
+<header class="nav wrap" id="nav">
+  <a class="nav__name" href="#top">Mikkel Køster</a>
+  <nav class="nav__links">
+    <a class="nav__link nav__link--hide" href="#work">Work</a>
+    <a class="nav__link nav__link--hide" href="#experience">Experience</a>
+    <a class="nav__link" href="public/cv/mikkel-koster-cv.pdf">CV</a>
+    <a class="btn btn--primary btn--sm" href="mailto:hello@mikkelkoster.com">Get in touch</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- ── Hero ─────────────────────────────────────────── -->
+  <section class="hero wrap">
+    <p class="hero__avail rise"><span class="hero__dot"></span>Available for freelance and fractional work</p>
+    <h1 class="display hero__display rise" style="--d:70ms">Design at scale.<br>Player-coach.<br>Maker.</h1>
+    <p class="lede hero__lede rise" style="--d:140ms">15 years in design, 8 of them leading teams. I've built design systems and products across agencies, scale-ups and in-house. I design and ship with AI, and I'm particular about craft and detail.</p>
+    <div class="hero__actions rise" style="--d:210ms">
+      <a class="btn btn--primary" href="mailto:hello@mikkelkoster.com">Get in touch</a>
+      <a class="btn btn--ghost" href="public/cv/mikkel-koster-cv.pdf">Download CV</a>
+    </div>
+  </section>
+
+  <!-- ── About ────────────────────────────────────────── -->
+  <section class="section wrap" id="about">
+    <p class="label muted rise" style="margin-bottom:44px">About me</p>
+    <div class="about__grid" style="margin-bottom:calc(var(--sec) * 0.5)">
+      <div class="portrait rise">
+        <img src="public/images/main/main-photo-mikkel.webp" alt="Mikkel Køster" fetchpriority="high" width="1600" height="3272">
+      </div>
+      <div>
+        <h2 class="h2 rise" style="--d:70ms;margin-bottom:40px">When everyone can make things, taste is the differentiator.</h2>
+        <p class="lede two-tone rise" style="--d:140ms">
+          <strong>AI raises the floor for everyone. But not the ceiling.</strong>
+          In this era, taste and judgement are the real currency — knowing what's worth building, and caring enough to build it right. Making something is no longer the hard part. Knowing whether it's any good still is, and that's where most of my time goes.
+        </p>
+      </div>
+    </div>
+    <div class="stats rise" style="--d:210ms">
+      <div><p class="stat__n">15+</p><p class="stat__l">Years of design experience</p></div>
+      <div><p class="stat__n">8+</p><p class="stat__l">Years of design leadership</p></div>
+      <div><p class="stat__n">25+</p><p class="stat__l">Designers led &amp; mentored</p></div>
+      <div><p class="stat__n">8+</p><p class="stat__l">Industries worked across</p></div>
+    </div>
+  </section>
+
+  <!-- ── How I work ───────────────────────────────────── -->
+  <section class="section--tight wrap" id="skills">
+    <p class="label muted rise" style="margin-bottom:44px">How I work</p>
+    <div class="rows">
+      <div class="row rise">
+        <span class="row__n">01</span>
+        <h3 class="row__t">Design at scale</h3>
+        <p class="row__b">I lead teams, build design systems, and work across whole product ecosystems. At Formalize I grew the design function from 0 to 4 and built the design system from scratch across 2 products. At Maersk I was first design lead on one platform serving three user types and 20+ product teams.</p>
+      </div>
+      <div class="row rise" style="--d:70ms">
+        <span class="row__n">02</span>
+        <h3 class="row__t">Player-coach</h3>
+        <p class="row__b">I hire for talent density, mentor closely, and stay in the craft myself rather than reviewing it from a distance. I still believe the most powerful thing a design leader can do is help someone grow into a version of themselves they didn't know was possible.</p>
+      </div>
+      <div class="row rise" style="--d:140ms">
+        <span class="row__n">03</span>
+        <h3 class="row__t">Maker</h3>
+        <p class="row__b">The best design decisions I've made weren't about how something looked. They were about what to build at all. I stay hands-on and use AI heavily to get to something clickable early. I'd rather hand a team a working prototype than a flat frame, because that's the only way to tell how an interaction actually feels.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Selected work ────────────────────────────────── -->
+  <section class="section wrap" id="work">
+    <p class="label muted rise" style="margin-bottom:44px">Selected work</p>
+    <div class="cases">
+
+      <article class="case rise">
+        <div class="case__media">
+          <img class="case__poster" src="public/videos/maersk-stage-poster.jpg" alt="" loading="lazy">
+          <canvas class="case__canvas" data-stage="maersk"
+                  data-plates="public/images/maersk/plates/plate-1.webp,public/images/maersk/plates/plate-2.webp,public/images/maersk/plates/plate-3.webp"></canvas>
+        </div>
+        <div class="case__head">
+          <h3 class="h3">Maersk</h3>
+          <span class="case__num">01 / 03</span>
+        </div>
+        <p class="case__line"><strong>Took design from an afterthought to a strategic function</strong> — across one of the world's largest logistics platforms.</p>
+        <div class="meta meta--3">
+          <div><p class="meta__k">Role</p><p class="meta__v">Design Lead</p></div>
+          <div><p class="meta__k">Scope</p><p class="meta__v">Design system, research practice, org design</p></div>
+          <div><p class="meta__k">Team</p><p class="meta__v">6 → 12 designers</p></div>
+        </div>
+        <p style="margin-top:32px"><a class="btn btn--ghost btn--sm" href="v2-maersk.html">See case study</a></p>
+      </article>
+
+      <article class="case rise">
+        <div class="case__media">
+          <img class="case__poster" src="public/images/formalize/formalize-stage-poster.jpg" alt="" loading="lazy">
+          <canvas class="case__canvas" data-stage="formalize"
+                  data-plates="public/images/formalize/plates/plate-1.webp,public/images/formalize/plates/plate-2.webp,public/images/formalize/plates/plate-3.webp,public/images/formalize/plates/plate-4.webp"></canvas>
+        </div>
+        <div class="case__head">
+          <h3 class="h3">Formalize</h3>
+          <span class="case__num">02 / 03</span>
+        </div>
+        <p class="case__line"><strong>Building the design function from zero</strong> at a hyper-growth compliance startup.</p>
+        <div class="meta meta--3">
+          <div><p class="meta__k">Role</p><p class="meta__v">Head of Product Design</p></div>
+          <div><p class="meta__k">Scope</p><p class="meta__v">Design system, two products, hiring</p></div>
+          <div><p class="meta__k">Team</p><p class="meta__v">0 → 4 designers</p></div>
+        </div>
+      </article>
+
+      <article class="case rise">
+        <div class="case__media">
+          <img class="case__poster" src="public/images/matas/matas-stage-poster.jpg" alt="" loading="lazy">
+          <canvas class="case__canvas" data-stage="matas" data-model="public/models/iphone-17-pro.min.glb"
+                  data-plates="public/images/matas/plates/plate-1.webp,public/images/matas/plates/plate-2.webp,public/images/matas/plates/plate-3.webp"></canvas>
+        </div>
+        <div class="case__head">
+          <h3 class="h3">Matas</h3>
+          <span class="case__num">03 / 03</span>
+        </div>
+        <p class="case__line"><strong>Denmark's largest loyalty club, rebuilt</strong> — 1.5M members and a 4.6 App Store rating across 32,800+ reviews.</p>
+        <div class="meta meta--3">
+          <div><p class="meta__k">Role</p><p class="meta__v">Lead UX Designer</p></div>
+          <div><p class="meta__k">Scope</p><p class="meta__v">Loyalty programme, app, research</p></div>
+          <div><p class="meta__k">Reach</p><p class="meta__v">1.5M members</p></div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ── Testimonials ─────────────────────────────────── -->
+  <section class="section--tight wrap" id="testimonial">
+    <p class="label muted rise" style="margin-bottom:56px">What people say</p>
+    <div class="quotes">
+      <blockquote class="quote rise" style="margin:0">
+        <p class="quote__t">He is an exemplary leader who genuinely cares about his people.</p>
+        <p class="quote__who">Simon</p>
+        <p class="quote__role">UX Designer, Maersk</p>
+      </blockquote>
+      <blockquote class="quote rise" style="--d:70ms;margin:0">
+        <p class="quote__t">A rare breed of design leader who doesn't just manage pixels — he scales product vision.</p>
+        <p class="quote__who">Emil</p>
+        <p class="quote__role">Formalize</p>
+      </blockquote>
+    </div>
+  </section>
+
+  <!-- ── Experience ───────────────────────────────────── -->
+  <section class="section--tight wrap" id="experience">
+    <p class="label muted rise" style="margin-bottom:44px">Experience</p>
+    <div class="rows rise">
+      <div class="xp">
+        <span class="xp__co">Freelance &amp; fractional</span>
+        <span class="xp__when">Sep 2026 – Now</span>
+        <span class="xp__role">Product design and strategy</span>
+        <span class="xp__where">Available</span>
+      </div>
+      <div class="xp">
+        <span class="xp__co">Formalize</span>
+        <span class="xp__when">Sep 2024 – Sep 2026</span>
+        <span class="xp__role">Head of Product Design</span>
+        <span class="xp__where">Aarhus</span>
+      </div>
+      <div class="xp">
+        <span class="xp__co">Maersk</span>
+        <span class="xp__when">Jan 2022 – Sep 2024</span>
+        <span class="xp__role">Design Lead</span>
+        <span class="xp__where">Copenhagen</span>
+      </div>
+      <div class="xp">
+        <span class="xp__co">Sleepacy</span>
+        <span class="xp__when">Jan – Jul 2021</span>
+        <span class="xp__role">Head of UX</span>
+        <span class="xp__where">Consumer</span>
+      </div>
+      <div class="xp">
+        <span class="xp__co">1508</span>
+        <span class="xp__when">Oct 2018 – Jan 2021</span>
+        <span class="xp__role">Experience Design Director</span>
+        <span class="xp__where">Agency</span>
+      </div>
+    </div>
+    <p style="margin-top:36px"><a class="btn btn--ghost btn--sm" href="public/cv/mikkel-koster-cv.pdf">Download full CV</a></p>
+  </section>
+
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────── -->
+<footer class="foot wrap">
+  <p class="label muted rise">Get in touch</p>
+  <h2 class="h2 rise" style="--d:70ms;margin-top:24px">Let's work together.</h2>
+  <a class="foot__mail rise" style="--d:140ms" href="mailto:hello@mikkelkoster.com">hello@mikkelkoster.com</a>
+  <div class="foot__end">
+    <span>Silkeborg, Denmark</span>
+    <span>© 2026 Mikkel Køster</span>
+  </div>
+</footer>
+
+<script src="v2.js"></script>
+</body>
+</html>

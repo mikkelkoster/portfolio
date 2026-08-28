@@ -289,3 +289,58 @@ Keep `CLAUDE.md` up to date as the project evolves:
 - New color tokens → add to the colors table
 - New spacing rules from Figma → update spacing section
 - New components or sections → add their conventions
+
+---
+
+## v2 — the minimal build
+
+A second design language living alongside the current site, not replacing it.
+Inspired by dstudio.agency: white ground, near edge-to-edge layout, one
+typeface at two weights, and colour reserved for two things only.
+
+| File | Role |
+|---|---|
+| `v2.html` | front page |
+| `v2-maersk.html` | one worked case study |
+| `v2.css` | the whole system, shared by both |
+| `v2.js` | reveal, nav hairline, and the film loader |
+| `public/js/stage-configs-mono.js` | grey grounds for the films |
+
+### The system
+| Token | Value |
+|---|---|
+| ink | `#121212` |
+| muted | `rgba(0,0,0,0.40)` |
+| surface | `#F7F7F7` |
+| line | `rgba(0,0,0,0.10)` |
+| blue | `#2563EB` |
+
+General Sans (Fontshare), weights 400 and 500 only. Display type runs to
+104px at *regular* weight with `-0.04em` tracking — the negative tracking is
+what stops it reading as shouty. Gutters 48px, 24px below 900. Section rhythm
+156px, 88px below 900.
+
+**Colour appears in exactly two places**: blue on things you can press, and
+the product UI inside the films. Everything else is ink, grey, or white. The
+portrait is greyscaled for the same reason. Adding a third source of colour
+is what would break this.
+
+### The films
+`stage-configs-mono.js` is `stage-configs.js` with the three coloured grounds
+(`#3f86af`, `#4a6cae`, rose `#E8899F`) replaced by one neutral grey sweep.
+Shots, sticky chrome and models are untouched and come straight from the
+colour version — **if a camera move changes there, re-derive this file**.
+The point is dstudio's trick: a monochrome environment so the UI on the
+screen is the only thing carrying hue.
+
+### Carried over from the main build
+Both lessons were learned the expensive way in `index.html` and are
+implemented here from the start, not rediscovered:
+- Scenes build **one at a time** through a promise chain, with a timeout
+  backing the rAF that releases it.
+- A film runs for as long as it is **more than 12% on screen**, rather than
+  only the most-visible one. Pausing is for cards that have gone.
+
+### Promoting it
+`git mv v2.html index.html` if it wins — that keeps the file's history
+instead of reading as a wholesale rewrite.
