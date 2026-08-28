@@ -178,7 +178,7 @@ a { color: inherit; text-decoration: none; }
   grid-template-columns: minmax(0, 1fr) minmax(260px, 36%);
   align-items: center;
   gap: 48px;
-  padding-top: clamp(40px, 7vh, 88px);
+  padding-top: clamp(20px, 3.5vh, 48px);
   padding-bottom: var(--hero-pb);
 }
 .hero__text { display: flex; flex-direction: column; align-items: flex-start; }
@@ -196,13 +196,28 @@ a { color: inherit; text-decoration: none; }
   border-radius: 20px;
   overflow: hidden;
   min-height: 0;
+  /* The image is positioned out of flow below. In flow it sized the grid row
+     itself: height:100% inside a stretch-sized item is circular, so it fell
+     back to the plate's intrinsic height and pushed the hero to 1737px
+     against a 1375px viewport — which is what put the figure below the fold. */
+  position: relative;
 }
+/* The plate is a full standing figure at 0.49, and the panel lands at almost
+   exactly that ratio — so contain (and plain cover) both showed him head to
+   feet with dead tint above the head. Oversizing the box the image covers
+   zooms in: the crop lands just above the pants and the head sits near the
+   top, with the panel clipping the sides. */
 .hero__figure img {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 134%;
   height: 100%;
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
-  object-position: bottom center;
+  max-width: none;
+  object-fit: cover;
+  object-position: center 12%;
   filter: grayscale(1) contrast(1.03);
 }
 

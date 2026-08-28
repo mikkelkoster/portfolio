@@ -1,5 +1,12 @@
 /* Grey-ground variant of stage-configs.js, for the minimal build (v2.html).
  *
+ * NOT one grey for all three. The ground exists to give the device a
+ * silhouette, so it has to run opposite to the body: the two monitors are
+ * silver and need a mid grey to have an edge against (the colour version
+ * learned the same thing the hard way — a silver device on a near-white
+ * ground simply vanishes). The phone is a black body and needs the bright
+ * ground the rose original had, or it flattens into the backdrop.
+ *
  * The only change is the ground. dstudio's trick is a neutral, near-monochrome
  * environment with the product itself the one thing carrying colour — so the
  * UI plates are untouched and the sweep behind them goes grey. Shots, sticky
@@ -143,9 +150,9 @@ window.STAGE_CONFIGS = {
          against; low → high is the range they carry it through. Same
          structure as the other two cards — bright low, deepening upward —
          transposed onto Matas's own palette rather than a new one. */
-      deep: 0x6b6f73,
-      low: [0.34, 0.35, 0.37],
-      high: [0.72, 0.73, 0.75],
+      deep: 0xc9ccd0,
+      low: [0.56, 0.57, 0.59],
+      high: [0.95, 0.95, 0.96],
     },
     /* The chrome that does not scroll with the page. Heights are in the
        plate's own pixels, measured off the captures: the home screen's tab
