@@ -209,3 +209,91 @@
       }
     });
   })();
+
+
+  /* ── Carousels ─────────────────────────────────────────
+     Position is measured off each column's own offsetLeft, not
+     off the first column's width — the clients row and the
+     testimonials row can hold columns of different widths, and
+     dividing by one width drifts further out with every item.
+
+     The track is never moved by hand. Arrows scroll it and the
+     browser snaps; this only reports where it landed. */
+  document.querySelectorAll('[data-car]').forEach(root => {
+    const pre   = root.dataset.car;
+    const track = document.getElementById(pre + '-track');
+    const dots  = document.getElementById(pre + '-dots');
+    const prev  = document.getElementById(pre + '-prev');
+    const next  = document.getElementById(pre + '-next');
+    if (!track) return;
+    const cols = [...track.children];
+    if (!cols.length) return;
+
+    cols.forEach((_, i) => {
+      const b = document.createElement('button');
+      b.className = 'car-dot';
+      b.type = 'button';
+      b.setAttribute('aria-label', 'Go to item ' + (i + 1));
+      b.addEventListener('click', () => track.scrollTo({ left: targetOf(i) }));
+      dots.appendChild(b);
+    });
+    const dotEls = [...dots.children];
+
+    const originOf = i => cols[i].offsetLeft - cols[0].offsetLeft;
+    const maxScroll = () => track.scrollWidth - track.clientWidth;
+    /* The last column's origin sits short of the scroll maximum, because the
+       track's trailing padding is part of scrollWidth. Aiming at the raw
+       origin left a sliver unscrolled and the Next arrow permanently enabled,
+       so the target is clamped to where the track can actually stop. */
+    const targetOf = i => Math.min(originOf(i), maxScroll());
+    const perPage = () => Math.max(1, Math.round(track.clientWidth / (cols[0].offsetWidth + 24)));
+    /* No cols.length - perPage cap. That heuristic stopped the last press
+       short whenever the final column's origin sat inside the scroll range:
+       the track had further to travel but the index had already run out.
+       The index runs to the last column and the TARGET is what gets clamped,
+       so the last press always lands on the scroll maximum. */
+    const indexNow = () => {
+      const x = track.scrollLeft;
+      let best = 0, bestD = Infinity;
+      cols.forEach((_, i) => {
+        const d = Math.abs(targetOf(i) - x);
+        if (d < bestD) { bestD = d; best = i; }
+      });
+      return best;
+    };
+
+    let pending = -1, release = 0, queued = 0;
+    const settle = () => { pending = -1; clearTimeout(release); };
+    const paint = i => {
+      dotEls.forEach((d, k) => d.classList.toggle('is-active', k === i));
+      if (prev) prev.disabled = track.scrollLeft <= 1;
+      if (next) next.disabled = track.scrollLeft >= maxScroll() - 1;
+    };
+    const sync = () => {
+      queued = 0;
+      if (pending >= 0) {
+        if (Math.abs(track.scrollLeft - targetOf(pending)) > 2) { paint(pending); return; }
+        settle();
+      }
+      paint(indexNow());
+    };
+    const schedule = () => { if (!queued) queued = requestAnimationFrame(sync); };
+    track.addEventListener('scroll', schedule, { passive: true });
+    addEventListener('resize', schedule, { passive: true });
+    track.addEventListener('touchstart', settle, { passive: true });
+    track.addEventListener('wheel', settle, { passive: true });
+
+    /* An arrow commits its destination straight away, so the dot moves with
+       the slide rather than at the half-way point. */
+    const go = dir => {
+      const i = Math.max(0, Math.min(cols.length - 1, indexNow() + dir * perPage()));
+      pending = i;
+      clearTimeout(release);
+      release = setTimeout(settle, 800);
+      paint(i);
+      track.scrollTo({ left: targetOf(i) });
+    };
+    if (prev) prev.addEventListener('click', () => go(-1));
+    if (next) next.addEventListener('click', () => go(1));
+    sync();
+  });
