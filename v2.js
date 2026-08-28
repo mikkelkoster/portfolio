@@ -171,3 +171,41 @@
     }, { threshold: 0.5 });
     els.forEach(el => io.observe(el));
   })();
+
+
+  /* ── Experience: expand a row, or show them all ────────
+     Rows carry data-open rather than a class so the chevron,
+     the panel and the button state all read from one source. */
+  (() => {
+    const list = document.getElementById('xp-list');
+    if (!list) return;
+
+    list.querySelectorAll('.xp').forEach(item => {
+      const btn = item.querySelector('.xp__row');
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        const open = item.dataset.open === 'true';
+        item.dataset.open = String(!open);
+        btn.setAttribute('aria-expanded', String(!open));
+      });
+    });
+
+    const toggle = document.getElementById('xp-show-all');
+    if (!toggle) return;
+    const label = toggle.querySelector('.xp-toggle__label');
+    const hidden = list.querySelectorAll('.xp--more');
+    if (!hidden.length) { toggle.remove(); return; }
+
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!open));
+      list.classList.toggle('is-all', !open);
+      label.textContent = open ? 'Show all experience' : 'Show fewer';
+      /* Collapsing can leave the button above the fold with the page
+         scrolled past where the rows used to be. */
+      if (open) {
+        const top = list.getBoundingClientRect().top + scrollY - 120;
+        if (scrollY > top) scrollTo({ top, behavior: 'smooth' });
+      }
+    });
+  })();
