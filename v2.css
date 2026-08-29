@@ -948,3 +948,255 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 430px) {
   .xp__actions .btn--sm { padding-inline: 14px; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   CASE MODAL
+   The sheet, and the case components re-expressed in this
+   language. The markup is the current site's; everything
+   visual here is new. Sections no longer carry their own
+   grounds — the panel is white throughout and separation
+   comes from space and hairlines, with one dark section kept
+   as the single emphatic moment.
+   ═══════════════════════════════════════════════════════════ */
+
+.cm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .45s ease;
+  z-index: 90;
+}
+.cm-overlay.is-open { opacity: 1; }
+
+.cm-modal { position: fixed; inset: 0; z-index: 100; visibility: hidden; }
+.cm-modal.is-open { visibility: visible; }
+.cm-scroller {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-top: 40px;
+}
+.cm-panel {
+  position: relative;
+  margin: 0 auto;
+  width: min(100vw - 32px, 1400px);
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  overflow: hidden;
+  transform: translateY(100%);
+}
+@media (max-width: 900px) {
+  .cm-scroller { padding-top: 20px; }
+  .cm-panel { width: calc(100vw - 16px); border-radius: 14px 14px 0 0; }
+}
+
+.cm-close {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 120;
+  width: 52px; height: 52px;
+  border-radius: 100px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .3s ease, background-color .2s ease;
+}
+.cm-close.is-visible { opacity: 1; }
+.cm-close:hover { background: #fff; }
+.cm-close svg { width: 18px; height: 18px; }
+
+/* ── Section rhythm ─────────────────────────────────────── */
+.cm-section--light,
+.cm-section--dark {
+  padding: clamp(56px, 7vw, 104px) clamp(24px, 5vw, 80px);
+}
+.cm-section--light + .cm-section--light { border-top: var(--rule) solid var(--line); }
+/* The one dark moment, and it is ink rather than navy — the palette has no
+   second hue to spend. */
+.cm-section--dark { background: var(--ink); color: #fff; }
+.cm-section--dark .cm-headline,
+.cm-section--dark .cm-hero__title { color: #fff; }
+.cm-section--dark .cm-body,
+.cm-section--dark .cm-label { color: rgba(255,255,255,0.62); }
+
+/* ── Case hero ─────────────────────────────────────────── */
+.cm-hero__label,
+.cm-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-55);
+  margin: 0 0 32px;
+}
+.cm-hero__title {
+  font-size: clamp(42px, 6.6vw, 112px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  margin: 0 0 28px -0.065em;
+}
+.cm-hook {
+  font-size: clamp(18px, 1.5vw, 22px);
+  line-height: 1.55;
+  letter-spacing: -0.015em;
+  color: var(--ink-55);
+  margin: 0 0 40px;
+}
+.cm-hero__meta { display: grid; gap: 32px; }
+@media (min-width: 860px) { .cm-hero__meta { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 859px) { .cm-hero__meta { grid-template-columns: repeat(2, 1fr); } }
+.cm-meta-label { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 6px; }
+.cm-meta-value { font-size: 17px; color: var(--ink-55); margin: 0; }
+
+/* ── Headings and copy ─────────────────────────────────── */
+.cm-headline {
+  font-size: clamp(28px, 3.4vw, 52px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+  margin: 0 0 28px;
+  max-width: 20ch;
+  text-wrap: balance;
+}
+.cm-body {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--ink-55);
+  margin: 0;
+  max-width: 62ch;
+}
+
+/* ── Challenge cards ───────────────────────────────────── */
+.cm-challenge-grid { display: grid; gap: 40px 56px; margin-top: 56px; }
+@media (min-width: 900px) { .cm-challenge-grid { grid-template-columns: repeat(3, 1fr); } }
+.cm-challenge-card { background: none; padding: 0; border: 0; }
+.cm-challenge-icon { font-size: 24px; color: var(--ink); margin-bottom: 18px; display: block; }
+.cm-challenge-title { font-size: 19px; font-weight: 500; letter-spacing: -0.02em; margin: 0 0 10px; color: var(--ink); }
+.cm-challenge-body { font-size: 16px; line-height: 1.6; color: var(--ink-55); margin: 0; }
+
+/* ── Result stats ──────────────────────────────────────── */
+.cm-close-section { background: var(--ink); color: #fff; }
+.cm-close-headline {
+  font-size: clamp(28px, 3.4vw, 52px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  color: #fff;
+  margin: 0 0 56px;
+  max-width: 22ch;
+}
+.cm-close-stats { display: grid; gap: 44px 32px; }
+@media (min-width: 860px) { .cm-close-stats { grid-template-columns: repeat(4, 1fr) !important; } }
+@media (max-width: 859px) { .cm-close-stats { grid-template-columns: repeat(2, 1fr) !important; } }
+.cm-close-stat { border: 0 !important; padding: 0 !important; }
+.cm-close-stat__val {
+  font-size: clamp(36px, 4vw, 60px);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #fff;
+  margin: 0 0 12px;
+  font-variant-numeric: tabular-nums;
+}
+.cm-close-stat__label { font-size: 15px; color: rgba(255,255,255,0.62); margin: 0; max-width: 24ch; }
+
+/* ── Modal carousels ───────────────────────────────────── */
+.cm-car-wrap { padding: 0 !important; overflow: visible; }
+.cm-car__track {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.cm-car__track::-webkit-scrollbar { display: none; }
+.cm-car__col { scroll-snap-align: start; flex: 0 0 auto; width: clamp(260px, 30%, 420px); }
+.cm-car__col--ds { width: auto; }
+/* No dimming. It belonged to a design that showed one card at a time; here
+   several are visible and fading the neighbours just makes the row murky. */
+.cm-car__col.is-peek, .cm-car__col.is-hidden { opacity: 1 !important; }
+.cm-car__slide, .cm-car__card-img {
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.cm-car__text-card { background: var(--surface); border-radius: 16px; overflow: hidden; }
+.cm-car__card-body-wrap { padding: 24px; }
+.cm-car__card-num { font-size: 13px; color: var(--ink-55); margin: 0 0 10px; font-variant-numeric: tabular-nums; }
+.cm-car__card-title { font-size: 18px; font-weight: 500; letter-spacing: -0.02em; margin: 0 0 8px; color: var(--ink); }
+.cm-car__card-body { font-size: 15px; line-height: 1.55; color: var(--ink-55); margin: 0; }
+.cm-car__cap { margin-top: 20px; }
+.cm-car__cap-title { font-size: 17px; font-weight: 500; margin: 0 0 6px; color: var(--ink); }
+.cm-car__cap-body { font-size: 15px; color: var(--ink-55); margin: 0; }
+.cm-car__footer {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px; margin-top: 32px; padding: 0 !important;
+}
+.cm-car__controls { display: flex; gap: 8px; }
+.cm-car__btn {
+  width: 44px; height: 44px; border-radius: 100px;
+  border: 1px solid var(--line); background: none; color: var(--ink);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: border-color .2s ease, opacity .2s ease;
+}
+.cm-car__btn:hover:not(:disabled) { border-color: var(--ink); }
+.cm-car__btn:disabled { opacity: 0.3; cursor: default; }
+.cm-car__dots { display: flex; align-items: center; }
+.cm-car__dot { width: 13px; height: 44px; position: relative; }
+.cm-car__dot::before {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%); width: 7px; height: 7px;
+  border-radius: 100px; background: var(--ink-25);
+  transition: background-color .25s ease;
+}
+.cm-car__dot.is-active::before { background: var(--ink); }
+.cm-ds-card { background: var(--surface); border-radius: 14px; }
+
+/* ── Before / after ────────────────────────────────────── */
+.cm-transform-ba { display: grid; gap: 24px; align-items: stretch; margin-top: 48px; }
+@media (min-width: 900px) { .cm-transform-ba { grid-template-columns: 1fr auto 1fr; } }
+.cm-transform-col { background: var(--surface); border: 0; border-radius: 16px; padding: 32px; }
+.cm-transform-label { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-55); margin: 0 0 14px; }
+.cm-transform-title { font-size: 22px; font-weight: 400; letter-spacing: -0.02em; color: var(--ink); margin: 0 0 20px; }
+.cm-transform-rule { height: 1px; background: var(--line) !important; margin: 0 0 20px; }
+.cm-transform-divider { display: flex; align-items: center; justify-content: center; color: var(--ink-25); }
+.cm-transform-list li::before { background: var(--ink-25) !important; }
+.cm-transform-col--after .cm-transform-list li::before { background: var(--ink) !important; }
+
+.cm-ba-dark { display: grid; gap: 24px; margin-top: 48px; }
+@media (min-width: 900px) { .cm-ba-dark { grid-template-columns: 1fr auto 1fr; align-items: center; } }
+.cm-ba-dark__col { background: rgba(255,255,255,0.06); border-radius: 16px; padding: 32px; }
+.cm-ba-dark__label { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin: 0 0 12px; }
+.cm-ba-dark__title { font-size: 20px; font-weight: 400; color: #fff; margin: 0 0 12px; }
+.cm-ba-dark__body { font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.62); margin: 0; }
+.cm-ba-dark__arrow { color: rgba(255,255,255,0.4); display: flex; justify-content: center; }
+
+/* ── Flow rows and spreads ─────────────────────────────── */
+.cm-lego-row { display: grid; gap: 20px 40px; padding-block: 36px; border-top: var(--rule) solid var(--line); align-items: start; }
+@media (min-width: 900px) { .cm-lego-row { grid-template-columns: 260px 1fr; } }
+.cm-lego-row__label { display: flex; align-items: center; gap: 10px; }
+.cm-lego-row__title { font-size: 19px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
+.cm-lego-emoji { font-size: 20px; }
+.cm-lego-img { border-radius: 12px; background: var(--surface); }
+.cm-svg-spread { display: grid; gap: 40px; margin-top: 48px; }
+@media (min-width: 900px) { .cm-svg-spread { grid-template-columns: repeat(3, 1fr); } }
+.cm-svg-spread-label { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 14px; }
+.cm-svg-spread-img { width: 100%; border-radius: 12px; background: var(--surface); }
+.cm-skeleton { background: var(--surface); }

@@ -12,7 +12,7 @@
 <meta name="description" content="Product design and product strategy, hands-on. 15 years in design, 8 of them leading teams.">
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
-<link rel="stylesheet" href="v2.css?v=80">
+<link rel="stylesheet" href="v2.css?v=82">
 </head>
 <body>
 <script>
@@ -109,7 +109,7 @@
           <div><p class="meta__k">Scope</p><p class="meta__v">Design system, research practice, org design</p></div>
           <div><p class="meta__k">Team</p><p class="meta__v">6 → 12 designers</p></div>
         </div>
-        <p style="margin-top:32px"><a class="btn btn--ghost btn--sm" href="v2-maersk.html">See case study</a></p>
+        <p style="margin-top:32px"><button class="btn btn--ghost btn--sm" type="button" data-case="maersk">See case study</button></p>
       </article>
 
       <article class="case rise">
@@ -531,6 +531,592 @@
   <a class="foot__mail rise" style="--d:140ms" href="mailto:hello@mikkelkoster.com">hello@mikkelkoster.com</a>
 </footer>
 
-<script src="v2.js?v=80"></script>
+
+<!-- ── Case modal ───────────────────────────────────────
+     Same pattern as the current site: the case opens as a sheet over the
+     page rather than as its own document. -->
+<div class="cm-overlay" id="cm-overlay"></div>
+<div class="cm-modal" id="cm-modal" role="dialog" aria-modal="true" aria-label="Case study">
+  <div class="cm-scroller" id="cm-scroller">
+    <div class="cm-panel" id="cm-panel">
+      <div id="modal-content-maersk">
+
+        <!-- ══════════════════════════════════════════════
+             §1  HERO + CAROUSEL (single gradient wrapper)
+        ══════════════════════════════════════════════ -->
+        <div class="cm-section--light">
+          <p class="cm-hero__label">Case study · 2021–2024</p>
+          <h2 class="cm-hero__title">Maersk</h2>
+          <p class="cm-hook" style="max-width:680px; margin-bottom:40px">Making design matter inside one of the world's most complex logistics platforms.</p>
+
+          <div class="cm-hero__meta" style="margin-bottom:40px">
+            <div class="cm-meta-item"><p class="cm-meta-label">Role</p><p class="cm-meta-value">Lead UX Designer</p></div>
+            <div class="cm-meta-item"><p class="cm-meta-label">Scope</p><p class="cm-meta-value">Design leadership · Strategy · Product</p></div>
+            <div class="cm-meta-item"><p class="cm-meta-label">Team</p><p class="cm-meta-value">12 product designers · 6 nationalities</p></div>
+            <div class="cm-meta-item"><p class="cm-meta-label">Platform</p><p class="cm-meta-value">350+ stakeholders · 260 engineers · 20+ product teams</p></div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-bottom:8px">
+            <div>
+              <p style="font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:10px">The Platform</p>
+              <p style="font-size:14px; line-height:1.65">Maersk Supply Chain — the operational backbone for the world's largest container shipping network. 350+ stakeholders, 20+ product teams, 260 engineers.</p>
+            </div>
+            <div>
+              <p style="font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:10px">My Role</p>
+              <p style="font-size:14px; line-height:1.65">First dedicated UX/Design Lead. I set the vision, built the team of 12 product designers, and shifted design from a Technology-centric function to a Product-centric one.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero carousel: 3 product screenshots -->
+        <div class="cm-car-wrap" style="overflow:hidden">
+          <div class="cm-car__track" id="cm-c1-track">
+            <div class="cm-car__col">
+              <div class="cm-car__slide">
+                <div class="cm-skeleton"></div>
+                <img src="public/images/maersk/maersk-dashboard.webp" alt="Supply Chain Overview dashboard" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="1800" height="1188">
+              </div>
+              <div class="cm-car__cap">
+                <p class="cm-car__cap-title">Supply Chain Overview</p>
+                <p class="cm-car__cap-body">Centralised visibility across all active shipments — filterable by mode, status, and exception type.</p>
+              </div>
+            </div>
+            <div class="cm-car__col">
+              <div class="cm-car__slide">
+                <div class="cm-skeleton"></div>
+                <img src="public/images/maersk/maersk-list.webp" alt="Shipment list view" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="1800" height="1188">
+              </div>
+              <div class="cm-car__cap">
+                <p class="cm-car__cap-title">Shipment List</p>
+                <p class="cm-car__cap-body">High-density data table with customisable columns, inline filters, and bulk action support for operators managing hundreds of shipments.</p>
+              </div>
+            </div>
+            <div class="cm-car__col">
+              <div class="cm-car__slide">
+                <div class="cm-skeleton"></div>
+                <img src="public/images/maersk/maersk-detail.webp" alt="Shipment detail view" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="1800" height="1188">
+              </div>
+              <div class="cm-car__cap">
+                <p class="cm-car__cap-title">Shipment Detail</p>
+                <p class="cm-car__cap-body">Full milestone timeline, document management, and exception handling in a single scrollable view.</p>
+              </div>
+            </div>
+          </div>
+          <div class="cm-car__footer">
+            <div class="cm-car__dots" id="cm-c1-dots"></div>
+            <div class="cm-car__controls">
+              <button class="cm-car__btn" id="cm-c1-prev" aria-label="Previous" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <button class="cm-car__btn" id="cm-c1-next" aria-label="Next">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             §3  THE BIG BET  (dark)
+        ══════════════════════════════════════════════ -->
+        <div class="cm-section--dark">
+          <p class="cm-label cm-label--light" data-n="01"><span>The Big Bet</span></p>
+          <h3 class="cm-headline cm-headline--light" style="max-width:680px">Maersk made a bet that would reshape global trade. Design was part of the wager.</h3>
+          <p class="cm-body cm-body--muted" style="max-width:680px">In 2017, Maersk committed to becoming the world's first integrated logistics company — pivoting from moving containers to running customers' entire supply chains. The Supply Chain Platform was the digital product at the centre of that strategy.</p>
+          <p class="cm-body cm-body--muted" style="max-width:680px; margin-bottom:48px">I was brought in as the first-ever Design Lead to build that capability from scratch.</p>
+
+          <div class="cm-ba-dark">
+            <div class="cm-ba-dark__col cm-ba-dark__col--before">
+              <p class="cm-ba-dark__label">Before</p>
+              <p class="cm-ba-dark__title">Move containers from A to B</p>
+              <p class="cm-ba-dark__body">Maersk's value was in its ships and routes. Customers booked a container; Maersk delivered it. Revenue was tied to volume shipped.</p>
+              <img src="public/images/maersk/maersk-before.svg" alt="Before: container shipping" style="width:100%; margin-top:24px; display:block" loading="lazy" width="390" height="80">
+            </div>
+            <div class="cm-ba-dark__arrow">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="cm-ba-dark__col cm-ba-dark__col--after">
+              <p class="cm-ba-dark__label">After</p>
+              <p class="cm-ba-dark__title">Run the customer's entire supply chain</p>
+              <p class="cm-ba-dark__body">Maersk manages freight, customs, warehousing, and last-mile — end to end. Revenue tied to value delivered, not containers counted.</p>
+              <img src="public/images/maersk/maersk-after.svg" alt="After: integrated supply chain" style="width:100%; margin-top:24px; display:block" loading="lazy" width="390" height="80">
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             §4  FROM THIS  (legacy chaos — light blue bg)
+        ══════════════════════════════════════════════ -->
+        <div class="cm-section--light">
+          <p class="cm-label" data-n="02"><span>The Starting Point</span></p>
+          <h3 class="cm-headline" style="max-width:680px">Operators juggled 10+ disconnected tools to complete a single task.</h3>
+          <p class="cm-body" style="max-width:600px; margin-bottom:40px">Terminals, spreadsheets, internal web tools, and manual workarounds — a constellation of legacy systems that operators lived in every day, with no single product holding it together.</p>
+
+          <div style="border-radius:16px">
+            <img src="public/images/maersk/maersk-from-this.webp" alt="Legacy tools operators lived in every day" style="width:100%; display:block" loading="lazy" width="1920" height="730">
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             §5  THE CHALLENGE
+        ══════════════════════════════════════════════ -->
+        <div class="cm-section--light">
+          <p class="cm-label" data-n="03"><span>The Challenge</span></p>
+          <h3 class="cm-headline" style="max-width:760px">One platform, three user types, no design foundation — inside an engineering-led organisation.</h3>
+
+          <div class="cm-challenge-grid">
+            <div class="cm-challenge-card">
+              <div class="cm-challenge-icon"><i class="ph ph-squares-four"></i></div>
+              <p class="cm-challenge-title">Fragmented experience</p>
+              <p class="cm-challenge-body">Apps across separate tabs, different structures, no coherent flow. Users felt they were using 10 products, not one.</p>
+            </div>
+            <div class="cm-challenge-card">
+              <div class="cm-challenge-icon"><i class="ph ph-compass"></i></div>
+              <p class="cm-challenge-title">No task guidance</p>
+              <p class="cm-challenge-body">Users could complete tasks but had no path to follow — the interface didn't know what they were trying to do.</p>
+            </div>
+            <div class="cm-challenge-card">
+              <div class="cm-challenge-icon"><i class="ph ph-stack"></i></div>
+              <p class="cm-challenge-title">Information overload</p>
+              <p class="cm-challenge-body">Everything surfaced upfront regardless of context. No prioritisation, no filters that worked — just noise.</p>
+            </div>
+            <div class="cm-challenge-card">
+              <div class="cm-challenge-icon"><i class="ph ph-arrow-square-out"></i></div>
+              <p class="cm-challenge-title">Workarounds as workflow</p>
+              <p class="cm-challenge-body">Without end-to-end ownership, users left the platform to get work done. The source of truth lived in email and Excel.</p>
+            </div>
+            <div class="cm-challenge-card">
+              <div class="cm-challenge-icon"><i class="ph ph-users-three"></i></div>
+              <p class="cm-challenge-title">One platform, three user types</p>
+              <p class="cm-challenge-body">Customer Service, Shippers, Consignees — fundamentally different needs, one undifferentiated experience.</p>
+            </div>
+            <div class="cm-challenge-card">
+              <div class="cm-challenge-icon"><i class="ph ph-cube"></i></div>
+              <p class="cm-challenge-title">No design foundation</p>
+              <p class="cm-challenge-body">No design system, no research practice, no shared components. Starting from 0 in a highly complex domain.</p>
+            </div>
+            <div class="cm-challenge-card">
+              <div class="cm-challenge-icon"><i class="ph ph-git-branch"></i></div>
+              <p class="cm-challenge-title">Engineering-dominated org</p>
+              <p class="cm-challenge-body">260 engineers, 20+ teams, no design processes. The risk wasn't irrelevance — it was becoming a bottleneck.</p>
+            </div>
+            <div class="cm-challenge-card">
+              <div class="cm-challenge-icon"><i class="ph ph-cpu"></i></div>
+              <p class="cm-challenge-title">Highly technical domain</p>
+              <p class="cm-challenge-body">Logistics ops are dense and specialised. Designers had to earn credibility through domain fluency, not just craft.</p>
+            </div>
+            <div class="cm-challenge-card">
+              <div class="cm-challenge-icon"><i class="ph ph-globe-hemisphere-west"></i></div>
+              <p class="cm-challenge-title">Distributed team</p>
+              <p class="cm-challenge-body">12 designers across 6 nationalities and multiple time zones. Building a shared culture had to be intentional.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             §6  THE TRANSFORMATION
+        ══════════════════════════════════════════════ -->
+        <div class="cm-section--light">
+          <p class="cm-label" data-n="04"><span>The Transformation</span></p>
+          <h3 class="cm-headline" style="max-width:680px">Design moved from order-taker to strategic partner.</h3>
+          <p class="cm-body" style="max-width:760px; margin-bottom:0">The biggest shift wasn't a product or a tool — it was the role design played in the organisation. When I joined, design was downstream of engineering. When I left, design had a seat at the product strategy table.</p>
+
+          <div class="cm-transform-ba" style="margin-top:40px">
+            <div class="cm-transform-col cm-transform-col--before">
+              <p class="cm-transform-label">Before</p>
+              <p class="cm-transform-title">Design as delivery service</p>
+              <hr class="cm-transform-rule">
+              <ul class="cm-transform-list">
+                <li>Receives specs from product and engineering</li>
+                <li>Executes UI requests with little context</li>
+                <li>No access to strategy, user research, or roadmap</li>
+                <li>Reactive — brought in when design is "needed"</li>
+                <li>Measured by output: screens delivered</li>
+              </ul>
+            </div>
+            <div class="cm-transform-divider">
+              <div class="cm-transform-arrow">→</div>
+            </div>
+            <div class="cm-transform-col cm-transform-col--after">
+              <p class="cm-transform-label">After</p>
+              <p class="cm-transform-title">Design as strategic partner</p>
+              <hr class="cm-transform-rule">
+              <ul class="cm-transform-list">
+                <li>Co-creates product strategy and roadmap</li>
+                <li>Drives user research and insight synthesis</li>
+                <li>Direct input into platform vision and OKRs</li>
+                <li>Proactive — at the table before decisions are made</li>
+                <li>Measured by impact: outcomes enabled</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             §7  THE RESULT — heading
+        ══════════════════════════════════════════════ -->
+        <div class="cm-section--light">
+          <p class="cm-label" data-n="05"><span>The Playbook</span></p>
+          <h3 class="cm-headline" style="max-width:680px">9 initiatives that elevated design across the Supply Chain Platform.</h3>
+        </div>
+
+        <!-- Result carousel: 9 cards with image area -->
+        <div class="cm-car-wrap" style="overflow:hidden">
+          <div class="cm-car__track" id="cm-c2-track">
+
+            <!-- 01 — First-ever Design Lead (sets the stakes) -->
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:140px"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-01.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.35s ease" loading="lazy" width="800" height="560"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">01</p>
+                  <p class="cm-car__card-title">First-ever Design Lead</p>
+                  <p class="cm-car__card-body">Established the role, the mandate, and what design could mean at the platform level.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 02 — Shift left (the strategic reframe) -->
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:140px"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-04.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.35s ease" loading="lazy" width="800" height="560"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">02</p>
+                  <p class="cm-car__card-title">Shift left</p>
+                  <p class="cm-car__card-body">Moved design upstream into the product org — from delivery function to strategic partner.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 03 — Scaled team (built the capacity) -->
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:140px"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-02.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.35s ease" loading="lazy" width="800" height="560"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">03</p>
+                  <p class="cm-car__card-title">Scaled team from 6 → 12</p>
+                  <p class="cm-car__card-body">Doubled the design team through targeted hiring across product design, research, and systems.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 04 — 3 sub-teams (structured for specialisation) -->
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:140px"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-03.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.35s ease" loading="lazy" width="800" height="560"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">04</p>
+                  <p class="cm-car__card-title">3 sub-teams</p>
+                  <p class="cm-car__card-body">Structured the team into dedicated product design, UX research, and design systems practices.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 05 — North Star Vision (aligned the whole platform) -->
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:140px"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-05.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.35s ease" loading="lazy" width="800" height="560"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">05</p>
+                  <p class="cm-car__card-title">North Star Vision</p>
+                  <p class="cm-car__card-body">Created a platform-wide vision to align 20+ product teams and set a shared direction for design.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 06 — Flea Market / Design System (the infrastructure) -->
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:140px"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-07.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.35s ease" loading="lazy" width="800" height="560"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">06</p>
+                  <p class="cm-car__card-title">"Flea Market"</p>
+                  <p class="cm-car__card-body">Launched the platform's first design system — enabling consistency, speed, and scale across all 20+ product teams.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 07 — Grand Central Station (product initiative) -->
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:140px"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-06.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.35s ease" loading="lazy" width="800" height="560"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">07</p>
+                  <p class="cm-car__card-title">"Grand Central Station"</p>
+                  <p class="cm-car__card-body">Conceptualised and initiated a new platform landing page guiding users to exactly where they need to go to perform their tasks.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 08 — Dressed for Success (rollout framework) -->
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:140px"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-08.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.35s ease" loading="lazy" width="800" height="560"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">08</p>
+                  <p class="cm-car__card-title">"Dressed for Success"</p>
+                  <p class="cm-car__card-body">Designed a progressive rollout framework to bring operators onto the new platform without disruption.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 09 — Closed the design-to-delivery gap (QA gate, the capstone) -->
+            <div class="cm-car__col cm-car__col--narrow">
+              <div class="cm-car__text-card cm-car__text-card--result">
+                <div class="cm-car__card-img" style="height:140px"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-result-09.webp" alt="" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 0.35s ease" loading="lazy" width="800" height="560"></div>
+                <div class="cm-car__card-body-wrap">
+                  <p class="cm-car__card-num">09</p>
+                  <p class="cm-car__card-title">Closed the design-to-delivery gap</p>
+                  <p class="cm-car__card-body">Introduced a QA gate into the delivery process so original design intent survived implementation — what we designed was actually what shipped.</p>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /cm-car__track -->
+          <div class="cm-car__footer">
+            <div class="cm-car__dots" id="cm-c2-dots"></div>
+            <div class="cm-car__controls">
+              <button class="cm-car__btn" id="cm-c2-prev" aria-label="Previous" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <button class="cm-car__btn" id="cm-c2-next" aria-label="Next">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             §8  THE WORK — dark (from chaos)
+        ══════════════════════════════════════════════ -->
+        <div class="cm-section--dark">
+          <p class="cm-label cm-label--light" data-n="06"><span>The Work</span></p>
+          <h3 class="cm-headline cm-headline--light" style="margin-bottom:40px">From a chaotic, inconsistent mess</h3>
+          <div style="border-radius:12px; overflow:hidden; margin-top:8px">
+            <img src="public/images/maersk/maersk-inconsistent-mess.webp" alt="Fragmented legacy tools — the chaotic state before" style="width:100%; display:block" loading="lazy" width="1920" height="1192">
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             §8  THE WORK — light (to a system)
+        ══════════════════════════════════════════════ -->
+        <div class="cm-section--light">
+          <h3 class="cm-headline" style="max-width:660px; margin-bottom:48px">To one scalable system that lets all 20+ product teams build faster and more consistently.</h3>
+          <div class="cm-svg-spread">
+            <div class="cm-svg-spread-item">
+              <p class="cm-svg-spread-label">List pages</p>
+              <img src="public/images/maersk/maersk-list-pages.svg" alt="List pages template" class="cm-svg-spread-img" loading="lazy" width="304" height="190">
+            </div>
+            <div class="cm-svg-spread-item">
+              <p class="cm-svg-spread-label">Detail pages</p>
+              <img src="public/images/maersk/maersk-detail-pages.svg" alt="Detail pages template" class="cm-svg-spread-img" loading="lazy" width="304" height="190">
+            </div>
+            <div class="cm-svg-spread-item">
+              <p class="cm-svg-spread-label">Creation flows</p>
+              <img src="public/images/maersk/maersk-creation-flows.svg" alt="Creation flows template" class="cm-svg-spread-img" loading="lazy" width="304" height="190">
+            </div>
+          </div>
+        </div>
+
+        <!-- Design system component carousel -->
+        <div class="cm-car-wrap cm-car-wrap--ds" style="overflow:hidden">
+          <div class="cm-car__track" id="cm-c4-track" style="align-items:flex-start">
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-01.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="3322" height="1850"></div>
+            </div>
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-02.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="1264" height="1863"></div>
+            </div>
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-03.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2380" height="1850"></div>
+            </div>
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-04.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2136" height="1850"></div>
+            </div>
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-05.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="1566" height="1850"></div>
+            </div>
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-06.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2544" height="1850"></div>
+            </div>
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-07.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2800" height="1850"></div>
+            </div>
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-08.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2800" height="1850"></div>
+            </div>
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-09.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2800" height="1850"></div>
+            </div>
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-10.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2810" height="1850"></div>
+            </div>
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-11.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2800" height="1014"></div>
+            </div>
+            <div class="cm-car__col cm-car__col--ds">
+              <div class="cm-ds-card"><div class="cm-skeleton"></div><img src="public/images/maersk/maersk-components-12.webp" alt="Design system component" class="cm-ds-card__img" onload="this.style.opacity='1';this.previousElementSibling.classList.add('is-done');" loading="lazy" width="2212" height="1712"></div>
+            </div>
+          </div>
+          <div class="cm-car__footer">
+            <div class="cm-car__dots" id="cm-c4-dots"></div>
+            <div class="cm-car__controls">
+              <button class="cm-car__btn" id="cm-c4-prev" aria-label="Previous" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <button class="cm-car__btn" id="cm-c4-next" aria-label="Next">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             §8b  HOW THE DESIGN SYSTEM HELPED (lego)
+        ══════════════════════════════════════════════ -->
+        <div class="cm-section--light cm-lego-section">
+          <div>
+            <h3 class="cm-headline" style="max-width:680px; margin-bottom:20px">How 20+ teams stayed consistent: a system, clear instructions, and a quality gate.</h3>
+            <p class="cm-body" style="max-width:680px; margin-bottom:0">Rolling it out was a change effort as much as a design one — managing stakeholders, advocating, convincing, and anchoring new ways of working in documentation and best practice to create streamlined, consistent, quality output.</p>
+          </div>
+
+          <!-- ❌ Not like this -->
+          <div class="cm-lego-row">
+            <div class="cm-lego-row__label">
+              <span class="cm-lego-emoji">❌</span>
+              <span class="cm-lego-row__title">Not like this</span>
+            </div>
+            <img class="cm-lego-img" src="public/images/maersk/maersk-not-like-this.webp" alt="No design system: product team produces inconsistent products" loading="lazy" width="1920" height="472">
+          </div>
+
+          <!-- ✅ Like this -->
+          <div class="cm-lego-row">
+            <div class="cm-lego-row__label">
+              <span class="cm-lego-emoji">✅</span>
+              <span class="cm-lego-row__title">Like this</span>
+            </div>
+            <img class="cm-lego-img" src="public/images/maersk/maersk-like-this.webp" alt="Design system plus instructions: product team passes a quality gate and ships consistent products" loading="lazy" width="1920" height="452">
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             §8c  THE TEAM PHOTO
+        ══════════════════════════════════════════════ -->
+        <div class="cm-section--light">
+          <div style="border-radius:16px; overflow:hidden">
+            <img src="public/images/maersk/maersk-team.webp" alt="The Maersk design team" style="width:100%; display:block" loading="lazy" width="4032" height="3024">
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════
+             §9  THE RESULT / CLOSE  (dark)
+        ══════════════════════════════════════════════ -->
+        <div class="cm-close-section">
+          <p class="cm-label cm-label--light" data-n="07"><span>The Result</span></p>
+          <h3 class="cm-close-headline">Design went from 0 to changing how the platform ships.</h3>
+
+          <div class="cm-close-stats" style="grid-template-columns:repeat(5,1fr); margin-bottom:48px">
+            <div class="cm-close-stat">
+              <p class="cm-close-stat__val">6 → 12</p>
+              <p class="cm-close-stat__label">Product designers, hired and structured into focused practices</p>
+            </div>
+            <div class="cm-close-stat">
+              <p class="cm-close-stat__val">3</p>
+              <p class="cm-close-stat__label">Dedicated practices — product design, research, design systems</p>
+            </div>
+            <div class="cm-close-stat">
+              <p class="cm-close-stat__val">20+</p>
+              <p class="cm-close-stat__label">Product teams building on the design system</p>
+            </div>
+            <div class="cm-close-stat">
+              <p class="cm-close-stat__val">350+</p>
+              <p class="cm-close-stat__label">Stakeholders aligned behind one platform vision</p>
+            </div>
+            <div class="cm-close-stat">
+              <p class="cm-close-stat__val">4.25 <span>/ 5</span></p>
+              <p class="cm-close-stat__label">Gallup team engagement — above the 3.90 platform average</p>
+            </div>
+          </div>
+
+          <div style="overflow:hidden; margin-right:-80px">
+            <div class="cm-car__track" id="cm-c5-track">
+              <div class="cm-car__col cm-car__col--quote">
+                <div class="t-card" style="border:1px solid rgba(255,255,255,0.1)">
+                  <div class="testimonial-mark">&ldquo;</div>
+                  <p class="testimonial-quote">Mikkel brings a rare combination of strong design craft and the ability to simplify complexity. He consistently found ways to break messy problems down into simple, practical concepts — his storytelling made alignment feel easy. Together we co-created a design system, defined page recipes, and established UX principles that gave teams clarity and direction, enabling a full navigation and UI overhaul delivered without compromising quality. As someone responsible for raising the bar on experience, I've worked with many strong profiles. Mikkel stands out. He raises the standard in a way that lasts, both in the product and in the team.</p>
+                  <div class="testimonial-author">
+                    <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-patrick.webp" alt="Patrick Rischel" loading="lazy" width="300" height="300"></div>
+                    <div>
+                      <div class="testimonial-meta">
+                        <p class="testimonial-name">Patrick Rischel</p>
+                        <p class="testimonial-role">Senior Digital Product Manager, Novo Nordisk</p>
+                        <p class="testimonial-role testimonial-role--prev">formerly Senior Platform Product Owner, Maersk</p>
+                        <span class="testimonial-tag">Cross-functional partner at Maersk</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="cm-car__col cm-car__col--quote">
+                <div class="t-card" style="border:1px solid rgba(255,255,255,0.1)">
+                  <div class="testimonial-mark">&ldquo;</div>
+                  <p class="testimonial-quote">Mikkel was one of the first leaders I'd worked with who truly understood the strategic value of research. He didn't just make space for it — he integrated it into how the team operated, and made sure our findings shaped direction rather than just informed delivery. Mikkel is one of the best strategic designers I've had the pleasure of working with. While his design expertise is exceptional, his true strength lies in his leadership. He has a rare ability to bring out the best in people, creating an environment where individuals grow, take ownership, and thrive. Working with Mikkel makes you a better and braver designer, a strong believer in teamwork, and a more confident professional.</p>
+                  <div class="testimonial-author">
+                    <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-viki.webp" alt="Viki Ølgod Frandsen" loading="lazy" width="800" height="800"></div>
+                    <div>
+                      <div class="testimonial-meta">
+                        <p class="testimonial-name">Viki Ølgod Frandsen</p>
+                        <p class="testimonial-role">Lead UX Researcher, Maersk</p>
+                        <span class="testimonial-tag">Direct report at Maersk</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="cm-car__col cm-car__col--quote">
+                <div class="t-card" style="border:1px solid rgba(255,255,255,0.1)">
+                  <div class="testimonial-mark">&ldquo;</div>
+                  <p class="testimonial-quote">It was an absolute pleasure to have worked with Mikkel on the same design team. He created a highly supportive environment where the UX team could thrive, guiding us with both empathy and clear strategic vision. One of his greatest strengths is his ability to tackle messy, complex UX problems and help guide the team toward simple, impactful solutions. He is an exemplary leader who genuinely cares about his people.</p>
+                  <div class="testimonial-author">
+                    <div class="testimonial-avatar"><img src="public/images/main/main-testimonial-leo.webp" alt="Leo Wan" loading="lazy" width="251" height="251"></div>
+                    <div>
+                      <div class="testimonial-meta">
+                        <p class="testimonial-name">Leo Wan</p>
+                        <p class="testimonial-role">Lead Product Designer, Maersk</p>
+                        <span class="testimonial-tag">Direct report at Maersk</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cm-car__footer">
+              <div class="cm-car__dots" id="cm-c5-dots"></div>
+              <div class="cm-car__controls">
+                <button class="cm-car__btn" id="cm-c5-prev" aria-label="Previous" disabled>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <button class="cm-car__btn" id="cm-c5-next" aria-label="Next">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /modal-content-maersk -->
+
+      <!-- ═══════════════════════════════════════════════════════
+           MATAS CONTENT
+      ═══════════════════════════════════════════════════════ -->
+    </div>
+  </div>
+</div>
+<button class="cm-close" id="cm-close" aria-label="Close case study" hidden>
+  <svg viewBox="0 0 18 18" fill="none" aria-hidden="true">
+    <path d="M14 4L4 14M4 4l10 10" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+  </svg>
+</button>
+
+<script src="v2.js?v=82"></script>
 </body>
 </html>

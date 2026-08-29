@@ -374,3 +374,140 @@
     if (next) next.addEventListener('click', () => go(1));
     sync();
   });
+
+
+  /* ── Case modal ────────────────────────────────────────
+     The sheet slides up, the page behind it locks, and the
+     panel drops its transform once it has arrived — an
+     identity transform still promotes a twelve-thousand-pixel
+     panel to its own layer, and rasterising a mask that size
+     is slow enough that a fast scroll can outrun it and show
+     straight through to the page beneath. It only needs to be
+     a layer while it is moving. */
+  (() => {
+    const overlay  = document.getElementById('cm-overlay');
+    const modal    = document.getElementById('cm-modal');
+    const scroller = document.getElementById('cm-scroller');
+    const panel    = document.getElementById('cm-panel');
+    const closeBtn = document.getElementById('cm-close');
+    if (!modal || !panel) return;
+
+    const IN  = 'transform .6s cubic-bezier(0.32, 0.72, 0, 1)';
+    const OUT = 'transform .52s cubic-bezier(0.4, 0, 0.8, 0.55)';
+    let lastTrigger = null;
+
+    const open = (trigger) => {
+      lastTrigger = trigger || null;
+      document.body.style.overflow = 'hidden';
+      scroller.scrollTop = 0;
+      panel.style.transition = 'none';
+      panel.style.transform = 'translateY(100%)';
+      panel.getBoundingClientRect();          // flush the reset
+      overlay.classList.add('is-open');
+      modal.classList.add('is-open');
+      panel.style.transition = IN;
+      panel.style.transform = 'translateY(0)';
+      closeBtn.hidden = false;
+      setTimeout(() => closeBtn.classList.add('is-visible'), 420);
+      const settle = (e) => {
+        if (e.propertyName !== 'transform') return;
+        panel.removeEventListener('transitionend', settle);
+        if (!modal.classList.contains('is-open')) return;
+        panel.style.transition = 'none';
+        panel.style.transform = 'none';
+      };
+      panel.addEventListener('transitionend', settle);
+      closeBtn.focus({ preventScroll: true });
+    };
+
+    const close = () => {
+      closeBtn.classList.remove('is-visible');
+      /* Reset the scroll first, while the panel still covers it. Animating a
+         panel that is taller than the viewport out by 100% sweeps its whole
+         length past the screen; moving it one viewport plus a margin is the
+         distance that actually matters. */
+      scroller.scrollTop = 0;
+      panel.style.transition = OUT;
+      panel.style.transform = `translateY(${innerHeight + 40}px)`;
+      overlay.classList.remove('is-open');
+      setTimeout(() => {
+        modal.classList.remove('is-open');
+        document.body.style.overflow = '';
+        closeBtn.hidden = true;
+        if (lastTrigger) lastTrigger.focus({ preventScroll: true });
+      }, 520);
+    };
+
+    document.querySelectorAll('[data-case]').forEach(btn => {
+      btn.addEventListener('click', () => open(btn));
+    });
+    closeBtn.addEventListener('click', close);
+    scroller.addEventListener('click', e => { if (e.target === scroller) close(); });
+    addEventListener('keydown', e => {
+      if (e.key === 'Escape' && modal.classList.contains('is-open')) close();
+    });
+  })();
+
+  /* The modal's carousels run on the same engine as the page's. Their markup
+     uses cm-car__ class names, so they are adapted rather than rebuilt. */
+  (() => {
+    document.querySelectorAll('.cm-car__track').forEach(track => {
+      const id = track.id.replace('-track', '');
+      const prev = document.getElementById(id + '-prev');
+      const next = document.getElementById(id + '-next');
+      const dots = document.getElementById(id + '-dots');
+      const cols = [...track.querySelectorAll('.cm-car__col')];
+      if (!cols.length || !prev || !next || !dots) return;
+
+      cols.forEach((_, i) => {
+        const d = document.createElement('button');
+        d.className = 'cm-car__dot';
+        d.type = 'button';
+        d.setAttribute('aria-label', 'Go to item ' + (i + 1));
+        dots.appendChild(d);
+      });
+      const dotEls = [...dots.children];
+      const originOf = i => cols[i].offsetLeft - cols[0].offsetLeft;
+      const maxScroll = () => track.scrollWidth - track.clientWidth;
+      const targetOf = i => Math.min(originOf(i), maxScroll());
+      const lastIndex = () => {
+        const max = maxScroll();
+        for (let i = 0; i < cols.length; i++) if (originOf(i) >= max - 1) return i;
+        return cols.length - 1;
+      };
+      const visibleCount = () => {
+        const pitch = cols[0].offsetWidth + 24;
+        return Math.max(1, Math.round(track.clientWidth / pitch));
+      };
+      const nearest = () => {
+        const x = track.scrollLeft;
+        let best = 0, bd = Infinity;
+        cols.forEach((_, i) => { const d = Math.abs(targetOf(i) - x); if (d < bd) { bd = d; best = i; } });
+        return best;
+      };
+      let current = 0, queued = 0;
+      const paint = i => {
+        const span = visibleCount(), last = Math.min(dotEls.length - 1, i + span - 1);
+        dotEls.forEach((d, k) => d.classList.toggle('is-active', k >= i && k <= last));
+        prev.disabled = i <= 0;
+        next.disabled = i >= lastIndex();
+      };
+      const sync = () => { queued = 0; current = nearest(); paint(current); };
+      track.addEventListener('scroll', () => {
+        if (!queued) queued = requestAnimationFrame(sync);
+      }, { passive: true });
+      const go = dir => {
+        current = Math.max(0, Math.min(lastIndex(), current + dir));
+        paint(current);
+        track.scrollTo({ left: targetOf(current) });
+      };
+      prev.addEventListener('click', () => go(-1));
+      next.addEventListener('click', () => go(1));
+      dotEls.forEach((d, i) => d.addEventListener('click', () => {
+        current = Math.min(i, lastIndex());
+        paint(current);
+        track.scrollTo({ left: targetOf(current) });
+      }));
+      paint(0);
+    });
+  })();
