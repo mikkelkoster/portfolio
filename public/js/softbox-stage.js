@@ -37,7 +37,21 @@ window.initSoftboxStage = function (canvas, config) {
   const BASE_Y = -BODY_H / 2 - ARM_H + DROP;
   const GROUND_Y = BASE_Y - BASE_T - 0.014;
 
-  const ALU = "#cdd2d9";
+  /* The enclosure colour, and it is per-case for a reason.
+     This device is metal — metalness 0.9 — so almost all of what you see on
+     it is the environment reflected back, tinted by this colour. That makes
+     the body's read entirely relative to its surroundings, and it is why the
+     Formalize film kept losing its device: in the mono build the environment
+     IS a neutral grey of roughly this value, so a silver body reflecting it
+     comes back the same tone as the backdrop behind it and the enclosure
+     disappears, leaving the picture floating over its own contact shadow.
+     Every previous attempt at this went at the environment — the strip
+     light's opacity, then the ground sweep. Both help and neither is stable,
+     because they are trying to hold a gap open from the far side. Setting the
+     body darker than the ground fixes it from the near side: the silhouette
+     then reads on base colour, not on reflection contrast, whatever the
+     backdrop does. The colour build keeps the silver it has always had. */
+  const ALU = config.enclosure || "#cdd2d9";
 
   /* How much room the glass gives back. The single dial for the shaped
      reflection: 0 removes it, and much past 0.8 the softboxes start to

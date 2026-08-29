@@ -64,6 +64,10 @@ window.STAGE_CONFIGS = {
   /* Maersk — opens wide from the LEFT, two macros at eye level, resolves
      near-frontal. Cool cyan ground. */
   maersk: {
+    /* Graphite, not the silver of the colour build. See softbox-stage.js:
+       a metal body reflects its surroundings, and this build surrounds it with
+       a grey of the silver's own value. */
+    enclosure: "#6e747b",
     ground: {
       deep: 0x6b6f73,
       low: [0.34, 0.35, 0.37],
@@ -106,6 +110,10 @@ window.STAGE_CONFIGS = {
      cut also changes what is on the display; Maersk holds its first plate
      across two shots. Warmer, more indigo ground to match the card. */
   formalize: {
+    /* Graphite, not the silver of the colour build. See softbox-stage.js:
+       a metal body reflects its surroundings, and this build surrounds it with
+       a grey of the silver's own value. */
+    enclosure: "#6e747b",
     ground: {
       deep: 0x6b6f73,
       low: [0.34, 0.35, 0.37],

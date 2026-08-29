@@ -1179,7 +1179,11 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink);
   margin: 0 0 32px;
   max-width: var(--cm-measure);
-  text-wrap: balance;
+  /* NOT balanced. Balance evens the two lines, which on this measure left the
+     widest line using as little as 58% of the box — so a headline told to run
+     to two thirds of the column visibly did not. Normal wrapping fills the
+     measure (76-99% across the eight) and costs nothing: the line counts are
+     identical either way, measured. */
 }
 /* Supporting, and sized to stay that way next to an 80px headline. */
 .cm-body {
@@ -1252,6 +1256,18 @@ a { color: inherit; text-decoration: none; }
   font-variant-numeric: tabular-nums;
 }
 .cm-close-stat__label { font-size: 15px; color: var(--ink-55); margin: 0; max-width: 24ch; }
+/* The team, under the numbers that describe it. Cropped to 16:9 from the
+   photograph's own 4:3, and anchored to the BOTTOM so the whole of that
+   quarter comes off the top — which is ceiling and a light fitting. Anchored
+   any other way it would start taking feet. */
+.cm-team { margin: 56px 0 0; border-radius: 16px; overflow: hidden; }
+.cm-team img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: bottom;
+  display: block;
+}
 /* The arrow inherited the stat's 60px and came out heavier than the numbers it
    joins. It is a connector, not a value. */
 .cm-stat-arrow {

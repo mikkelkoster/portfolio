@@ -69,9 +69,13 @@
           load("public/js/three.min.js"),
           load("public/js/gsap.min.js"),
         ])
-          .then(() => load("public/js/stage-configs-mono.js"))
-          .then(() => load("public/js/softbox-stage.js"))
-          .then(() => load("public/js/phone-stage.js"));
+          /* Versioned like the stylesheet. These two carry the scene and its
+             per-case colours, and the dev server sends only an ETag — an
+             edited scene file otherwise sits behind a cached copy and the
+             change looks like it did not take. */
+          .then(() => load("public/js/stage-configs-mono.js?v=129"))
+          .then(() => load("public/js/softbox-stage.js?v=129"))
+          .then(() => load("public/js/phone-stage.js?v=129"));
       }
       return libs;
     };
