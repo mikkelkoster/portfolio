@@ -471,18 +471,6 @@ a { color: inherit; text-decoration: none; }
   transition: border-color .25s ease, color .25s ease;
 }
 .foot__mail:hover { border-color: var(--blue); color: var(--blue); }
-.foot__end {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 28px;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: clamp(64px, 9vw, 120px);
-  padding-top: 28px;
-  border-top: var(--rule) solid var(--line);
-  font-size: 14px;
-  color: var(--ink-55);
-}
 
 /* ── Reveal ────────────────────────────────────────────────
    Same approach as the main build: hidden state set in CSS
