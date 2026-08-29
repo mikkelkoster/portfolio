@@ -492,6 +492,7 @@
       lastTrigger = trigger || null;
       document.body.style.overflow = 'hidden';
       scroller.scrollTop = 0;
+      modal.classList.remove('is-at-end');
       panel.style.transition = 'none';
       panel.style.transform = 'translateY(100%)';
       panel.getBoundingClientRect();          // flush the reset
@@ -536,6 +537,20 @@
         if (lastTrigger) lastTrigger.focus({ preventScroll: true });
       }, 520);
     };
+
+    /* The backstop covers the floor while there is scrolling left to do, and
+       lifts once the reader reaches the end so the sheet's rounded bottom sits
+       over the dimmed page. Throttled to a frame — this runs on every scroll
+       event of a twelve-thousand-pixel scroller. */
+    let endQueued = 0;
+    scroller.addEventListener('scroll', () => {
+      if (endQueued) return;
+      endQueued = requestAnimationFrame(() => {
+        endQueued = 0;
+        const atEnd = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4;
+        modal.classList.toggle('is-at-end', atEnd);
+      });
+    }, { passive: true });
 
     document.querySelectorAll('[data-case]').forEach(btn => {
       btn.addEventListener('click', () => open(btn));

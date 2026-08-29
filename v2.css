@@ -1016,12 +1016,18 @@ a { color: inherit; text-decoration: none; }
   transform: translateX(-50%);
   width: min(100vw - 32px, 1400px);
   background: var(--bg);
-  border-radius: 20px 20px 0 0;
+  border-radius: 20px;
   z-index: -1;
   pointer-events: none;
 }
+/* Pulled up off the floor once the reader has arrived at the end, so the gap
+   under the sheet shows the dimmed page and not this. It stays full-height
+   while there is still scrolling to do, which is when a fast fling could
+   outrun the raster and see through. */
+.cm-modal.is-settled.is-at-end::after { bottom: 40px; }
 @media (max-width: 900px) {
-  .cm-modal.is-settled::after { top: 20px; width: calc(100vw - 16px); border-radius: 14px 14px 0 0; }
+  .cm-modal.is-settled::after { top: 20px; width: calc(100vw - 16px); border-radius: 14px; }
+  .cm-modal.is-settled.is-at-end::after { bottom: 20px; }
 }
 .cm-scroller {
   position: absolute;
@@ -1032,18 +1038,23 @@ a { color: inherit; text-decoration: none; }
   -webkit-overflow-scrolling: touch;
   padding-top: 40px;
 }
+/* The sheet floats: dimmed page above it and the same below, so scrolling to
+   the end lands on a rounded bottom edge rather than running into the
+   viewport. Matches the current site, whose own comment records that removing
+   the lower half of this was a mistaken fix for the transient paint gap —
+   that was a compositor problem and is handled by the backstop above. */
 .cm-panel {
   position: relative;
-  margin: 0 auto;
+  margin: 0 auto 40px;
   width: min(100vw - 32px, 1400px);
   background: var(--bg);
-  border-radius: 20px 20px 0 0;
+  border-radius: 20px;
   overflow: hidden;
   transform: translateY(100%);
 }
 @media (max-width: 900px) {
   .cm-scroller { padding-top: 20px; }
-  .cm-panel { width: calc(100vw - 16px); border-radius: 14px 14px 0 0; }
+  .cm-panel { width: calc(100vw - 16px); border-radius: 14px; margin-bottom: 20px; }
 }
 
 .cm-close {
@@ -1487,6 +1498,12 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Flow rows and spreads ─────────────────────────────── */
 .cm-lego-row { display: grid; gap: 20px 40px; padding-block: 36px; align-items: start; }
+/* The first row sits under the section's own paragraph, not under another
+   row, so it needs the gap that separates a block from its intro rather than
+   the one that separates two peers. Set on the intro, not the row: the rows
+   are divs and so is the intro, so .cm-lego-row:first-of-type matched the
+   intro instead — :first-of-type keys off the element type, never the class. */
+.cm-lego-section > div:first-child { margin-bottom: 36px; }
 @media (min-width: 900px) { .cm-lego-row { grid-template-columns: 260px 1fr; } }
 .cm-lego-row__label { display: flex; align-items: center; gap: 10px; }
 .cm-lego-row__title { font-size: 19px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
