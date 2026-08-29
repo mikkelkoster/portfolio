@@ -1075,6 +1075,11 @@ a { color: inherit; text-decoration: none; }
    page. Sections are tall and the type inside them is large, so the space
    between them has to be larger again or the page reads as a list. */
 @media (min-width: 760px) { :root { --cm-measure: calc(100% * 2 / 3); } }
+/* A heading and the row it introduces are one unit, so the full section gap
+   between them read as a break in the middle of a thought. The gap BELOW the
+   row keeps the section rhythm; only the one above it closes up. */
+.cm-section--light:has(+ .cm-car-wrap),
+.cm-section--dark:has(+ .cm-car-wrap) { padding-bottom: clamp(24px, 2.6vw, 44px); }
 .cm-section--light,
 .cm-section--dark {
   padding: clamp(64px, 7vw, 116px) var(--cm-gutter);
