@@ -1077,7 +1077,7 @@ a { color: inherit; text-decoration: none; }
 @media (min-width: 760px) { :root { --cm-measure: calc(100% * 2 / 3); } }
 .cm-section--light,
 .cm-section--dark {
-  padding: clamp(72px, 9vw, 150px) var(--cm-gutter);
+  padding: clamp(64px, 7vw, 116px) var(--cm-gutter);
 }
 /* Every section sits on white. There were two ink-ground sections and an
    ink-ground closing block; they were the only thing in the build that
@@ -1298,7 +1298,6 @@ a { color: inherit; text-decoration: none; }
   flex: 0 0 auto;
   width: min(1160px, calc(100% - 104px));
 }
-@media (max-width: 900px) { .cm-car__col { width: calc(100% - 40px); } }
 /* Nine result cards, so they run three across rather than one at a time.
    The 72% width above belongs to the case screenshots, where one slide IS the
    subject; a result card is a caption with a picture over it, and at 900px it
@@ -1314,6 +1313,17 @@ a { color: inherit; text-decoration: none; }
 .cm-car__col--quote { width: clamp(260px, calc((100% - 48px) / 3), 420px); }
 .t-role--prev { color: var(--ink-25); margin-top: 2px; }
 .cm-car__col--ds { width: auto; }
+/* One card per screen on a phone, with the least sliver that still says the
+   row continues. This has to sit AFTER the modifiers: --narrow and --quote
+   carry a clamp whose 260px floor is what actually applied at this width, and
+   at equal specificity the later rule is the one that wins. Every extra pixel
+   of width here is a line of quote the card does not have to grow to hold.
+   --ds keeps its intrinsic width. */
+@media (max-width: 900px) {
+  .cm-car__col,
+  .cm-car__col--narrow,
+  .cm-car__col--quote { width: calc(100% - 16px); }
+}
 /* No dimming. It belonged to a design that showed one card at a time; here
    several are visible and fading the neighbours just makes the row murky. */
 .cm-car__col.is-peek, .cm-car__col.is-hidden { opacity: 1 !important; }
@@ -1367,6 +1377,10 @@ a { color: inherit; text-decoration: none; }
   gap: 24px; margin-top: 32px;
   padding: 0 var(--cm-gutter) !important;
 }
+/* The hidden attribute only carries display:none from the UA sheet, and the
+   author rule above beats it. Without this the footer stayed on screen while
+   the JS believed it had put it away. */
+.cm-car__footer[hidden], .car-nav[hidden] { display: none; }
 .cm-car__controls { display: flex; gap: 8px; }
 .cm-car__btn {
   width: 44px; height: 44px; border-radius: 100px;

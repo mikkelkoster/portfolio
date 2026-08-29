@@ -385,6 +385,7 @@
       paint(current);
     };
     const schedule = () => { if (!queued) queued = requestAnimationFrame(sync); };
+    addEventListener('resize', () => { if (typeof showControls === 'function') showControls(); }, { passive: true });
     track.addEventListener('scroll', schedule, { passive: true });
     addEventListener('resize', schedule, { passive: true });
     track.addEventListener('touchstart', settle, { passive: true });
@@ -414,7 +415,19 @@
        the sheet is display:block and merely transformed off-screen — but
        its images are lazy and several columns size to the image, so the
        widths this measured at load are not the widths after opening. */
-    const remeasure = () => { settle(); current = indexNow(); paint(current); };
+    /* A row that fits needs no controls. The quote row shows all three of its
+       cards at once on a wide screen, so its dots and arrows were offering to
+       scroll something that could not move. Hidden rather than disabled: a
+       disabled control still says "there is more here". */
+    const footer = dots.closest('.cm-car__footer, .car-nav');
+    const showControls = () => {
+      if (!footer) return;
+      footer.hidden = track.scrollWidth <= track.clientWidth + 1;
+    };
+    const remeasure = () => {
+      settle(); current = indexNow(); paint(current); showControls();
+    };
+    showControls();
     const handle = { remeasure, track };
     carousels.push(handle);
     return handle;
