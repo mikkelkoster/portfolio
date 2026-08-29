@@ -876,8 +876,30 @@ a { color: inherit; text-decoration: none; }
 }
 @media (max-width: 900px) {
   .hero { gap: 0; }
-  .hero__figure { height: clamp(180px, 26vh, 260px); margin-top: 18px; }
+  /* aspect-ratio has to go here. With an explicit height it DERIVES the
+     width — 260 x 0.78 gave a 171px strip on a 390px screen instead of a
+     full-width band. */
+  .hero__figure {
+    aspect-ratio: auto;
+    width: 100%;
+    height: clamp(180px, 26vh, 260px);
+    margin-top: 18px;
+  }
   .hero__avail { margin-bottom: 24px; }
   .hero__display { margin-bottom: 24px; }
   .hero__lede { margin-bottom: 28px; }
+}
+
+/* Emil's recommendation runs about four times the length of the shortest one,
+   and equal-height cards mean the longest sets every card in the row — on a
+   phone that was a full screen of one quote. Capped on mobile only, so the
+   desktop still shows every word and nobody's words are rewritten. The cap
+   applies to all seven equally rather than singling one out. */
+@media (max-width: 900px) {
+  .t-quote {
+    display: -webkit-box;
+    -webkit-line-clamp: 9;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
