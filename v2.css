@@ -1082,6 +1082,10 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: -0.015em;
   color: var(--ink-55);
   margin: 0 0 40px;
+  /* The hook sits between the headline's 18ch and the body's 54ch, so it
+     needs its own measure. It only ever had one inline, in px, and that is
+     now gone with the rest of them. */
+  max-width: 46ch;
 }
 .cm-hero__meta { display: grid; gap: 32px; }
 @media (min-width: 860px) { .cm-hero__meta { grid-template-columns: repeat(4, 1fr); } }
@@ -1121,7 +1125,14 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Result stats ──────────────────────────────────────── */
 /* White too. The closing stats were the last inverted block. */
-.cm-close-section { background: var(--bg); color: var(--ink); border-top: var(--rule) solid var(--line); }
+/* It carries --light now, so it takes the gutter from the section rule like
+   everything else. It never had padding of its own: it matched neither
+   --light nor --dark, so the one rule that sets the sheet's gutter skipped
+   it entirely and the closing headline and stats sat flush against the panel
+   edge while every section above them was indented 72px. Its quote row moved
+   out to be a sibling at the same time — every other row in the sheet is one,
+   which is what lets a row bleed while its heading stays on the gutter. */
+.cm-close-section { background: var(--bg); color: var(--ink); }
 .cm-close-headline {
   font-size: clamp(28px, 3.4vw, 52px);
   font-weight: 400;
