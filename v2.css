@@ -1049,7 +1049,14 @@ a { color: inherit; text-decoration: none; }
   width: min(100vw - 32px, 1400px);
   background: var(--bg);
   border-radius: 20px;
-  overflow: hidden;
+  /* NO overflow:hidden. Paired with the radius it puts a rounded mask over an
+     eleven-thousand-pixel box, and that masked layer is what a fast scroll
+     outruns — the tile arrives late and the un-painted band shows through to
+     the dimmed page. The radius alone is just a rounded background and costs
+     nothing; the clip was only ever protecting corners that no child paints
+     into, since the first and last children are both transparent.
+     The fixed backstop behind carries the same corners, so even a late tile
+     now resolves to white rather than to the page. */
   transform: translateY(100%);
 }
 @media (max-width: 900px) {
@@ -1397,7 +1404,7 @@ a { color: inherit; text-decoration: none; }
    the artwork's own ratio instead, so nothing is cut. */
 .cm-car__card-img { aspect-ratio: 800 / 560; }
 .cm-car__card-img img { width: 100%; height: 100%; object-fit: contain; }
-.cm-car__card-body-wrap { padding: 24px; }
+.cm-car__card-body-wrap { padding: 14px 24px 24px; }
 .cm-car__card-num { font-size: 13px; color: var(--ink-55); margin: 0 0 10px; font-variant-numeric: tabular-nums; }
 .cm-car__card-title { font-size: 18px; font-weight: 500; letter-spacing: -0.02em; margin: 0 0 8px; color: var(--ink); }
 .cm-car__card-body { font-size: 15px; line-height: 1.55; color: var(--ink-55); margin: 0; }
