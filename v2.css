@@ -436,7 +436,10 @@ a { color: inherit; text-decoration: none; }
 /* Same grey as the About lede. --ink-40 measures about 3.3:1 on white, under
    the 4.5 floor, and at 18px this is body copy rather than a caption. */
 .case__line { color: var(--ink-55); font-size: 18px; max-width: 62ch; margin: 0 0 28px; }
-.case__line strong { font-weight: 400; color: var(--ink); }
+/* The lead clause is the claim; the rest is context. Colour alone left the
+   two halves reading as one flat line, so the highlighted half takes the
+   heavier of the two weights too — matching .two-tone above. */
+.case__line strong { font-weight: 500; color: var(--ink); }
 
 /* ── Quote ─────────────────────────────────────────────── */
 .quote { max-width: 24ch; }
@@ -585,6 +588,20 @@ a { color: inherit; text-decoration: none; }
 }
 .xp__detail > div { overflow: hidden; }
 .xp[data-open="true"] .xp__detail { grid-template-rows: 1fr; }
+/* The one-line summary each row carried on the old site. Hidden while the
+   row is closed — that restraint is the point of the collapsed list — and
+   used as the detail's own heading once it opens. */
+.xp__lead {
+  margin: 0 0 14px;
+  /* Same size and leading as the copy below it — weight and colour do the
+     separating, so it reads as that paragraph's heading rather than as a
+     second, larger paragraph. */
+  font-size: 16px;
+  line-height: 1.65;
+  font-weight: 500;
+  color: var(--ink);
+  max-width: 62ch;
+}
 .xp__text {
   /* No top margin: .xp__body already provides it, and having both meant the
      paragraph started 18px below the image it is supposed to sit level with. */
@@ -598,11 +615,24 @@ a { color: inherit; text-decoration: none; }
 
 /* Hidden until the toggle, and they animate in on their own rather than
    appearing all at once. */
-.xp--more { display: none; }
-.rows.is-all .xp--more { display: block; animation: xpIn .45s cubic-bezier(0.16, 1, 0.3, 1) both; }
-@keyframes xpIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+/* display:none cannot animate, so collapsing snapped shut while opening
+   faded in — the two directions did not match. The extra rows share one
+   wrapper that animates 0fr to 1fr, which works both ways and needs nobody
+   to know the content's height. */
+.xp-more {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows .5s cubic-bezier(0.76, 0, 0.24, 1),
+              opacity .35s ease;
+}
+/* Exactly one child. grid-template-rows: 0fr sizes only the FIRST row, so
+   with the seven rows as direct children the other six got auto-sized
+   implicit rows and the wrapper collapsed to 553px instead of 0. */
+.xp-more > div { overflow: hidden; min-height: 0; }
+.rows.is-all .xp-more { grid-template-rows: 1fr; opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .rows.is-all .xp--more { animation: none; }
+  .xp-more { transition: none; }
   .xp__detail { transition: none; }
 }
 
@@ -681,7 +711,11 @@ a { color: inherit; text-decoration: none; }
   background: var(--ink-25);
   transition: background-color .25s ease, width .25s ease;
 }
-.car-dot.is-active::before { background: var(--ink); width: 22px; }
+/* Every card currently on screen gets a filled dot, so the indicator shows
+   how much of the row you are looking at rather than a single position. Same
+   shape throughout — the elongated pill implied one active item when three
+   are visible. */
+.car-dot.is-active::before { background: var(--ink); }
 .car-btns { display: flex; gap: 8px; }
 .car-btn {
   width: 44px; height: 44px;
@@ -778,9 +812,15 @@ a { color: inherit; text-decoration: none; }
 /* The image takes the date column's width and the gap matches the row's, so
    the detail text starts exactly where the role column does above it —
    240 + 190 + 40. Sized by the grid rather than by eye. */
-.xp__body { display: flex; gap: 40px; align-items: flex-start; margin: 0 0 30px; }
+/* 150 with an 80px gap rather than 190 with 40 — the pair still sums to the
+   230 that puts the paragraph on the role column above it. */
+.xp__body { display: flex; gap: 80px; align-items: flex-start; margin: 0 0 30px; }
+/* The two paragraphs stack in their own column beside the image. Left as
+   siblings of the img they became flex items and sat side by side, which put
+   the copy 400px right of where the role column sits above it. */
+.xp__copy { min-width: 0; }
 .xp__media {
-  width: 190px;
+  width: 150px;
   flex-shrink: 0;
   border-radius: 12px;
   aspect-ratio: 1 / 1;

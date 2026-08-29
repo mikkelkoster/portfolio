@@ -12,13 +12,29 @@
       });
     }, { rootMargin: '-40px 0px', threshold: 0.06 });
     els.forEach(el => io.observe(el));
-    /* Anything already in view at load goes immediately, so the
-       first screen is not waiting on a scroll that may not come. */
-    requestAnimationFrame(() => {
+    /* Anything at or above the fold goes immediately, and again on every
+       scroll frame. The observer alone is not enough: text is wiped in with
+       clip-path, so an element that never receives is-in stays CLIPPED
+       rather than merely un-animated — jumping straight to an anchor left
+       nine of them with their descenders cut off. This sweep costs one rect
+       read per element per scroll frame and removes that failure entirely. */
+    const sweep = () => {
+      let pending = false;
       els.forEach(el => {
+        if (el.classList.contains('is-in')) return;
         if (el.getBoundingClientRect().top < innerHeight) el.classList.add('is-in');
+        else pending = true;
       });
-    });
+      if (!pending) removeEventListener('scroll', onScroll);
+    };
+    let queued = false;
+    const onScroll = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => { queued = false; sweep(); });
+    };
+    addEventListener('scroll', onScroll, { passive: true });
+    requestAnimationFrame(sweep);
   })();
 
   /* ── Nav hairline on scroll ────────────────────────── */
@@ -240,7 +256,7 @@
       b.type = 'button';
       b.setAttribute('aria-label', 'Go to item ' + (i + 1));
       b.addEventListener('click', () => {
-        current = i;
+        current = Math.min(i, lastIndex());
         pending = i;
         clearTimeout(release);
         release = setTimeout(settle, 800);
@@ -258,6 +274,20 @@
        origin left a sliver unscrolled and the Next arrow permanently enabled,
        so the target is clamped to where the track can actually stop. */
     const targetOf = i => Math.min(originOf(i), maxScroll());
+    /* The last index that still moves the track. Past it every column shares
+       the same clamped resting position, so advancing further would light a
+       new dot while nothing slid — which is exactly what the dots were doing
+       when clicks outran the scroll. */
+    /* How many cards sit in the viewport at once. */
+    const visibleCount = () => {
+      const pitch = cols[0].offsetWidth + 24;
+      return Math.max(1, Math.round(track.clientWidth / pitch));
+    };
+    const lastIndex = () => {
+      const max = maxScroll();
+      for (let i = 0; i < cols.length; i++) if (originOf(i) >= max - 1) return i;
+      return cols.length - 1;
+    };
     /* No cols.length - perPage cap. That heuristic stopped the last press
        short whenever the final column's origin sat inside the scroll range:
        the track had further to travel but the index had already run out.
@@ -280,10 +310,21 @@
     let current = 0;
     let pending = -1, release = 0, queued = 0;
     const settle = () => { pending = -1; clearTimeout(release); };
+    /* Disabled state comes from the index, not from scrollLeft: the scroll
+       has not started yet when a press is painted, so reading position let a
+       second click through after the last one. */
     const paint = i => {
-      dotEls.forEach((d, k) => d.classList.toggle('is-active', k === i));
-      if (prev) prev.disabled = track.scrollLeft <= 1;
-      if (next) next.disabled = track.scrollLeft >= maxScroll() - 1;
+      /* One dot per card, all of them shown. Hiding the unreachable ones made
+         sense while a single dot meant a single position, but the highlight
+         is a range now — the last cards are visible at the end even though
+         the track cannot start on them, so their dots do light up. */
+      const span = visibleCount();
+      dotEls.forEach((d, k) => {
+        d.hidden = false;
+        d.classList.toggle('is-active', k >= i && k < i + span);
+      });
+      if (prev) prev.disabled = i <= 0;
+      if (next) next.disabled = i >= lastIndex();
     };
     const sync = () => {
       queued = 0;
@@ -310,7 +351,7 @@
        An arrow also commits its destination straight away, so the dot moves
        with the slide rather than at the half-way point. */
     const go = dir => {
-      const i = Math.max(0, Math.min(cols.length - 1, current + dir));
+      const i = Math.max(0, Math.min(lastIndex(), current + dir));
       current = i;
       pending = i;
       clearTimeout(release);
