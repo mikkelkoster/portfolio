@@ -37,6 +37,9 @@
      is the width of the window, and the gutter is small enough that
      the type has to carry the composition. */
   --nav-h:      64px;
+  /* The case sheet's gutter. Sections and carousel tracks both read it, so a
+     card can never come to rest out of line with the heading above it. */
+  --cm-gutter:  clamp(24px, 4vw, 72px);
   --hero-pb:    clamp(48px, 8vh, 104px);
   --maxw:       1600px;
   --gutter:     48px;
@@ -76,6 +79,14 @@ body {
 }
 
 img, canvas, svg { display: block; max-width: 100%; }
+/* The other half of that rule, and it is not optional. max-width caps the
+   width, but the width/height ATTRIBUTES still apply as presentational
+   hints — and a CSS width paired with an attribute height does not preserve
+   the ratio, it squashes. The team photo was arriving 4032x3024 and drawing
+   at 1256x3024; the case screenshots were 1800x1188 drawing at 900x1188.
+   Specificity 0,0,1 on purpose, so any component rule that wants a definite
+   height (the design-system row, the card thumbnails) still wins. */
+img { height: auto; }
 a { color: inherit; text-decoration: none; }
 
 /* ── Layout primitives ─────────────────────────────────── */
@@ -1028,16 +1039,23 @@ a { color: inherit; text-decoration: none; }
    between them has to be larger again or the page reads as a list. */
 .cm-section--light,
 .cm-section--dark {
-  padding: clamp(72px, 9vw, 150px) clamp(24px, 4vw, 72px);
+  padding: clamp(72px, 9vw, 150px) var(--cm-gutter);
 }
-.cm-section--light + .cm-section--light { border-top: var(--rule) solid var(--line); }
-/* The one dark moment, and it is ink rather than navy — the palette has no
-   second hue to spend. */
-.cm-section--dark { background: var(--ink); color: #fff; }
+/* Every section sits on white. There were two ink-ground sections and an
+   ink-ground closing block; they were the only thing in the build that
+   inverted, and one dark slab in the middle of a white case reads as a
+   different site rather than as emphasis. The hairline is what separates
+   sections now — the same device the front page uses. The --dark class is
+   kept on the markup so it can still be targeted, but it no longer inverts. */
+.cm-section--light + .cm-section--light,
+.cm-section--light + .cm-section--dark,
+.cm-section--dark  + .cm-section--light,
+.cm-section--dark  + .cm-section--dark { border-top: var(--rule) solid var(--line); }
+.cm-section--dark { background: var(--bg); color: var(--ink); }
 .cm-section--dark .cm-headline,
-.cm-section--dark .cm-hero__title { color: #fff; }
+.cm-section--dark .cm-hero__title { color: var(--ink); }
 .cm-section--dark .cm-body,
-.cm-section--dark .cm-label { color: rgba(255,255,255,0.62); }
+.cm-section--dark .cm-label { color: var(--ink-55); }
 
 /* ── Case hero ─────────────────────────────────────────── */
 /* 18px, regular, grey. The reference sets these as a quiet sentence rather
@@ -1098,37 +1116,49 @@ a { color: inherit; text-decoration: none; }
 .cm-challenge-grid { display: grid; gap: 56px 64px; margin-top: 72px; }
 @media (min-width: 900px) { .cm-challenge-grid { grid-template-columns: repeat(3, 1fr); } }
 .cm-challenge-card { background: none; padding: 0; border: 0; }
-.cm-challenge-icon { font-size: 24px; color: var(--ink); margin-bottom: 18px; display: block; }
 .cm-challenge-title { font-size: 19px; font-weight: 500; letter-spacing: -0.02em; margin: 0 0 10px; color: var(--ink); }
 .cm-challenge-body { font-size: 16px; line-height: 1.6; color: var(--ink-55); margin: 0; }
 
 /* ── Result stats ──────────────────────────────────────── */
-.cm-close-section { background: var(--ink); color: #fff; }
+/* White too. The closing stats were the last inverted block. */
+.cm-close-section { background: var(--bg); color: var(--ink); border-top: var(--rule) solid var(--line); }
 .cm-close-headline {
   font-size: clamp(28px, 3.4vw, 52px);
   font-weight: 400;
   line-height: 1.12;
   letter-spacing: -0.035em;
-  color: #fff;
+  color: var(--ink);
   margin: 0 0 56px;
   max-width: 22ch;
 }
-.cm-close-stats { display: grid; gap: 44px 32px; }
-@media (min-width: 860px) { .cm-close-stats { grid-template-columns: repeat(4, 1fr) !important; } }
-@media (max-width: 859px) { .cm-close-stats { grid-template-columns: repeat(2, 1fr) !important; } }
+/* Five stats in a grid hard-pinned to four columns left the fifth alone on a
+   row of its own. auto-fit takes the count from the content instead, so the
+   row reflows at any width without anyone having to keep a number in the
+   stylesheet in step with a number in the markup. */
+.cm-close-stats {
+  display: grid;
+  gap: 44px 32px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
 .cm-close-stat { border: 0 !important; padding: 0 !important; }
 .cm-close-stat__val {
   font-size: clamp(36px, 4vw, 60px);
   font-weight: 400;
   letter-spacing: -0.04em;
   line-height: 1;
-  color: #fff;
+  color: var(--ink);
   margin: 0 0 12px;
   font-variant-numeric: tabular-nums;
 }
-.cm-close-stat__label { font-size: 15px; color: rgba(255,255,255,0.62); margin: 0; max-width: 24ch; }
+.cm-close-stat__label { font-size: 15px; color: var(--ink-55); margin: 0; max-width: 24ch; }
 
 /* ── Modal carousels ───────────────────────────────────── */
+/* The rows are full-bleed so cards can run off the right edge, but the
+   track's OWN padding lines the first card up with the section content, and
+   scroll-padding is the half that matters — without it snap aligns to the
+   scrollport edge, so every first card came to rest 72px left of the heading
+   above it and the arrows sat flush against the panel. Same fix, and the same
+   reason, as the front page's rows. */
 .cm-car-wrap { padding: 0 !important; overflow: visible; }
 .cm-car__track {
   display: flex;
@@ -1142,6 +1172,8 @@ a { color: inherit; text-decoration: none; }
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding-bottom: 4px;
+  padding-inline: var(--cm-gutter);
+  scroll-padding-inline: var(--cm-gutter);
   /* Stretch, so every card in a row is the same height — the same trade the
      page rows make: nothing is clipped, so the longest card sets the height. */
   align-items: stretch;
@@ -1152,6 +1184,20 @@ a { color: inherit; text-decoration: none; }
    horizontal track — big enough that one slide is the subject, not a
    thumbnail among several. */
 .cm-car__col { scroll-snap-align: start; flex: 0 0 auto; width: min(72%, 900px); }
+/* Nine result cards, so they run three across rather than one at a time.
+   The 72% width above belongs to the case screenshots, where one slide IS the
+   subject; a result card is a caption with a picture over it, and at 900px it
+   read as a banner. The calc divides the track's own content box, so three
+   land exactly inside the gutters. */
+.cm-car__col--narrow { width: clamp(260px, calc((100% - 48px) / 3), 420px); }
+/* The quote row is three across too. Its cards used the old site's inner
+   class names — testimonial-quote, testimonial-avatar, testimonial-meta —
+   none of which exist in this stylesheet, so they rendered unstyled: raw
+   paragraphs, default margins, and an avatar drawing at its natural 800px.
+   They use the front page's card now, which is the same card the reader has
+   already seen once. */
+.cm-car__col--quote { width: clamp(260px, calc((100% - 48px) / 3), 420px); }
+.t-role--prev { color: var(--ink-25); margin-top: 2px; }
 .cm-car__col--ds { width: auto; }
 /* No dimming. It belonged to a design that showed one card at a time; here
    several are visible and fading the neighbours just makes the row murky. */
@@ -1162,6 +1208,13 @@ a { color: inherit; text-decoration: none; }
   background: var(--surface);
 }
 .cm-car__text-card { background: var(--surface); border-radius: 16px; overflow: hidden; }
+/* The illustrations are 800x560 and they are drawings, not photographs — a
+   crop throws away the subject rather than the edges. They were being covered
+   into a 140px band, which at card width is a 6.4:1 slot: what survived was a
+   giant cropped head on one card and half an arrow on the next. The box takes
+   the artwork's own ratio instead, so nothing is cut. */
+.cm-car__card-img { aspect-ratio: 800 / 560; }
+.cm-car__card-img img { width: 100%; height: 100%; object-fit: contain; }
 .cm-car__card-body-wrap { padding: 24px; }
 .cm-car__card-num { font-size: 13px; color: var(--ink-55); margin: 0 0 10px; font-variant-numeric: tabular-nums; }
 .cm-car__card-title { font-size: 18px; font-weight: 500; letter-spacing: -0.02em; margin: 0 0 8px; color: var(--ink); }
@@ -1171,7 +1224,8 @@ a { color: inherit; text-decoration: none; }
 .cm-car__cap-body { font-size: 15px; color: var(--ink-55); margin: 0; }
 .cm-car__footer {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 24px; margin-top: 32px; padding: 0 !important;
+  gap: 24px; margin-top: 32px;
+  padding: 0 var(--cm-gutter) !important;
 }
 .cm-car__controls { display: flex; gap: 8px; }
 .cm-car__btn {
@@ -1218,18 +1272,23 @@ a { color: inherit; text-decoration: none; }
 
 .cm-ba-dark { display: grid; gap: 24px; margin-top: 48px; }
 @media (min-width: 900px) { .cm-ba-dark { grid-template-columns: 1fr auto 1fr; align-items: center; } }
-.cm-ba-dark__col { background: rgba(255,255,255,0.06); border-radius: 16px; padding: 32px; }
-.cm-ba-dark__label { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin: 0 0 12px; }
-.cm-ba-dark__title { font-size: 20px; font-weight: 400; color: #fff; margin: 0 0 12px; }
-.cm-ba-dark__body { font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.62); margin: 0; }
-.cm-ba-dark__arrow { color: rgba(255,255,255,0.4); display: flex; justify-content: center; }
+.cm-ba-dark__col { background: var(--surface); border-radius: 16px; padding: 32px; }
+.cm-ba-dark__label { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-55); margin: 0 0 12px; }
+.cm-ba-dark__title { font-size: 20px; font-weight: 500; color: var(--ink); margin: 0 0 12px; }
+.cm-ba-dark__body { font-size: 15px; line-height: 1.6; color: var(--ink-55); margin: 0; }
+.cm-ba-dark__arrow { color: var(--ink-25); display: flex; justify-content: center; }
 
 /* ── Flow rows and spreads ─────────────────────────────── */
 .cm-lego-row { display: grid; gap: 20px 40px; padding-block: 36px; border-top: var(--rule) solid var(--line); align-items: start; }
 @media (min-width: 900px) { .cm-lego-row { grid-template-columns: 260px 1fr; } }
 .cm-lego-row__label { display: flex; align-items: center; gap: 10px; }
 .cm-lego-row__title { font-size: 19px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
-.cm-lego-emoji { font-size: 20px; }
+/* Drawn marks, not emoji. A red cross and a green tick put two more hues on
+   a page whose whole argument is that colour appears in two places only —
+   and they were the last emoji left in the build. The cross is grey and the
+   tick is ink, so the pair still reads as no/yes without any hue at all. */
+.cm-lego-mark { display: inline-flex; color: var(--ink-25); flex: 0 0 auto; }
+.cm-lego-mark--yes { color: var(--ink); }
 .cm-lego-img { border-radius: 12px; background: var(--surface); }
 .cm-svg-spread { display: grid; gap: 40px; margin-top: 72px; }
 @media (min-width: 900px) { .cm-svg-spread { grid-template-columns: repeat(3, 1fr); } }
