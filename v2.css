@@ -904,12 +904,17 @@ a { color: inherit; text-decoration: none; }
   /* aspect-ratio has to go here. With an explicit height it DERIVES the
      width — 260 x 0.78 gave a 171px strip on a 390px screen instead of a
      full-width band. */
+  /* Square, not a letterbox. The plate is a standing figure at 0.49, so a
+     342x219 band made cover crop 481px off the height and land on the head
+     alone. A square frame crops far less and holds head to chest. */
   .hero__figure {
-    aspect-ratio: auto;
+    aspect-ratio: 1 / 1;
     width: 100%;
-    height: clamp(180px, 26vh, 260px);
+    height: auto;
+    max-height: 42vh;
     margin-top: 18px;
   }
+  .hero__figure img { object-position: center 12%; }
   .hero__avail { margin-bottom: 24px; }
   .hero__display { margin-bottom: 24px; }
   .hero__lede { margin-bottom: 28px; }
