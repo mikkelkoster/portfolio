@@ -1034,7 +1034,15 @@ a { color: inherit; text-decoration: none; }
   inset: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
+  /* none, not contain. Both stop the scroll chaining to the page underneath,
+     but contain still lets the browser show its overscroll affordance — the
+     rubber-band bounce at either end of a trackpad fling. That bounce pushes
+     the sheet away from the edge it is resting against and exposes the dimmed
+     page behind it, which reads exactly like the modal flashing through at the
+     top and bottom. It is not a paint problem, which is why chasing the
+     compositor never fixed it. The current site's modal has used none all
+     along, and does not do this. */
+  overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
   padding-top: 40px;
 }
