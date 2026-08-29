@@ -1020,9 +1020,12 @@ a { color: inherit; text-decoration: none; }
 .cm-close svg { width: 18px; height: 18px; }
 
 /* ── Section rhythm ─────────────────────────────────────── */
+/* Measured off the reference: the case breathes far harder than the front
+   page. Sections are tall and the type inside them is large, so the space
+   between them has to be larger again or the page reads as a list. */
 .cm-section--light,
 .cm-section--dark {
-  padding: clamp(56px, 7vw, 104px) clamp(24px, 5vw, 80px);
+  padding: clamp(72px, 9vw, 150px) clamp(24px, 4vw, 72px);
 }
 .cm-section--light + .cm-section--light { border-top: var(--rule) solid var(--line); }
 /* The one dark moment, and it is ink rather than navy — the palette has no
@@ -1034,12 +1037,16 @@ a { color: inherit; text-decoration: none; }
 .cm-section--dark .cm-label { color: rgba(255,255,255,0.62); }
 
 /* ── Case hero ─────────────────────────────────────────── */
+/* 18px, regular, grey. The reference sets these as a quiet sentence rather
+   than an uppercase caption — they read as the section's name, not as a tag. */
 .cm-hero__label,
 .cm-label {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
   color: var(--ink-55);
-  margin: 0 0 32px;
+  margin: 0 0 24px;
+  text-transform: none;
 }
 .cm-hero__title {
   font-size: clamp(42px, 6.6vw, 112px);
@@ -1062,26 +1069,30 @@ a { color: inherit; text-decoration: none; }
 .cm-meta-value { font-size: 17px; color: var(--ink-55); margin: 0; }
 
 /* ── Headings and copy ─────────────────────────────────── */
+/* 80px, not 52. On the reference the headline IS the argument — there is not
+   one paragraph over 120 characters on the whole case — so it carries the
+   weight that body copy carries elsewhere. */
 .cm-headline {
-  font-size: clamp(28px, 3.4vw, 52px);
+  font-size: clamp(34px, 5vw, 80px);
   font-weight: 400;
-  line-height: 1.12;
-  letter-spacing: -0.035em;
+  line-height: 1.08;
+  letter-spacing: -0.038em;
   color: var(--ink);
-  margin: 0 0 28px;
-  max-width: 20ch;
+  margin: 0 0 32px;
+  max-width: 18ch;
   text-wrap: balance;
 }
+/* Supporting, and sized to stay that way next to an 80px headline. */
 .cm-body {
   font-size: 18px;
   line-height: 1.6;
   color: var(--ink-55);
   margin: 0;
-  max-width: 62ch;
+  max-width: 54ch;
 }
 
 /* ── Challenge cards ───────────────────────────────────── */
-.cm-challenge-grid { display: grid; gap: 40px 56px; margin-top: 56px; }
+.cm-challenge-grid { display: grid; gap: 56px 64px; margin-top: 72px; }
 @media (min-width: 900px) { .cm-challenge-grid { grid-template-columns: repeat(3, 1fr); } }
 .cm-challenge-card { background: none; padding: 0; border: 0; }
 .cm-challenge-icon { font-size: 24px; color: var(--ink); margin-bottom: 18px; display: block; }
@@ -1127,7 +1138,10 @@ a { color: inherit; text-decoration: none; }
   scrollbar-width: none;
 }
 .cm-car__track::-webkit-scrollbar { display: none; }
-.cm-car__col { scroll-snap-align: start; flex: 0 0 auto; width: clamp(260px, 30%, 420px); }
+/* Wide. The reference runs its case imagery at about 72% of the window in a
+   horizontal track — big enough that one slide is the subject, not a
+   thumbnail among several. */
+.cm-car__col { scroll-snap-align: start; flex: 0 0 auto; width: min(72%, 900px); }
 .cm-car__col--ds { width: auto; }
 /* No dimming. It belonged to a design that showed one card at a time; here
    several are visible and fading the neighbours just makes the row murky. */
@@ -1195,7 +1209,7 @@ a { color: inherit; text-decoration: none; }
 .cm-lego-row__title { font-size: 19px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
 .cm-lego-emoji { font-size: 20px; }
 .cm-lego-img { border-radius: 12px; background: var(--surface); }
-.cm-svg-spread { display: grid; gap: 40px; margin-top: 48px; }
+.cm-svg-spread { display: grid; gap: 40px; margin-top: 72px; }
 @media (min-width: 900px) { .cm-svg-spread { grid-template-columns: repeat(3, 1fr); } }
 .cm-svg-spread-label { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 14px; }
 .cm-svg-spread-img { width: 100%; border-radius: 12px; background: var(--surface); }
