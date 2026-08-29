@@ -1134,6 +1134,15 @@ a { color: inherit; text-decoration: none; }
 }
 .cm-fact dt { font-size: 15px; color: var(--ink-55); margin-bottom: 7px; }
 .cm-fact dd { font-size: 18px; color: var(--ink); margin: 0; max-width: 60ch; }
+/* Stacked to one column, the desktop spacing turned six facts into most of a
+   phone screen before the first image. The pair is tightened so a label reads
+   as attached to its value rather than floating between two of them, and the
+   gap between pairs stays comfortably larger than the gap inside one. */
+@media (max-width: 759px) {
+  .cm-facts { gap: 20px; margin-top: 32px; }
+  .cm-fact dt { font-size: 13px; margin-bottom: 2px; }
+  .cm-fact dd { font-size: 15px; line-height: 1.4; }
+}
 
 /* ── Headings and copy ─────────────────────────────────── */
 /* 80px, not 52. On the reference the headline IS the argument — there is not
