@@ -490,6 +490,7 @@
         if (!modal.classList.contains('is-open')) return;
         panel.style.transition = 'none';
         panel.style.transform = 'none';
+        modal.classList.add('is-settled');   // arms the opaque backstop
       };
       panel.addEventListener('transitionend', settle);
       closeBtn.focus({ preventScroll: true });
@@ -501,6 +502,7 @@
     };
 
     const close = () => {
+      modal.classList.remove('is-settled');  // the backstop cannot travel with the panel
       closeBtn.classList.remove('is-visible');
       /* Reset the scroll first, while the panel still covers it. Animating a
          panel that is taller than the viewport out by 100% sweeps its whole
