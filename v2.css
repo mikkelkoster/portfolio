@@ -164,10 +164,14 @@ a { color: inherit; text-decoration: none; }
 .btn--sm { height: 44px; padding-inline: 20px; font-size: 14px; }
 
 /* ── Nav ───────────────────────────────────────────────── */
+/* The bar spans the window; its contents sit on the content column. .wrap
+   would have capped the bar itself at 1440, so the background, the blur and
+   the bottom hairline all stopped short of the edges. */
 .nav {
   position: sticky;
   top: 0;
   z-index: 60;
+  padding-inline: var(--edge);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -279,10 +283,29 @@ a { color: inherit; text-decoration: none; }
      full width of the page. */
   align-self: flex-start;
 }
+/* The ping ring from the current site, carried over. 2.4s rather than 2.8 —
+   slightly more often, as asked. The ring is a pseudo-element so only it
+   animates; the dot itself stays put. */
 .hero__dot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--green);
   flex-shrink: 0;
+  position: relative;
+}
+.hero__dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--green) 55%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero__dot::after { animation: avail-ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite; }
+  @keyframes avail-ping {
+    0%   { transform: scale(1);    opacity: 0.85; }
+    70%  { transform: scale(1.9);  opacity: 0; }
+    100% { transform: scale(1.9);  opacity: 0; }
+  }
 }
 /* No font-size here. This rule used to carry clamp(46px, 9.2vw, 132px),
    which beat .display on specificity and source order — so the type scale
