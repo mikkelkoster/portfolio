@@ -1,5 +1,12 @@
 /* Grey-ground variant of stage-configs.js, for the minimal build (v2.html).
  *
+ * The monitor sweep is DARKER than the colour version it replaces, not
+ * lighter. Measured in linear terms the old blue top came to about 0.68
+ * luminance; a neutral 0.72/0.73/0.75 comes to 0.73, so the silver enclosure
+ * had less to stand against here than it did in colour and dropped out of
+ * some shots entirely. 0.58/0.59/0.61 is about 0.59 and gives it an edge in
+ * every camera setup.
+ *
  * NOT one grey for all three. The ground exists to give the device a
  * silhouette, so it has to run opposite to the body: the two monitors are
  * silver and need a mid grey to have an edge against (the colour version
@@ -66,7 +73,7 @@ window.STAGE_CONFIGS = {
          well — force it to unlit green and 6.5% of the frame goes green —
          it simply has the same value as the ground behind it and vanishes.
          Dropping the top of the gradient is what gives it a silhouette. */
-      high: [0.72, 0.73, 0.75],
+      high: [0.58, 0.59, 0.61],
     },
     shots: [
       {
@@ -104,7 +111,7 @@ window.STAGE_CONFIGS = {
       low: [0.34, 0.35, 0.37],
       /* Same reasoning as Maersk above: a silver device needs a ground
          darker than it is. */
-      high: [0.72, 0.73, 0.75],
+      high: [0.58, 0.59, 0.61],
     },
     shots: [
       {

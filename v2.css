@@ -691,9 +691,24 @@ a { color: inherit; text-decoration: none; }
 /* The dot people see is 7px; the thing they can hit is 44. Drawing the dot
    as a pseudo-element inside a full-size button keeps the visual weight
    without a 7px tap target. */
-.car-dots { display: flex; align-items: center; flex-wrap: wrap; }
+.car-dots { display: flex; align-items: center; position: relative; }
+/* One pill spanning the cards on screen, rather than a run of separate dots.
+   Drawn as a single element so the shape has two rounded ends instead of a
+   chain of lozenges, and so it slides between positions. */
+.car-pill {
+  position: absolute;
+  top: 50%;
+  height: 7px;
+  border-radius: 100px;
+  background: var(--ink);
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: left .38s cubic-bezier(0.76, 0, 0.24, 1),
+              width .38s cubic-bezier(0.76, 0, 0.24, 1);
+}
+@media (prefers-reduced-motion: reduce) { .car-pill { transition: none; } }
 .car-dot {
-  width: 18px;
+  width: 13px;
   height: 44px;
   background: none;
   border: 0;
@@ -715,7 +730,7 @@ a { color: inherit; text-decoration: none; }
    how much of the row you are looking at rather than a single position. Same
    shape throughout — the elongated pill implied one active item when three
    are visible. */
-.car-dot.is-active::before { background: var(--ink); }
+/* The dots stay grey; the pill above covers the active run. */
 .car-btns { display: flex; gap: 8px; }
 .car-btn {
   width: 44px; height: 44px;

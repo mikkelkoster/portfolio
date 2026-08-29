@@ -266,6 +266,9 @@
       dots.appendChild(b);
     });
     const dotEls = [...dots.children];
+    const pill = document.createElement('span');
+    pill.className = 'car-pill';
+    dots.appendChild(pill);
 
     const originOf = i => cols[i].offsetLeft - cols[0].offsetLeft;
     const maxScroll = () => track.scrollWidth - track.clientWidth;
@@ -319,10 +322,18 @@
          is a range now — the last cards are visible at the end even though
          the track cannot start on them, so their dots do light up. */
       const span = visibleCount();
+      const last = Math.min(dotEls.length - 1, i + span - 1);
       dotEls.forEach((d, k) => {
         d.hidden = false;
-        d.classList.toggle('is-active', k >= i && k < i + span);
+        d.classList.toggle('is-active', k >= i && k <= last);
       });
+      /* Span the run from the centre of the first active dot to the centre of
+         the last, plus one dot's width so both ends are capped. */
+      const slot = dotEls[0].offsetWidth;
+      const x0 = dotEls[i].offsetLeft + (slot - 7) / 2;
+      const x1 = dotEls[last].offsetLeft + (slot - 7) / 2 + 7;
+      pill.style.left = x0 + 'px';
+      pill.style.width = (x1 - x0) + 'px';
       if (prev) prev.disabled = i <= 0;
       if (next) next.disabled = i >= lastIndex();
     };
