@@ -40,6 +40,12 @@
   /* The case sheet's gutter. Sections and carousel tracks both read it, so a
      card can never come to rest out of line with the heading above it. */
   --cm-gutter:  clamp(24px, 4vw, 72px);
+  /* One measure for a case section's headline AND the body under it. They were
+     set independently — 38ch at 50px against 54ch at 18px — so the body ran to
+     566px under a 1106px headline and the block read as two ragged columns
+     rather than one. In px because ch scales with font-size, which is exactly
+     what made them diverge. */
+  --cm-measure: min(1106px, 100%);
   --hero-pb:    clamp(48px, 8vh, 104px);
   --maxw:       1600px;
   --gutter:     48px;
@@ -1071,13 +1077,12 @@ a { color: inherit; text-decoration: none; }
 /* Every section sits on white. There were two ink-ground sections and an
    ink-ground closing block; they were the only thing in the build that
    inverted, and one dark slab in the middle of a white case reads as a
-   different site rather than as emphasis. The hairline is what separates
-   sections now — the same device the front page uses. The --dark class is
-   kept on the markup so it can still be targeted, but it no longer inverts. */
-.cm-section--light + .cm-section--light,
-.cm-section--light + .cm-section--dark,
-.cm-section--dark  + .cm-section--light,
-.cm-section--dark  + .cm-section--dark { border-top: var(--rule) solid var(--line); }
+   different site rather than as emphasis. The --dark class is kept on the
+   markup so it can still be targeted, but it no longer inverts.
+   Nothing separates the sections now but the space between them. A hairline
+   went in when they turned white, and it drew a line across the widest part of
+   the page every 150px — a lot of ruling for a build whose whole argument is
+   that spacing does the work. The 150px of section padding IS the division. */
 .cm-section--dark { background: var(--bg); color: var(--ink); }
 .cm-section--dark .cm-headline,
 .cm-section--dark .cm-hero__title { color: var(--ink); }
@@ -1162,7 +1167,7 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: -0.03em;
   color: var(--ink);
   margin: 0 0 32px;
-  max-width: 38ch;
+  max-width: var(--cm-measure);
   text-wrap: balance;
 }
 /* Supporting, and sized to stay that way next to an 80px headline. */
@@ -1171,7 +1176,7 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.6;
   color: var(--ink-55);
   margin: 0;
-  max-width: 54ch;
+  max-width: var(--cm-measure);
 }
 
 /* ── Challenge cards ───────────────────────────────────── */
@@ -1373,11 +1378,14 @@ a { color: inherit; text-decoration: none; }
    not reach its far end, and mandatory snap refused to rest anywhere that
    would have shown it. The cap is in px and vw, both definite: a percentage
    against a shrink-to-fit column is circular. */
+/* No radius and no clip. The card lost its grey ground, so the rounded corner
+   had nothing left to round except the artwork — and these sheets carry their
+   label 2 to 5 source pixels from the left edge, which at 3322px shown in
+   862px is under one display pixel. The corner was taking a bite out of the
+   N in "Navigation". The glyph was fine in the file all along. */
 .cm-ds-card {
   background: none;
-  border-radius: 14px;
   height: clamp(300px, 40vh, 480px);
-  overflow: hidden;
 }
 .cm-ds-card__img {
   display: block;
