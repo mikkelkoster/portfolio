@@ -1087,24 +1087,46 @@ a { color: inherit; text-decoration: none; }
      now gone with the rest of them. */
   max-width: 46ch;
 }
-.cm-hero__meta { display: grid; gap: 32px; }
-@media (min-width: 860px) { .cm-hero__meta { grid-template-columns: repeat(4, 1fr); } }
-@media (max-width: 859px) { .cm-hero__meta { grid-template-columns: repeat(2, 1fr); } }
-.cm-meta-label { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 6px; }
-.cm-meta-value { font-size: 17px; color: var(--ink-55); margin: 0; }
+/* The case facts, one per row. They used to be four across with two prose
+   blocks under them, and five of the seven facts appeared in BOTH — the same
+   three organisation numbers, the role and the team size, all within one
+   screen. The prose also set its own labels inline at 10px/700/uppercase, a
+   component that exists nowhere in this stylesheet, which is why it read as
+   borrowed from another site.
+   One row per fact makes the compound values legible: '20+ product teams, 260
+   engineers, 350+ stakeholders' was a mush of middle dots wrapped in a quarter
+   of the width. The label column is fixed so the values start on one line and
+   the eye can run down either side. */
+.cm-facts { margin: 40px 0 0; border-top: var(--rule) solid var(--line); }
+.cm-fact {
+  display: grid;
+  gap: 4px 32px;
+  padding: 18px 0;
+  border-bottom: var(--rule) solid var(--line);
+}
+@media (min-width: 700px) { .cm-fact { grid-template-columns: 200px 1fr; gap: 32px; } }
+.cm-fact dt { font-size: 17px; color: var(--ink-55); }
+.cm-fact dd { font-size: 17px; color: var(--ink); margin: 0; max-width: 60ch; }
 
 /* ── Headings and copy ─────────────────────────────────── */
 /* 80px, not 52. On the reference the headline IS the argument — there is not
    one paragraph over 120 characters on the whole case — so it carries the
    weight that body copy carries elsewhere. */
 .cm-headline {
-  font-size: clamp(34px, 5vw, 80px);
+  /* 52 and 36ch, measured rather than picked. At 80px every headline in the
+     case broke over four or five lines inside an 18ch measure, which reads as
+     cropped — the eye gets a column of fragments instead of a sentence. 52px
+     50px with a 38ch measure puts ALL eight on two lines or fewer — measured,
+     not guessed: at 36ch the 94-character one still broke to three. That lands
+     the box at 1106px, wider than the 838px they had and still 12% short of
+     the content width, so they stay a headline rather than a paragraph. */
+  font-size: clamp(30px, 3.3vw, 50px);
   font-weight: 400;
-  line-height: 1.08;
-  letter-spacing: -0.038em;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
   color: var(--ink);
   margin: 0 0 32px;
-  max-width: 18ch;
+  max-width: 38ch;
   text-wrap: balance;
 }
 /* Supporting, and sized to stay that way next to an 80px headline. */
@@ -1117,9 +1139,25 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ── Challenge cards ───────────────────────────────────── */
-.cm-challenge-grid { display: grid; gap: 56px 64px; margin-top: 72px; }
+/* The cards carry padding so the hover fill has somewhere to sit, and the
+   grid is pulled out by that same amount so the first column's text still
+   starts on the gutter. The gap comes down by roughly what the padding adds,
+   so the space BETWEEN two blocks of text is unchanged. */
+.cm-challenge-grid { display: grid; gap: 8px 16px; margin-top: 72px; margin-inline: -24px; }
 @media (min-width: 900px) { .cm-challenge-grid { grid-template-columns: repeat(3, 1fr); } }
-.cm-challenge-card { background: none; padding: 0; border: 0; }
+.cm-challenge-card {
+  background: none;
+  border: 0;
+  padding: 24px;
+  border-radius: 14px;
+  transition: background-color .22s ease;
+}
+.cm-challenge-card:hover { background: var(--surface); }
+@media (hover: none) { .cm-challenge-card:hover { background: none; } }
+/* Drawn, not a webfont. These nine slots held Phosphor classes for a font the
+   page never loaded, so each one reserved 24px of nothing. Same line weight
+   and viewBox as the front page's icons, and they take currentColor. */
+.cm-challenge-icon { color: var(--ink); margin-bottom: 16px; display: block; }
 .cm-challenge-title { font-size: 19px; font-weight: 500; letter-spacing: -0.02em; margin: 0 0 10px; color: var(--ink); }
 .cm-challenge-body { font-size: 16px; line-height: 1.6; color: var(--ink-55); margin: 0; }
 
@@ -1162,6 +1200,15 @@ a { color: inherit; text-decoration: none; }
   font-variant-numeric: tabular-nums;
 }
 .cm-close-stat__label { font-size: 15px; color: var(--ink-55); margin: 0; max-width: 24ch; }
+/* The arrow inherited the stat's 60px and came out heavier than the numbers it
+   joins. It is a connector, not a value. */
+.cm-stat-arrow {
+  font-size: 0.45em;
+  color: var(--ink-55);
+  margin: 0 0.22em;
+  vertical-align: 0.32em;
+  letter-spacing: 0;
+}
 
 /* ── Modal carousels ───────────────────────────────────── */
 /* The rows are full-bleed so cards can run off the right edge, but the
@@ -1171,6 +1218,9 @@ a { color: inherit; text-decoration: none; }
    above it and the arrows sat flush against the panel. Same fix, and the same
    reason, as the front page's rows. */
 .cm-car-wrap { padding: 0 !important; overflow: visible; }
+/* The sheet ends on a row, and a row has no padding of its own, so the last
+   card sat hard against the bottom of the panel. */
+.cm-car-wrap:last-child { margin-bottom: clamp(72px, 9vw, 150px); }
 .cm-car__track {
   display: flex;
   gap: 24px;
@@ -1191,10 +1241,17 @@ a { color: inherit; text-decoration: none; }
 }
 .cm-car__track::-webkit-scrollbar { display: none; }
 @media (prefers-reduced-motion: reduce) { .cm-car__track { scroll-behavior: auto; } }
-/* Wide. The reference runs its case imagery at about 72% of the window in a
-   horizontal track — big enough that one slide is the subject, not a
-   thumbnail among several. */
-.cm-car__col { scroll-snap-align: start; flex: 0 0 auto; width: min(72%, 900px); }
+/* Nearly the whole width. The reference runs its case imagery big enough that
+   one slide is unambiguously the subject; the next card is present only as a
+   sliver, enough to say the row continues and no more. At 72% the second
+   monitor was showing a third of itself and competing with the first.
+   The calc leaves the gap plus about 80px of the next card. */
+.cm-car__col {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: min(1160px, calc(100% - 104px));
+}
+@media (max-width: 900px) { .cm-car__col { width: calc(100% - 56px); } }
 /* Nine result cards, so they run three across rather than one at a time.
    The 72% width above belongs to the case screenshots, where one slide IS the
    subject; a result card is a caption with a picture over it, and at 900px it
@@ -1218,7 +1275,26 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
   background: var(--surface);
 }
-.cm-car__text-card { background: var(--surface); border-radius: 16px; overflow: hidden; }
+/* A little taller than the 1.647 the mockups were rendered at. The extra
+   height is taken off the sides rather than added to the top, so the monitor
+   keeps its proportions and the frame just sits closer around it. */
+.cm-car__slide { aspect-ratio: 3 / 2; }
+.cm-car__slide img { width: 100%; height: 100%; object-fit: cover; }
+/* One grey card, top to bottom. The illustration plates were a pale blue that
+   sat 20 levels off this grey — close enough to look like a mistake rather
+   than a choice, so the plates were repainted to --surface and the card now
+   reads as a single surface with the artwork floating on it.
+   height:100% makes the cards in a row match: the track already stretches the
+   COLUMN, but the card inside it was sized by its own content. */
+.cm-car__text-card {
+  background: var(--surface);
+  border-radius: 16px;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.cm-car__text-card .cm-car__card-body-wrap { flex: 1; }
 /* The illustrations are 800x560 and they are drawings, not photographs — a
    crop throws away the subject rather than the edges. They were being covered
    into a 140px band, which at card width is a 6.4:1 slot: what survived was a
@@ -1256,7 +1332,7 @@ a { color: inherit; text-decoration: none; }
    would have shown it. The cap is in px and vw, both definite: a percentage
    against a shrink-to-fit column is circular. */
 .cm-ds-card {
-  background: var(--surface);
+  background: none;
   border-radius: 14px;
   height: clamp(300px, 40vh, 480px);
   overflow: hidden;
@@ -1276,8 +1352,8 @@ a { color: inherit; text-decoration: none; }
 .cm-transform-col { background: var(--surface); border: 0; border-radius: 16px; padding: 32px; }
 .cm-transform-label { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-55); margin: 0 0 14px; }
 .cm-transform-title { font-size: 22px; font-weight: 400; letter-spacing: -0.02em; color: var(--ink); margin: 0 0 20px; }
-.cm-transform-rule { height: 1px; background: var(--line) !important; margin: 0 0 20px; }
-.cm-transform-divider { display: flex; align-items: center; justify-content: center; color: var(--ink-25); }
+.cm-transform-rule { display: none; }
+.cm-transform-divider { display: flex; align-items: center; justify-content: center; color: var(--ink); font-size: 22px; }
 .cm-transform-list li::before { background: var(--ink-25) !important; }
 .cm-transform-col--after .cm-transform-list li::before { background: var(--ink) !important; }
 
@@ -1287,10 +1363,10 @@ a { color: inherit; text-decoration: none; }
 .cm-ba-dark__label { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-55); margin: 0 0 12px; }
 .cm-ba-dark__title { font-size: 20px; font-weight: 500; color: var(--ink); margin: 0 0 12px; }
 .cm-ba-dark__body { font-size: 15px; line-height: 1.6; color: var(--ink-55); margin: 0; }
-.cm-ba-dark__arrow { color: var(--ink-25); display: flex; justify-content: center; }
+.cm-ba-dark__arrow { color: var(--ink); display: flex; justify-content: center; align-items: center; }
 
 /* ── Flow rows and spreads ─────────────────────────────── */
-.cm-lego-row { display: grid; gap: 20px 40px; padding-block: 36px; border-top: var(--rule) solid var(--line); align-items: start; }
+.cm-lego-row { display: grid; gap: 20px 40px; padding-block: 36px; align-items: start; }
 @media (min-width: 900px) { .cm-lego-row { grid-template-columns: 260px 1fr; } }
 .cm-lego-row__label { display: flex; align-items: center; gap: 10px; }
 .cm-lego-row__title { font-size: 19px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
@@ -1300,7 +1376,10 @@ a { color: inherit; text-decoration: none; }
    tick is ink, so the pair still reads as no/yes without any hue at all. */
 .cm-lego-mark { display: inline-flex; color: var(--ink-25); flex: 0 0 auto; }
 .cm-lego-mark--yes { color: var(--ink); }
-.cm-lego-img { border-radius: 12px; background: var(--surface); }
+.cm-lego-img { border-radius: 12px; }
+/* A full-width image answering a headline. It sat 48px below it, which read as
+   a caption rather than the evidence for the claim. */
+.cm-figure { border-radius: 12px; overflow: hidden; margin-top: 56px; }
 .cm-svg-spread { display: grid; gap: 40px; margin-top: 72px; }
 @media (min-width: 900px) { .cm-svg-spread { grid-template-columns: repeat(3, 1fr); } }
 .cm-svg-spread-label { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 14px; }

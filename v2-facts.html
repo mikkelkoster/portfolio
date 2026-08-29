@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Case facts — five variations</title>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
+<link rel="stylesheet" href="v2.css?v=105">
+<style>
+  /* Scratch page. Everything below is either a real v2 class or a candidate
+     that would move into v2.css if it wins. */
+  body { background: #e9e9e9; }
+  .vx { max-width: 1400px; margin: 0 auto 56px; background: #fff; border-radius: 20px; overflow: hidden; }
+  .vx__bar {
+    display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+    padding: 20px 72px; border-bottom: 1px solid var(--line); background: #fafafa;
+  }
+  .vx__n { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--ink-25); }
+  .vx__t { font-size: 17px; font-weight: 500; }
+  .vx__note { font-size: 15px; color: var(--ink-55); flex: 1 1 340px; }
+  .vx__body { padding: 64px 72px 72px; }
+
+  /* ── 2 · paired grid ─────────────────────────────────── */
+  .fx-grid { display: grid; gap: 36px 48px; margin-top: 44px; }
+  @media (min-width: 760px) { .fx-grid { grid-template-columns: repeat(3, 1fr); } }
+  .fx-grid dt { font-size: 15px; color: var(--ink-55); margin-bottom: 7px; }
+  .fx-grid dd { font-size: 18px; color: var(--ink); margin: 0; }
+
+  /* ── 3 · sentence + numbers ──────────────────────────── */
+  .fx-lede { font-size: 20px; line-height: 1.6; color: var(--ink); max-width: 62ch; margin: 40px 0 0; }
+  .fx-lede b { font-weight: 500; }
+  .fx-nums { display: grid; gap: 32px; margin-top: 56px; padding-top: 40px; border-top: 1px solid var(--line); }
+  @media (min-width: 760px) { .fx-nums { grid-template-columns: repeat(4, 1fr); } }
+  .fx-num { font-size: 42px; font-weight: 400; letter-spacing: -0.04em; line-height: 1; margin: 0 0 10px; font-variant-numeric: tabular-nums; }
+  .fx-numlabel { font-size: 15px; color: var(--ink-55); margin: 0; max-width: 22ch; }
+
+  /* ── 4 · one meta line + numbers ─────────────────────── */
+  .fx-line {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: baseline;
+    margin-top: 36px; font-size: 18px; color: var(--ink);
+  }
+  .fx-line span:not(.fx-dot) { white-space: nowrap; }
+  .fx-dot { color: var(--ink-25); }
+
+  /* ── 5 · facts as a sidebar ──────────────────────────── */
+  .fx-split { display: grid; gap: 56px; margin-top: 44px; }
+  @media (min-width: 960px) { .fx-split { grid-template-columns: 1fr 380px; gap: 80px; align-items: start; } }
+  .fx-side { display: grid; gap: 0; }
+  .fx-side div { padding: 14px 0; border-top: 1px solid var(--line); display: flex; gap: 16px; justify-content: space-between; }
+  .fx-side div:last-child { border-bottom: 1px solid var(--line); }
+  .fx-side dt { font-size: 15px; color: var(--ink-55); flex: 0 0 auto; }
+  .fx-side dd { font-size: 15px; color: var(--ink); margin: 0; text-align: right; }
+  .fx-bigcontext { font-size: 26px; line-height: 1.45; letter-spacing: -0.02em; color: var(--ink); margin: 0; max-width: 24ch; }
+</style>
+</head>
+<body>
+
+<div style="max-width:1400px;margin:40px auto 32px;padding:0 8px">
+  <p class="label muted" style="margin-block:0 10px">Scratch</p>
+  <h1 style="font-size:40px;font-weight:400;letter-spacing:-0.03em;margin:0 0 12px">Case facts — five variations</h1>
+  <p style="font-size:17px;color:var(--ink-55);margin:0;max-width:70ch">The same six facts each time. What changes is how much of them is prose, how much is
+  a number, and whether they run down the page or across it. Rendered in the real stylesheet at the real panel width.</p>
+</div>
+
+<!-- ══ 1 ═══════════════════════════════════════════════ -->
+<section class="vx">
+  <div class="vx__bar">
+    <span class="vx__n">01</span><span class="vx__t">Definition list</span>
+    <span class="vx__note">What is on the site now. Most scannable per fact, but six ruled rows is a lot of vertical
+    weight this early, and every fact gets identical emphasis whether it is the platform or the scope.</span>
+  </div>
+  <div class="vx__body">
+    <p class="cm-hero__label">Case study</p>
+    <h2 class="cm-hero__title">Maersk</h2>
+    <p class="cm-hook">Making design matter inside one of the world's most complex logistics platforms.</p>
+    <dl class="cm-facts">
+      <div class="cm-fact"><dt>Platform</dt><dd>Maersk Supply Chain — the operational backbone of the world's largest container shipping network</dd></div>
+      <div class="cm-fact"><dt>Role</dt><dd>Lead UX Designer — the first the platform had</dd></div>
+      <div class="cm-fact"><dt>Timeline</dt><dd>2021 – 2024</dd></div>
+      <div class="cm-fact"><dt>Team</dt><dd>12 product designers, 6 nationalities</dd></div>
+      <div class="cm-fact"><dt>Organisation</dt><dd>20+ product teams, 260 engineers, 350+ stakeholders</dd></div>
+      <div class="cm-fact"><dt>Scope</dt><dd>Design leadership, strategy, product</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- ══ 2 ═══════════════════════════════════════════════ -->
+<section class="vx">
+  <div class="vx__bar">
+    <span class="vx__n">02</span><span class="vx__t">Paired grid</span>
+    <span class="vx__note">Label above value, three across, no rules. Half the height of 01 and the eye takes a whole
+    row at a glance. The long Platform line has to be trimmed to fit a third of the width.</span>
+  </div>
+  <div class="vx__body">
+    <p class="cm-hero__label">Case study</p>
+    <h2 class="cm-hero__title">Maersk</h2>
+    <p class="cm-hook">Making design matter inside one of the world's most complex logistics platforms.</p>
+    <dl class="fx-grid">
+      <div><dt>Platform</dt><dd>Maersk Supply Chain</dd></div>
+      <div><dt>Role</dt><dd>Lead UX Designer, the first</dd></div>
+      <div><dt>Timeline</dt><dd>2021 – 2024</dd></div>
+      <div><dt>Team</dt><dd>12 designers, 6 nationalities</dd></div>
+      <div><dt>Organisation</dt><dd>20+ teams, 260 engineers</dd></div>
+      <div><dt>Scope</dt><dd>Leadership, strategy, product</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- ══ 3 ═══════════════════════════════════════════════ -->
+<section class="vx">
+  <div class="vx__bar">
+    <span class="vx__n">03</span><span class="vx__t">Sentence, then numbers</span>
+    <span class="vx__note">The facts that are language become one sentence; the facts that are quantities become
+    figures. Puts the scale of the thing up front and rhymes with the result stats at the end of the case.</span>
+  </div>
+  <div class="vx__body">
+    <p class="cm-hero__label">Case study</p>
+    <h2 class="cm-hero__title">Maersk</h2>
+    <p class="cm-hook">Making design matter inside one of the world's most complex logistics platforms.</p>
+    <p class="fx-lede">Maersk Supply Chain is the operational backbone of the world's largest container shipping
+    network. I joined in 2021 as its <b>first Lead UX Designer</b>, and left in 2024 having built the design
+    function around it.</p>
+    <div class="fx-nums">
+      <div><p class="fx-num">12</p><p class="fx-numlabel">Product designers, across 6 nationalities</p></div>
+      <div><p class="fx-num">20+</p><p class="fx-numlabel">Product teams on the platform</p></div>
+      <div><p class="fx-num">260</p><p class="fx-numlabel">Engineers</p></div>
+      <div><p class="fx-num">350+</p><p class="fx-numlabel">Stakeholders</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 4 ═══════════════════════════════════════════════ -->
+<section class="vx">
+  <div class="vx__bar">
+    <span class="vx__n">04</span><span class="vx__t">One meta line</span>
+    <span class="vx__note">Role, dates and scope compressed to a single line under the hook — the way a masthead
+    carries a byline. Lightest of the five; the numbers wait for the result section rather than appearing twice.</span>
+  </div>
+  <div class="vx__body">
+    <p class="cm-hero__label">Case study</p>
+    <h2 class="cm-hero__title">Maersk</h2>
+    <p class="cm-hook">Making design matter inside one of the world's most complex logistics platforms.</p>
+    <p class="fx-line">
+      <span>Lead UX Designer, the first</span><span class="fx-dot">·</span>
+      <span>2021 – 2024</span><span class="fx-dot">·</span>
+      <span>Design leadership, strategy, product</span>
+    </p>
+    <p class="fx-lede" style="margin-top:28px">Maersk Supply Chain is the operational backbone of the world's
+    largest container shipping network — 20+ product teams, 260 engineers, 350+ stakeholders, and no design
+    function until I built one.</p>
+  </div>
+</section>
+
+<!-- ══ 5 ═══════════════════════════════════════════════ -->
+<section class="vx">
+  <div class="vx__bar">
+    <span class="vx__n">05</span><span class="vx__t">Facts as a sidebar</span>
+    <span class="vx__note">Spends horizontal space instead of vertical. The statement carries the left, the facts
+    sit right as a tight ledger. Nothing pushes the first image further down the page. Stacks on mobile.</span>
+  </div>
+  <div class="vx__body">
+    <p class="cm-hero__label">Case study</p>
+    <h2 class="cm-hero__title">Maersk</h2>
+    <div class="fx-split">
+      <p class="fx-bigcontext">Maersk Supply Chain is the operational backbone of the world's largest container
+      shipping network. I was its first design lead.</p>
+      <dl class="fx-side">
+        <div><dt>Role</dt><dd>Lead UX Designer</dd></div>
+        <div><dt>Timeline</dt><dd>2021 – 2024</dd></div>
+        <div><dt>Team</dt><dd>12 designers, 6 nationalities</dd></div>
+        <div><dt>Teams</dt><dd>20+ product teams</dd></div>
+        <div><dt>Engineers</dt><dd>260</dd></div>
+        <div><dt>Stakeholders</dt><dd>350+</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<div style="max-width:1400px;margin:0 auto 80px;padding:0 8px">
+  <p style="font-size:15px;color:var(--ink-55);margin:0">Say which number you want and I will put it into
+  <code style="font-size:14px">v2.html</code>; the candidate CSS moves into <code style="font-size:14px">v2.css</code> and this file gets deleted.</p>
+</div>
+
+</body>
+</html>
