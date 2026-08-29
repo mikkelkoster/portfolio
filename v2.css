@@ -161,7 +161,7 @@ a { color: inherit; text-decoration: none; }
 .btn--primary:hover { background: var(--blue-ink); }
 .btn--ghost { border-color: var(--line); color: var(--ink); }
 .btn--ghost:hover { border-color: var(--ink); }
-.btn--sm { height: 42px; padding-inline: 20px; font-size: 14px; }
+.btn--sm { height: 44px; padding-inline: 20px; font-size: 14px; }
 
 /* ── Nav ───────────────────────────────────────────────── */
 .nav {
@@ -596,16 +596,30 @@ a { color: inherit; text-decoration: none; }
   margin-top: 36px;
   padding-inline: var(--edge);
 }
-.car-dots { display: flex; gap: 7px; flex-wrap: wrap; }
+/* The dot people see is 7px; the thing they can hit is 44. Drawing the dot
+   as a pseudo-element inside a full-size button keeps the visual weight
+   without a 7px tap target. */
+.car-dots { display: flex; align-items: center; flex-wrap: wrap; }
 .car-dot {
+  width: 18px;
+  height: 44px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+}
+.car-dot::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
   width: 7px; height: 7px;
   border-radius: 100px;
   background: var(--ink-25);
-  border: 0; padding: 0;
-  cursor: pointer;
   transition: background-color .25s ease, width .25s ease;
 }
-.car-dot.is-active { background: var(--ink); width: 22px; }
+.car-dot.is-active::before { background: var(--ink); width: 22px; }
 .car-btns { display: flex; gap: 8px; }
 .car-btn {
   width: 44px; height: 44px;
@@ -743,3 +757,22 @@ a { color: inherit; text-decoration: none; }
   margin: 0 0 12px;
 }
 .bey__b { font-size: 16px; line-height: 1.62; color: var(--ink-70); margin: 0; }
+
+/* ── Mobile ────────────────────────────────────────────────
+   The nav ran out of room before 500px: the name and the links met with 3px
+   between them and the CV link was squeezed to zero width rather than
+   wrapping or hiding. It goes; the same link sits in the hero and the footer.
+   The hero also needs to fit one screen — the figure was pushing nav + hero
+   to 967px against an 844px viewport. */
+@media (max-width: 560px) {
+  .nav__links { gap: 10px; }
+  .nav__links .nav__link { display: none; }
+  .nav__name { font-size: 15px; }
+}
+@media (max-width: 900px) {
+  .hero { gap: 0; }
+  .hero__figure { height: clamp(180px, 26vh, 260px); margin-top: 18px; }
+  .hero__avail { margin-bottom: 24px; }
+  .hero__display { margin-bottom: 24px; }
+  .hero__lede { margin-bottom: 28px; }
+}
