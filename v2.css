@@ -708,10 +708,13 @@ a { color: inherit; text-decoration: none; }
 /* The dot people see is 7px; the thing they can hit is 44. Drawing the dot
    as a pseudo-element inside a full-size button keeps the visual weight
    without a 7px tap target. */
-.car-dots { display: flex; align-items: center; position: relative; }
+.car-dots, .cm-car__dots { display: flex; align-items: center; position: relative; }
 /* One pill spanning the cards on screen, rather than a run of separate dots.
    Drawn as a single element so the shape has two rounded ends instead of a
    chain of lozenges, and so it slides between positions. */
+/* The modal's rows use the same dot, pill and container — they used to have
+   their own, which never reset the UA button styling, so the case studies
+   showed a row of 2px-outset grey boxes with a dot drawn on top of each. */
 .car-pill {
   position: absolute;
   top: 50%;
@@ -1135,9 +1138,16 @@ a { color: inherit; text-decoration: none; }
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+  /* Stretch, so every card in a row is the same height — the same trade the
+     page rows make: nothing is clipped, so the longest card sets the height. */
+  align-items: stretch;
 }
 .cm-car__track::-webkit-scrollbar { display: none; }
+@media (prefers-reduced-motion: reduce) { .cm-car__track { scroll-behavior: auto; } }
 /* Wide. The reference runs its case imagery at about 72% of the window in a
    horizontal track — big enough that one slide is the subject, not a
    thumbnail among several. */
@@ -1172,16 +1182,28 @@ a { color: inherit; text-decoration: none; }
 }
 .cm-car__btn:hover:not(:disabled) { border-color: var(--ink); }
 .cm-car__btn:disabled { opacity: 0.3; cursor: default; }
-.cm-car__dots { display: flex; align-items: center; }
-.cm-car__dot { width: 13px; height: 44px; position: relative; }
-.cm-car__dot::before {
-  content: ''; position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%,-50%); width: 7px; height: 7px;
-  border-radius: 100px; background: var(--ink-25);
-  transition: background-color .25s ease;
+/* The design-system row sizes by HEIGHT, not width. Its twelve component
+   sheets run from 0.68 to 2.76 in aspect, so a common width would make the
+   tall ones tiny and the wide ones enormous; a common band height keeps them
+   comparable. Nothing sized them at all before, so they rendered at intrinsic
+   size — the first sheet is 3322px wide in a 1400px track. The arrows could
+   not reach its far end, and mandatory snap refused to rest anywhere that
+   would have shown it. The cap is in px and vw, both definite: a percentage
+   against a shrink-to-fit column is circular. */
+.cm-ds-card {
+  background: var(--surface);
+  border-radius: 14px;
+  height: clamp(300px, 40vh, 480px);
+  overflow: hidden;
 }
-.cm-car__dot.is-active::before { background: var(--ink); }
-.cm-ds-card { background: var(--surface); border-radius: 14px; }
+.cm-ds-card__img {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: min(900px, 84vw);
+  object-fit: contain;
+  margin: 0 auto;
+}
 
 /* ── Before / after ────────────────────────────────────── */
 .cm-transform-ba { display: grid; gap: 24px; align-items: stretch; margin-top: 48px; }

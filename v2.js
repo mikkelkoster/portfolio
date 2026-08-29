@@ -233,6 +233,15 @@
 
 
   /* ── Carousels ─────────────────────────────────────────
+     ONE engine, two sets of markup. The page rows and the case
+     modal's rows used to have separate implementations: the
+     modal's was copied from the page's before the page's bugs
+     had been beaten out, so it still carried every one of them
+     — the highlight snapping back on an arrow press, no pill,
+     and dots that were unstyled <button>s down to the 2px
+     outset border. There is one function now, so the next fix
+     lands in both places.
+
      Position is measured off each column's own offsetLeft, not
      off the first column's width — the clients row and the
      testimonials row can hold columns of different widths, and
@@ -240,15 +249,11 @@
 
      The track is never moved by hand. Arrows scroll it and the
      browser snaps; this only reports where it landed. */
-  document.querySelectorAll('[data-car]').forEach(root => {
-    const pre   = root.dataset.car;
-    const track = document.getElementById(pre + '-track');
-    const dots  = document.getElementById(pre + '-dots');
-    const prev  = document.getElementById(pre + '-prev');
-    const next  = document.getElementById(pre + '-next');
-    if (!track) return;
+  const carousels = [];
+  function initCarousel({ track, dots, prev, next }) {
+    if (!track || !dots) return null;
     const cols = [...track.children];
-    if (!cols.length) return;
+    if (!cols.length) return null;
 
     cols.forEach((_, i) => {
       const b = document.createElement('button');
@@ -276,26 +281,58 @@
        track's trailing padding is part of scrollWidth. Aiming at the raw
        origin left a sliver unscrolled and the Next arrow permanently enabled,
        so the target is clamped to where the track can actually stop. */
-    const targetOf = i => Math.min(originOf(i), maxScroll());
+    /* The final column can also be WIDER than the scrollport — the
+       design-system row holds several. Resting on its origin then leaves its
+       right-hand side unreachable by the arrows while Next has already gone
+       disabled, so the last stop is always the scroll maximum. On every row
+       whose columns fit, that is what the clamp above already produced. */
+    const targetOf = i => {
+      const max = maxScroll();
+      return i === cols.length - 1 ? max : Math.min(originOf(i), max);
+    };
+    /* Which cards are fully on screen once the track has come to rest at
+       index i — measured off geometry, not derived from a card count.
+       Dividing clientWidth by the pitch ignored the track's own padding,
+       which counts toward clientWidth but is not space a card can occupy:
+       on the page rows that rounded three visible cards up to four, so the
+       pill lit a dot for a card sitting past the edge. It read as the
+       indicator being one ahead of the row.
+
+       Working from the resting position also gets the end right. There the
+       track is clamped short of the index's own origin, so the cards on
+       screen are the trailing ones — first comes back lower than i, which
+       is correct and is what a count could never express. */
+    const visibleRange = i => {
+      const pad = cols[0].offsetLeft;
+      const left = targetOf(i);
+      const right = left + track.clientWidth - pad + 1;
+      let first = -1, last = -1;
+      cols.forEach((c, k) => {
+        const o = originOf(k);
+        if (o >= left - 1 && o + c.offsetWidth <= right) {
+          if (first < 0) first = k;
+          last = k;
+        }
+      });
+      /* A column wider than the scrollport never fits — the design-system
+         row holds a few. Fall back to the one the track is resting on. */
+      return first < 0 ? [i, i] : [first, last];
+    };
     /* The last index that still moves the track. Past it every column shares
        the same clamped resting position, so advancing further would light a
        new dot while nothing slid — which is exactly what the dots were doing
-       when clicks outran the scroll. */
-    /* How many cards sit in the viewport at once. */
-    const visibleCount = () => {
-      const pitch = cols[0].offsetWidth + 24;
-      return Math.max(1, Math.round(track.clientWidth / pitch));
-    };
+       when clicks outran the scroll.
+
+       No cols.length - perPage cap. That heuristic stopped the last press
+       short whenever the final column's origin sat inside the scroll range:
+       the track had further to travel but the index had already run out.
+       The index runs to the last column and the TARGET is what gets clamped,
+       so the last press always lands on the scroll maximum. */
     const lastIndex = () => {
       const max = maxScroll();
       for (let i = 0; i < cols.length; i++) if (originOf(i) >= max - 1) return i;
       return cols.length - 1;
     };
-    /* No cols.length - perPage cap. That heuristic stopped the last press
-       short whenever the final column's origin sat inside the scroll range:
-       the track had further to travel but the index had already run out.
-       The index runs to the last column and the TARGET is what gets clamped,
-       so the last press always lands on the scroll maximum. */
     const indexNow = () => {
       const x = track.scrollLeft;
       let best = 0, bestD = Infinity;
@@ -321,16 +358,15 @@
          sense while a single dot meant a single position, but the highlight
          is a range now — the last cards are visible at the end even though
          the track cannot start on them, so their dots do light up. */
-      const span = visibleCount();
-      const last = Math.min(dotEls.length - 1, i + span - 1);
+      const [first, last] = visibleRange(i);
       dotEls.forEach((d, k) => {
         d.hidden = false;
-        d.classList.toggle('is-active', k >= i && k <= last);
+        d.classList.toggle('is-active', k >= first && k <= last);
       });
       /* Span the run from the centre of the first active dot to the centre of
          the last, plus one dot's width so both ends are capped. */
       const slot = dotEls[0].offsetWidth;
-      const x0 = dotEls[i].offsetLeft + (slot - 7) / 2;
+      const x0 = dotEls[first].offsetLeft + (slot - 7) / 2;
       const x1 = dotEls[last].offsetLeft + (slot - 7) / 2 + 7;
       pill.style.left = x0 + 'px';
       pill.style.width = (x1 - x0) + 'px';
@@ -373,9 +409,48 @@
     if (prev) prev.addEventListener('click', () => go(-1));
     if (next) next.addEventListener('click', () => go(1));
     sync();
+
+    /* Remeasure on demand. A row inside the closed modal measures fine —
+       the sheet is display:block and merely transformed off-screen — but
+       its images are lazy and several columns size to the image, so the
+       widths this measured at load are not the widths after opening. */
+    const remeasure = () => { settle(); current = indexNow(); paint(current); };
+    const handle = { remeasure, track };
+    carousels.push(handle);
+    return handle;
+  }
+
+  document.querySelectorAll('[data-car]').forEach(root => {
+    const pre = root.dataset.car;
+    initCarousel({
+      track: document.getElementById(pre + '-track'),
+      dots:  document.getElementById(pre + '-dots'),
+      prev:  document.getElementById(pre + '-prev'),
+      next:  document.getElementById(pre + '-next'),
+    });
   });
 
-
+  /* The modal's rows differ only in their class names and in living inside
+     the sheet. Same engine, same dots, same pill. */
+  const modalCarousels = [];
+  document.querySelectorAll('.cm-car__track').forEach(track => {
+    const id = track.id.replace('-track', '');
+    const h = initCarousel({
+      track,
+      dots: document.getElementById(id + '-dots'),
+      prev: document.getElementById(id + '-prev'),
+      next: document.getElementById(id + '-next'),
+    });
+    if (h) modalCarousels.push(h);
+  });
+  /* An image that finishes after the sheet has opened changes its column's
+     width, and with it the scroll extent the arrows are derived from. */
+  modalCarousels.forEach(({ track, remeasure }) => {
+    track.querySelectorAll('img').forEach(img => {
+      if (img.complete) return;
+      img.addEventListener('load', remeasure, { once: true });
+    });
+  });
   /* ── Case modal ────────────────────────────────────────
      The sheet slides up, the page behind it locks, and the
      panel drops its transform once it has arrived — an
@@ -418,6 +493,11 @@
       };
       panel.addEventListener('transitionend', settle);
       closeBtn.focus({ preventScroll: true });
+      /* Remeasure the rows now they are on screen. Several of their columns
+         size to a lazily-loaded image, so the widths measured at load are
+         not the widths the reader is looking at — and the arrows and pill
+         are both derived from those widths. */
+      modalCarousels.forEach(c => c.remeasure());
     };
 
     const close = () => {
@@ -448,66 +528,3 @@
     });
   })();
 
-  /* The modal's carousels run on the same engine as the page's. Their markup
-     uses cm-car__ class names, so they are adapted rather than rebuilt. */
-  (() => {
-    document.querySelectorAll('.cm-car__track').forEach(track => {
-      const id = track.id.replace('-track', '');
-      const prev = document.getElementById(id + '-prev');
-      const next = document.getElementById(id + '-next');
-      const dots = document.getElementById(id + '-dots');
-      const cols = [...track.querySelectorAll('.cm-car__col')];
-      if (!cols.length || !prev || !next || !dots) return;
-
-      cols.forEach((_, i) => {
-        const d = document.createElement('button');
-        d.className = 'cm-car__dot';
-        d.type = 'button';
-        d.setAttribute('aria-label', 'Go to item ' + (i + 1));
-        dots.appendChild(d);
-      });
-      const dotEls = [...dots.children];
-      const originOf = i => cols[i].offsetLeft - cols[0].offsetLeft;
-      const maxScroll = () => track.scrollWidth - track.clientWidth;
-      const targetOf = i => Math.min(originOf(i), maxScroll());
-      const lastIndex = () => {
-        const max = maxScroll();
-        for (let i = 0; i < cols.length; i++) if (originOf(i) >= max - 1) return i;
-        return cols.length - 1;
-      };
-      const visibleCount = () => {
-        const pitch = cols[0].offsetWidth + 24;
-        return Math.max(1, Math.round(track.clientWidth / pitch));
-      };
-      const nearest = () => {
-        const x = track.scrollLeft;
-        let best = 0, bd = Infinity;
-        cols.forEach((_, i) => { const d = Math.abs(targetOf(i) - x); if (d < bd) { bd = d; best = i; } });
-        return best;
-      };
-      let current = 0, queued = 0;
-      const paint = i => {
-        const span = visibleCount(), last = Math.min(dotEls.length - 1, i + span - 1);
-        dotEls.forEach((d, k) => d.classList.toggle('is-active', k >= i && k <= last));
-        prev.disabled = i <= 0;
-        next.disabled = i >= lastIndex();
-      };
-      const sync = () => { queued = 0; current = nearest(); paint(current); };
-      track.addEventListener('scroll', () => {
-        if (!queued) queued = requestAnimationFrame(sync);
-      }, { passive: true });
-      const go = dir => {
-        current = Math.max(0, Math.min(lastIndex(), current + dir));
-        paint(current);
-        track.scrollTo({ left: targetOf(current) });
-      };
-      prev.addEventListener('click', () => go(-1));
-      next.addEventListener('click', () => go(1));
-      dotEls.forEach((d, i) => d.addEventListener('click', () => {
-        current = Math.min(i, lastIndex());
-        paint(current);
-        track.scrollTo({ left: targetOf(current) });
-      }));
-      paint(0);
-    });
-  })();
