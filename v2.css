@@ -1114,26 +1114,26 @@ a { color: inherit; text-decoration: none; }
      now gone with the rest of them. */
   max-width: 46ch;
 }
-/* The case facts, one per row. They used to be four across with two prose
-   blocks under them, and five of the seven facts appeared in BOTH — the same
-   three organisation numbers, the role and the team size, all within one
-   screen. The prose also set its own labels inline at 10px/700/uppercase, a
-   component that exists nowhere in this stylesheet, which is why it read as
-   borrowed from another site.
-   One row per fact makes the compound values legible: '20+ product teams, 260
-   engineers, 350+ stakeholders' was a mush of middle dots wrapped in a quarter
-   of the width. The label column is fixed so the values start on one line and
-   the eye can run down either side. */
-.cm-facts { margin: 40px 0 0; border-top: var(--rule) solid var(--line); }
-.cm-fact {
-  display: grid;
-  gap: 4px 32px;
-  padding: 18px 0;
-  border-bottom: var(--rule) solid var(--line);
+/* The case facts, label above value, three across. They used to be four
+   columns with two prose blocks under them, and five of the seven facts
+   appeared in BOTH — the same three organisation numbers, the role and the
+   team size, all within one screen. The prose also set its own labels inline
+   at 10px/700/uppercase, a component that exists nowhere in this stylesheet,
+   which is why it read as borrowed from another site.
+   Ruled rows were tried first and carried too much vertical weight this early
+   in the sheet; a paired grid is about a third shorter and the eye takes a
+   whole row at once. No rules — the pairing does the grouping.
+   Platform spans the full width because it is the one fact that is a
+   sentence: it is the only line on the page that says what the product
+   actually is, and squeezed into a third it either wrapped to four lines or
+   had to be cut down to its name. */
+.cm-facts { display: grid; gap: 36px 48px; margin: 44px 0 0; }
+@media (min-width: 760px) {
+  .cm-facts { grid-template-columns: repeat(3, 1fr); }
+  .cm-fact--wide { grid-column: 1 / -1; }
 }
-@media (min-width: 700px) { .cm-fact { grid-template-columns: 200px 1fr; gap: 32px; } }
-.cm-fact dt { font-size: 17px; color: var(--ink-55); }
-.cm-fact dd { font-size: 17px; color: var(--ink); margin: 0; max-width: 60ch; }
+.cm-fact dt { font-size: 15px; color: var(--ink-55); margin-bottom: 7px; }
+.cm-fact dd { font-size: 18px; color: var(--ink); margin: 0; max-width: 60ch; }
 
 /* ── Headings and copy ─────────────────────────────────── */
 /* 80px, not 52. On the reference the headline IS the argument — there is not
