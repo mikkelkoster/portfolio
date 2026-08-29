@@ -239,7 +239,14 @@
       b.className = 'car-dot';
       b.type = 'button';
       b.setAttribute('aria-label', 'Go to item ' + (i + 1));
-      b.addEventListener('click', () => track.scrollTo({ left: targetOf(i) }));
+      b.addEventListener('click', () => {
+        current = i;
+        pending = i;
+        clearTimeout(release);
+        release = setTimeout(settle, 800);
+        paint(i);
+        track.scrollTo({ left: targetOf(i) });
+      });
       dots.appendChild(b);
     });
     const dotEls = [...dots.children];
@@ -251,7 +258,6 @@
        origin left a sliver unscrolled and the Next arrow permanently enabled,
        so the target is clamped to where the track can actually stop. */
     const targetOf = i => Math.min(originOf(i), maxScroll());
-    const perPage = () => Math.max(1, Math.round(track.clientWidth / (cols[0].offsetWidth + 24)));
     /* No cols.length - perPage cap. That heuristic stopped the last press
        short whenever the final column's origin sat inside the scroll range:
        the track had further to travel but the index had already run out.
@@ -267,6 +273,11 @@
       return best;
     };
 
+    /* The index the arrows have committed to. Derived from scroll position
+       only when the reader moves the track themselves — at the clamped end
+       several columns share one resting position, so recomputing after every
+       arrow press made prev skip a card on the way back. */
+    let current = 0;
     let pending = -1, release = 0, queued = 0;
     const settle = () => { pending = -1; clearTimeout(release); };
     const paint = i => {
@@ -279,8 +290,11 @@
       if (pending >= 0) {
         if (Math.abs(track.scrollLeft - targetOf(pending)) > 2) { paint(pending); return; }
         settle();
+        paint(current);
+        return;
       }
-      paint(indexNow());
+      current = indexNow();
+      paint(current);
     };
     const schedule = () => { if (!queued) queued = requestAnimationFrame(sync); };
     track.addEventListener('scroll', schedule, { passive: true });
@@ -288,10 +302,16 @@
     track.addEventListener('touchstart', settle, { passive: true });
     track.addEventListener('wheel', settle, { passive: true });
 
-    /* An arrow commits its destination straight away, so the dot moves with
-       the slide rather than at the half-way point. */
+    /* One card per press, not one page. Stepping by the visible count put the
+       target past the scroll maximum on a short row — with three visible and
+       seven cards, originOf(3) is 1125 against a maxScroll of 1097, so the
+       clamp sent the very first press to the end.
+
+       An arrow also commits its destination straight away, so the dot moves
+       with the slide rather than at the half-way point. */
     const go = dir => {
-      const i = Math.max(0, Math.min(cols.length - 1, indexNow() + dir * perPage()));
+      const i = Math.max(0, Math.min(cols.length - 1, current + dir));
+      current = i;
       pending = i;
       clearTimeout(release);
       release = setTimeout(settle, 800);

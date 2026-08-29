@@ -29,7 +29,7 @@
   /* Near edge-to-edge, not a centred column. The width of the page
      is the width of the window, and the gutter is small enough that
      the type has to carry the composition. */
-  --nav-h:      76px;
+  --nav-h:      64px;
   --hero-pb:    clamp(48px, 8vh, 104px);
   --maxw:       1600px;
   --gutter:     48px;
