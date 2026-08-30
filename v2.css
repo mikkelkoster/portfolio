@@ -1198,6 +1198,17 @@ a { color: inherit; text-decoration: none; }
 }
 .cm-fact dt { font-size: 15px; color: var(--ink-55); margin-bottom: 7px; }
 .cm-fact dd { font-size: 18px; color: var(--ink); margin: 0; max-width: 60ch; }
+/* The Platform value spans the row, but its measure is still the grid's: two
+   columns plus the gap between them, so it ends on a column edge like
+   everything under it. It was taking the 60ch cap above and wrapping at
+   629px — a line break that answered to nothing else on the page.
+   This has to come AFTER that rule: both are one class plus one element, so
+   specificity ties and source order is what decides. Written as a fraction of
+   the row rather than as 822px, so it stays true to the columns if the count
+   or the gap ever changes. */
+@media (min-width: 760px) {
+  .cm-fact--wide dd { max-width: calc((100% - 96px) / 3 * 2 + 48px); }
+}
 /* Stacked to one column, the desktop spacing turned six facts into most of a
    phone screen before the first image. The pair is tightened so a label reads
    as attached to its value rather than floating between two of them, and the
