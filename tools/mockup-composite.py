@@ -32,12 +32,27 @@ import os
 SP  = os.path.dirname(os.path.abspath(__file__))
 REPO= '/Users/mikkelkoster/Desktop/Desktop/mikkelkoster-portfolio'
 
-# quads measured off each mockup, verified visually
+# quads measured off each mockup, verified visually against an overlay
+QUADS = {
+  '6a344b1f9efa73909650e794_s6.png': [(490,239),(1442,222),(1426,832),(471,816)],
+  '6a344b20e9f2052ffa9e43d1_s1.png': [(370,143),(1581,146),(1587,825),(361,822)],
+  '6a344b2092520a0bf5a75f0e_s2.png': [(466,223),(1477,219),(1475,793),(458,791)],
+  # s3 is the angled over-shoulder scene, added for Formalize. Detected off the
+  # bright screen against the dark bezel, then checked on an overlay.
+  '6a344b1f959955ea089e4a8b_s3.png': [(852,172),(1640,230),(1568,794),(782,704)],
+}
+
+# mockup, source dir, screenshot, output name
 JOBS = [
-  # mockup file,                              screen quad (TL,TR,BR,BL),                                    screenshot,        output
-  ('6a344b1f9efa73909650e794_s6.png', [(490,239),(1442,222),(1426,832),(471,816)], 'maersk-dashboard.webp', 'maersk-shot-01'),
-  ('6a344b20e9f2052ffa9e43d1_s1.png', [(370,143),(1581,146),(1587,825),(361,822)], 'maersk-list.webp',      'maersk-shot-02'),
-  ('6a344b2092520a0bf5a75f0e_s2.png', [(466,223),(1477,219),(1475,793),(458,791)], 'maersk-detail.webp',    'maersk-shot-03'),
+  ('6a344b1f9efa73909650e794_s6.png', 'maersk',           'maersk-dashboard.webp', 'maersk-shot-01'),
+  ('6a344b20e9f2052ffa9e43d1_s1.png', 'maersk',           'maersk-list.webp',      'maersk-shot-02'),
+  ('6a344b2092520a0bf5a75f0e_s2.png', 'maersk',           'maersk-detail.webp',    'maersk-shot-03'),
+  # Formalize: the four screens the film already shows, so the sheet and the
+  # film are the same product rather than two different tours of it.
+  ('6a344b20e9f2052ffa9e43d1_s1.png', 'formalize/plates', 'plate-1.webp',          'formalize-scene-01'),
+  ('6a344b2092520a0bf5a75f0e_s2.png', 'formalize/plates', 'plate-2.webp',          'formalize-scene-02'),
+  ('6a344b1f959955ea089e4a8b_s3.png', 'formalize/plates', 'plate-3.webp',          'formalize-scene-03'),
+  ('6a344b1f9efa73909650e794_s6.png', 'formalize/plates', 'plate-4.webp',          'formalize-scene-04'),
 ]
 
 def solve8(A, b):
@@ -81,10 +96,11 @@ def grow(quad, px):
         out.append((x + dx/d*px, y + dy/d*px))
     return out
 
-for mock, quad, shot, out in JOBS:
+for mock, srcdir, shot, out in JOBS:
+    quad = QUADS[mock]
     base = Image.open(os.path.join(SP, mock)).convert('RGBA')
     W, H = base.size
-    src  = Image.open(os.path.join(REPO, 'public/images/maersk', shot)).convert('RGBA')
+    src  = Image.open(os.path.join(REPO, 'public/images', srcdir, shot)).convert('RGBA')
 
     # target aspect of the screen, averaged over both pairs of edges
     tw = (((quad[1][0]-quad[0][0])**2 + (quad[1][1]-quad[0][1])**2) ** .5 +
