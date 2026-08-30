@@ -1552,6 +1552,34 @@ a { color: inherit; text-decoration: none; }
   margin: 0 auto;
 }
 
+/* ── Many obligations, one platform ──────────────────────
+   The bet was two grey cards labelled Pain and Solution, which stated the
+   argument without showing it. Naming the actual regulations does the showing:
+   six of them against one panel is the whole claim, and it needs no adjective.
+   The rules the earlier version drew under each name are gone — a list of six
+   short names does not need six horizontal lines to be read as a list. */
+.cm-many { display: grid; gap: 40px; margin-top: 44px; align-items: center; }
+@media (min-width: 900px) { .cm-many { grid-template-columns: 1fr auto 0.9fr; gap: 48px; } }
+/* The caption earns its place by adding the reason, not by describing the
+   list. It read "what a mid-sized company is now on the hook for", which
+   named the audience the headline had already named. Six regulations is only
+   a problem because each one carries its own deadlines and evidence — that is
+   the sentence, and it is what the panel opposite answers. */
+.cm-many__cap { font-size: 15px; color: var(--ink-55); margin: 0 0 18px; }
+.cm-many__arrow { display: flex; align-items: center; justify-content: center; color: var(--ink); }
+@media (max-width: 899px) { .cm-many__arrow svg { transform: rotate(90deg); } }
+.cm-many__one { border: var(--rule) solid var(--line); border-radius: 16px; padding: 34px; }
+.cm-many__one-lab { font-size: 15px; color: var(--ink-55); margin: 0 0 10px; }
+.cm-many__one-t { font-size: 24px; font-weight: 500; letter-spacing: -0.025em; line-height: 1.25; margin: 0 0 12px; }
+.cm-many__one-b { font-size: 15px; line-height: 1.55; color: var(--ink-55); margin: 0; }
+
+.cm-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.cm-chip { border: var(--rule) solid var(--line); border-radius: 100px; padding: 9px 18px; font-size: 16px; color: var(--ink); }
+/* The open slot is a shape, not a sentence. An earlier version ended the list
+   with "and whatever lands next", which read as a joke where the section wants
+   a claim; a dashed chip says the same thing and says it as the diagram. */
+.cm-chip--open { color: var(--ink-55); border-style: dashed; }
+
 /* ── Utilities the Formalize sheet needs ─────────────────
    Three shapes, each used more than once, rather than a bespoke block per
    section. Everything else on that sheet reuses what Maersk already built. */
