@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Case sheet — four layouts</title>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
+<link rel="stylesheet" href="v2.css?v=147">
+<style>
+  /* Scratch page. Each variation shows the same slice of the Maersk case —
+     the opening, one argument section, and one piece of evidence — so the
+     difference you are judging is the layout and nothing else. */
+  body { background: #e9e9e9; }
+  .vx { max-width: 1400px; margin: 0 auto 64px; background: #fff; border-radius: 20px; overflow: hidden; }
+  .vx__bar {
+    display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+    padding: 20px 72px; border-bottom: 1px solid var(--line); background: #fafafa;
+  }
+  .vx__n  { font-size: 13px; color: var(--ink-25); font-variant-numeric: tabular-nums; }
+  .vx__t  { font-size: 17px; font-weight: 500; }
+  .vx__note { font-size: 15px; color: var(--ink-55); flex: 1 1 380px; }
+  .vx__body { padding: 72px 0 80px; }
+  .vx__pad  { padding-inline: 72px; }
+  .vx__fig  { margin-top: 44px; }
+  .vx__fig img { width: 100%; display: block; }
+  .vx__fig--bleed img { border-radius: 0; }
+  .vx__fig--inset { padding-inline: 72px; }
+  .vx__fig--inset img { border-radius: 12px; }
+  .vx__cap { font-size: 15px; color: var(--ink-55); margin: 14px 0 0; }
+
+  /* ── 02 · left rail ─────────────────────────────────────── */
+  .lr { display: grid; gap: 24px 56px; }
+  @media (min-width: 900px) { .lr { grid-template-columns: 180px minmax(0,1fr); } }
+  .lr__label { font-size: 18px; color: var(--ink-55); margin: 0; padding-top: 6px; }
+  .lr__body  { font-size: 18px; line-height: 1.6; color: var(--ink-55); margin: 24px 0 0; max-width: 62ch; }
+
+  /* ── 03 · headline left, body right ─────────────────────── */
+  .sp { display: grid; gap: 28px 64px; align-items: start; }
+  @media (min-width: 900px) { .sp { grid-template-columns: 5fr 6fr; } }
+  .sp__body { font-size: 18px; line-height: 1.6; color: var(--ink-55); margin: 0; }
+  .sp__body + .sp__body { margin-top: 18px; }
+
+  /* ── 04 · evidence first ────────────────────────────────── */
+  .ev__words { display: grid; gap: 20px 64px; margin-top: 36px; }
+  @media (min-width: 900px) { .ev__words { grid-template-columns: minmax(0,7fr) minmax(0,5fr); align-items: start; } }
+  .ev__h { font-size: 30px; font-weight: 400; letter-spacing: -0.025em; line-height: 1.2; margin: 0; max-width: 22ch; }
+  .ev__b { font-size: 17px; line-height: 1.6; color: var(--ink-55); margin: 0; }
+</style>
+</head>
+<body>
+
+<div style="max-width:1400px;margin:40px auto 32px;padding:0 8px">
+  <p class="label" style="margin-block:0 10px">Scratch</p>
+  <h1 style="font-size:40px;font-weight:400;letter-spacing:-0.03em;margin:0 0 12px">Case sheet — four layouts</h1>
+  <p style="font-size:17px;color:var(--ink-55);margin:0;max-width:74ch">Each shows the same slice of Maersk — the opening, one argument, one piece of
+  evidence — so the only variable is the layout. All four keep the white ground, the one typeface and the two weights. 01 is what is on the site now.</p>
+</div>
+
+<!-- ══ 01 ═══════════════════════════════════════════════ -->
+<section class="vx">
+  <div class="vx__bar">
+    <span class="vx__n">01</span><span class="vx__t">Stacked</span>
+    <span class="vx__note">What the sheet does now. Label, headline, body, evidence — each under the last, centred in one column.
+    Simple and never wrong, but every section has the same shape, so twelve of them read as one long column with no rhythm.</span>
+  </div>
+  <div class="vx__body">
+    <div class="vx__pad">
+      <p class="cm-label">The Challenge</p>
+      <h3 class="cm-headline">One platform, three user types, no design foundation.</h3>
+      <p class="cm-body">No design system, no research practice, no shared components. Starting from zero in a highly
+      complex domain, with 20+ product teams already shipping.</p>
+    </div>
+    <div class="vx__fig vx__fig--inset">
+      <img src="public/images/maersk/maersk-scene-overview.webp" alt="" width="1800" height="1093">
+      <p class="cm-body vx__cap" style="padding-inline:0">Supply Chain Overview — the operator's first screen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 02 ═══════════════════════════════════════════════ -->
+<section class="vx">
+  <div class="vx__bar">
+    <span class="vx__n">02</span><span class="vx__t">Left rail</span>
+    <span class="vx__note">The eyebrow moves into a narrow left column and stays there down the whole sheet, so one hard
+    vertical line runs the length of the case. Costs 180px of width and gives the page a spine — the most editorial of the four.</span>
+  </div>
+  <div class="vx__body">
+    <div class="vx__pad lr">
+      <p class="lr__label">The Challenge</p>
+      <div>
+        <h3 class="cm-headline" style="max-width:none">One platform, three user types, no design foundation.</h3>
+        <p class="lr__body">No design system, no research practice, no shared components. Starting from zero in a highly
+        complex domain, with 20+ product teams already shipping.</p>
+      </div>
+    </div>
+    <div class="vx__fig vx__fig--inset" style="padding-left:308px">
+      <img src="public/images/maersk/maersk-scene-overview.webp" alt="" width="1800" height="1093">
+      <p class="vx__cap">Supply Chain Overview — the operator's first screen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 03 ═══════════════════════════════════════════════ -->
+<section class="vx">
+  <div class="vx__bar">
+    <span class="vx__n">03</span><span class="vx__t">Headline left, body right</span>
+    <span class="vx__note">The two halves of a section sit side by side instead of stacked. Roughly a third shorter per
+    section, and the headline gets to stay large without pushing the evidence down the page. Needs the copy to stay short or the columns go ragged.</span>
+  </div>
+  <div class="vx__body">
+    <div class="vx__pad sp">
+      <div>
+        <p class="cm-label">The Challenge</p>
+        <h3 class="cm-headline" style="max-width:none;margin-bottom:0">One platform, three user types, no design foundation.</h3>
+      </div>
+      <div>
+        <p class="sp__body">No design system, no research practice, no shared components. Starting from zero in a highly
+        complex domain, with 20+ product teams already shipping.</p>
+        <p class="sp__body">Three audiences — Customer Service, Shippers, Consignees — with fundamentally different needs
+        and one undifferentiated experience between them.</p>
+      </div>
+    </div>
+    <div class="vx__fig vx__fig--inset">
+      <img src="public/images/maersk/maersk-scene-overview.webp" alt="" width="1800" height="1093">
+      <p class="vx__cap">Supply Chain Overview — the operator's first screen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 04 ═══════════════════════════════════════════════ -->
+<section class="vx">
+  <div class="vx__bar">
+    <span class="vx__n">04</span><span class="vx__t">Evidence first</span>
+    <span class="vx__note">The reference's own order: the image runs edge to edge and the words come after it, smaller.
+    The work argues first and the writing explains second. Closest to dstudio, and the only one that would ask you to cut copy rather than lay it out.</span>
+  </div>
+  <div class="vx__body" style="padding-top:0">
+    <div class="vx__fig vx__fig--bleed" style="margin-top:0">
+      <img src="public/images/maersk/maersk-scene-overview.webp" alt="" width="1800" height="1093">
+    </div>
+    <div class="vx__pad ev__words">
+      <div>
+        <p class="cm-label" style="margin-bottom:14px">The Challenge</p>
+        <h4 class="ev__h">One platform, three user types, no design foundation.</h4>
+      </div>
+      <p class="ev__b">No design system, no research practice, no shared components. Starting from zero in a highly
+      complex domain, with 20+ product teams already shipping.</p>
+    </div>
+  </div>
+</section>
+
+<div style="max-width:1400px;margin:0 auto 80px;padding:0 8px">
+  <p style="font-size:15px;color:var(--ink-55);margin:0">Say a number and I will apply it across the whole Maersk sheet; the candidate
+  CSS moves into <code style="font-size:14px">v2.css</code> and this file gets deleted.</p>
+</div>
+
+</body>
+</html>
