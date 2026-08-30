@@ -1132,6 +1132,14 @@ a { color: inherit; text-decoration: none; }
    row keeps the section rhythm; only the one above it closes up. */
 .cm-section--light:has(+ .cm-car-wrap),
 .cm-section--dark:has(+ .cm-car-wrap) { padding-bottom: calc(var(--sec) * 0.28); }
+/* ...but only where the heading IS the section's last word. A section that
+   ends on a figure has already said something between its heading and the row
+   below it, so the row is a new thought and takes the full section gap. The
+   design-system row was reading as a continuation of the mess above it. */
+.cm-section--light:has(+ .cm-car-wrap):has(> .cm-figure:last-child),
+.cm-section--dark:has(+ .cm-car-wrap):has(> .cm-figure:last-child) {
+  padding-bottom: calc(var(--sec) * 0.5);
+}
 .cm-section--light,
 .cm-section--dark {
   /* The minor value, same token as the page's tight sections. The sheet had
