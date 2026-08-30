@@ -1548,7 +1548,10 @@ a { color: inherit; text-decoration: none; }
    are divs and so is the intro, so .cm-lego-row:first-of-type matched the
    intro instead — :first-of-type keys off the element type, never the class. */
 .cm-lego-section > div:first-child { margin-bottom: 36px; }
-@media (min-width: 900px) { .cm-lego-row { grid-template-columns: 260px 1fr; } }
+/* 150, not 260. The label is two words and the row beside it is an eight-step
+   flow that needs every pixel — at 260 the last step wrapped to its own line
+   and broke the sequence in half. */
+@media (min-width: 900px) { .cm-lego-row { grid-template-columns: 150px 1fr; gap: 20px 32px; } }
 .cm-lego-row__label { display: flex; align-items: center; gap: 10px; }
 .cm-lego-row__title { font-size: 19px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
 /* Drawn marks, not emoji. A red cross and a green tick put two more hues on
@@ -1558,6 +1561,58 @@ a { color: inherit; text-decoration: none; }
 .cm-lego-mark { display: inline-flex; color: var(--ink-25); flex: 0 0 auto; }
 .cm-lego-mark--yes { color: var(--ink); }
 .cm-lego-img { border-radius: 12px; }
+/* ── The design-system flow ──────────────────────────────
+   Was two flat composites with the labels and arrows baked into the artwork,
+   which meant the type inside them was not the page's type and could not be
+   read by anything but an eye. Each step is its own image now, the arrows are
+   drawn, and the labels are real text in the site's own font.
+   Steps size by HEIGHT and keep their own width: the first row's plates are
+   937, 818 and 1176 wide against a common 800, and the second row's are all
+   square, so a shared width would squash three of the eight. */
+.flow {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(10px, 1.2vw, 20px);
+  flex-wrap: wrap;
+}
+.flow__step { margin: 0; flex: 0 1 auto; min-width: 0; }
+.flow__step img {
+  height: clamp(88px, 11vw, 148px);
+  width: auto;
+  display: block;
+  border-radius: 10px;
+}
+.flow__step figcaption {
+  font-size: 15px;
+  color: var(--ink);
+  margin-top: 12px;
+  max-width: 18ch;
+}
+/* Black, per the brief, and centred against the plate rather than the whole
+   step — the caption below must not drag the arrow down with it. */
+.flow__link {
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  height: clamp(88px, 11vw, 148px);
+}
+.flow__link--plus { font-size: 22px; line-height: 1; color: var(--ink-55); }
+/* The system and its instructions are two inputs to one step, so they are
+   held together rather than reading as two more links in the chain. */
+.flow__pair {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(10px, 1.2vw, 20px);
+  padding: 16px;
+  margin: -16px;
+  border-radius: 14px;
+  background: var(--surface);
+}
+@media (max-width: 899px) {
+  .flow { gap: 12px; }
+  .flow__step figcaption { font-size: 13px; margin-top: 8px; }
+}
 /* A full-width image answering a headline. It sat 48px below it, which read as
    a caption rather than the evidence for the claim. */
 .cm-figure { border-radius: 12px; overflow: hidden; margin-top: 56px; }
