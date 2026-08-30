@@ -1627,6 +1627,14 @@ a { color: inherit; text-decoration: none; }
   gap: clamp(10px, 1.2vw, 20px);
   flex-wrap: wrap;
 }
+/* Both rows span the same width so they start and end on the same verticals.
+   The chains are different lengths — three steps against five — so packed
+   left the short one stopped 328px early and the two read as unrelated. The
+   gap is the only thing that stretches, which suits a flow: the arrows stay
+   centred between their plates and the row just breathes wider.
+   Wide only. Below 900 the row wraps, and space-between on a wrapped last
+   line pushes its two survivors to opposite edges. */
+@media (min-width: 900px) { .flow { justify-content: space-between; } }
 .flow__step { margin: 0; flex: 0 1 auto; min-width: 0; }
 .flow__step img {
   height: clamp(88px, 11vw, 148px);
