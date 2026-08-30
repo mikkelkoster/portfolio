@@ -80,6 +80,36 @@ window.initSoftboxStage = function (canvas, config) {
     canvas, antialias: true, powerPreference: "high-performance",
   });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  /* ── An open one, so nobody re-walks the same path ────────────────
+     Both scene files log, continuously and on every frame:
+
+       GL_INVALID_OPERATION: glDrawArrays / glDrawElements:
+       Mismatch between texture format and sampler type
+       (signed/unsigned/float/shadow)
+
+     until Chrome silences the context. It predates the mono build, it is a
+     warning rather than an error, and all three films render correctly — so
+     it is being tolerated somewhere in the pipeline. It is NOT the cause of
+     the "device renders 2D" symptom; that was the phone's bezel mask size,
+     see phone-stage.js.
+
+     Ruled out by A/B, each one reloaded and re-observed:
+       - shadows            shadowMap.enabled = false, error persists
+       - material anisotropy  MeshPhysicalMaterial anisotropy 0.6 -> 0, persists
+       - the splat backdrop   splats.mesh.visible = false, persists
+       - transmission       not used by either scene
+       - the hand-built mip chains  verified complete: buildMips halves to 1x1
+                            and every level matches max(1, base >> k)
+       - the two custom shaders  the splat material declares no sampler at all;
+                            the vignette composite declares exactly one, bound
+                            to bgRT.texture
+
+     Not yet tested: the PMREM environment map. It is the remaining thing that
+     writes a half-float target and is sampled by every lit material, and the
+     drawArrays calls that survive with the splats hidden point that way.
+     Note that getError() from JS returns clean — these come from Chrome's own
+     command-buffer validation, so a patched context cannot catch them; it
+     needs about:gpu or a native trace. */
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   /* Rendered ONCE, not every frame. A shadow map is built in the light's
