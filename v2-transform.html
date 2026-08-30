@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-store">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The transformation — five treatments</title>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
+<link rel="stylesheet" href="v2.css?v=155">
+<style>
+  body { background: #e9e9e9; margin: 0; }
+  .wrapx { max-width: 1400px; margin: 0 auto; }
+  .intro { padding: 48px 16px 12px; }
+  .ex { max-width: 1400px; margin: 0 auto 56px; }
+  .ex__hd { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 0 16px 14px; }
+  .ex__n { font-size: 13px; color: var(--ink-25); font-variant-numeric: tabular-nums; }
+  .ex__t { font-size: 17px; font-weight: 500; }
+  .ex__why { font-size: 15px; color: var(--ink-55); flex: 1 1 100%; margin: 4px 0 0; max-width: 104ch; }
+  .card { background: #fff; border-radius: 18px; padding: 56px 72px 60px; }
+
+  /* ── 01 · paired rows ──────────────────────────────────── */
+  .p1 { margin-top: 40px; }
+  .p1__hdr { display: none; }
+  @media (min-width: 900px) {
+    .p1__hdr { display: grid; grid-template-columns: 1fr 56px 1fr; gap: 0 24px; padding-bottom: 14px; }
+    .p1__row { display: grid; grid-template-columns: 1fr 56px 1fr; gap: 0 24px; align-items: center; }
+  }
+  .p1__hdr p { margin: 0; font-size: 15px; color: var(--ink-55); }
+  .p1__row { padding: 18px 0; border-top: 1px solid var(--line); }
+  .p1__was { font-size: 17px; color: var(--ink-55); margin: 0; }
+  .p1__now { font-size: 17px; color: var(--ink); margin: 0; }
+  .p1__arw { color: var(--ink-25); display: flex; justify-content: center; }
+
+  /* ── 02 · struck through ───────────────────────────────── */
+  .p2 { margin-top: 40px; display: grid; gap: 22px; }
+  .p2__line { font-size: clamp(17px, 1.5vw, 21px); line-height: 1.45; margin: 0; }
+  .p2__line s { color: var(--ink-25); text-decoration-thickness: 1px; }
+  .p2__line b { font-weight: 400; color: var(--ink); }
+
+  /* ── 03 · ledger ───────────────────────────────────────── */
+  .p3 { margin-top: 40px; }
+  .p3__row { display: grid; gap: 4px 40px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+  @media (min-width: 900px) { .p3__row { grid-template-columns: 1fr 1fr; } }
+  .p3__row:first-child { border-top: 1px solid var(--line); }
+  .p3 dt { font-size: 17px; color: var(--ink-25); }
+  .p3 dd { font-size: 17px; color: var(--ink); margin: 0; }
+  .p3__cap { display: grid; gap: 40px; grid-template-columns: 1fr 1fr; margin-bottom: 10px; }
+  .p3__cap p { margin: 0; font-size: 15px; color: var(--ink-55); }
+
+  /* ── 04 · not / but ────────────────────────────────────── */
+  .p4 { margin-top: 44px; display: grid; gap: 30px; }
+  .p4__s { font-size: clamp(20px, 1.9vw, 26px); line-height: 1.35; letter-spacing: -0.02em; margin: 0; max-width: 40ch; }
+  .p4__s span { color: var(--ink-25); }
+
+  /* ── 05 · the step ─────────────────────────────────────── */
+  .p5 { margin-top: 40px; display: grid; gap: 0; }
+  .p5__row { display: grid; align-items: center; gap: 6px 0; padding: 16px 0; }
+  @media (min-width: 900px) { .p5__row { grid-template-columns: 1fr 1fr; } }
+  .p5__was { font-size: 16px; color: var(--ink-25); margin: 0; }
+  .p5__now { font-size: 18px; color: var(--ink); margin: 0; padding-left: 28px; position: relative; }
+  .p5__now::before {
+    content: ''; position: absolute; left: 0; top: 0.62em;
+    width: 14px; height: 1px; background: var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapx intro">
+  <p class="label" style="margin-block:0 10px">Scratch</p>
+  <h1 style="font-size:40px;font-weight:400;letter-spacing:-0.03em;margin:0 0 12px">The transformation — five treatments</h1>
+  <p style="font-size:17px;color:var(--ink-55);margin:0;max-width:82ch">The content is <b style="font-weight:500;color:var(--ink)">five matched pairs</b>, but the section presents
+  them as two independent five-item lists. The reader has to pair them up themselves, and most will not — which is why it reads flat. Every treatment below makes the pairing the structure.</p>
+</div>
+
+<!-- ══ 01 ══ -->
+<section class="ex">
+  <div class="ex__hd">
+    <span class="ex__n">01</span><span class="ex__t">Paired rows</span>
+    <p class="ex__why">One row per pair, so each change is read across rather than down. Grey on the left, ink on the right — the
+    same step the icons and bullets already make. Closest to what is there now, and the smallest change that fixes the actual problem.</p>
+  </div>
+  <div class="card">
+    <p class="cm-label">The transformation</p>
+    <h3 class="cm-headline" style="margin-bottom:0">Design moved from order&#8209;taker to strategic partner.</h3>
+    <div class="p1">
+      <div class="p1__hdr"><p>Before</p><p></p><p>After</p></div>
+      <div class="p1__row"><p class="p1__was">Receives specs from product and engineering</p><span class="p1__arw"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13.5 6.5L20 12l-6.5 5.5"/></svg></span><p class="p1__now">Co-creates product strategy and roadmap</p></div>
+      <div class="p1__row"><p class="p1__was">Executes UI requests with little context</p><span class="p1__arw"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13.5 6.5L20 12l-6.5 5.5"/></svg></span><p class="p1__now">Drives user research and insight synthesis</p></div>
+      <div class="p1__row"><p class="p1__was">No access to strategy, research, or roadmap</p><span class="p1__arw"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13.5 6.5L20 12l-6.5 5.5"/></svg></span><p class="p1__now">Direct input into platform vision and OKRs</p></div>
+      <div class="p1__row"><p class="p1__was">Brought in when design was &ldquo;needed&rdquo;</p><span class="p1__arw"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13.5 6.5L20 12l-6.5 5.5"/></svg></span><p class="p1__now">At the table before decisions are made</p></div>
+      <div class="p1__row"><p class="p1__was">Measured by output: screens delivered</p><span class="p1__arw"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13.5 6.5L20 12l-6.5 5.5"/></svg></span><p class="p1__now">Measured by impact: outcomes enabled</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 02 ══ -->
+<section class="ex">
+  <div class="ex__hd">
+    <span class="ex__n">02</span><span class="ex__t">Struck through</span>
+    <p class="ex__why">The old way crossed out, the new way after it, on one line. The most direct of the five — you cannot misread
+    what replaced what. It is also the boldest thing on the sheet, which may be one device too many for a build this quiet.</p>
+  </div>
+  <div class="card">
+    <p class="cm-label">The transformation</p>
+    <h3 class="cm-headline" style="margin-bottom:0">Design moved from order&#8209;taker to strategic partner.</h3>
+    <div class="p2">
+      <p class="p2__line"><s>Receives specs</s> &nbsp;<b>Co-creates product strategy and roadmap</b></p>
+      <p class="p2__line"><s>Executes UI requests</s> &nbsp;<b>Drives research and insight synthesis</b></p>
+      <p class="p2__line"><s>No access to the roadmap</s> &nbsp;<b>Direct input into platform vision and OKRs</b></p>
+      <p class="p2__line"><s>Brought in when needed</s> &nbsp;<b>At the table before decisions are made</b></p>
+      <p class="p2__line"><s>Measured by screens delivered</s> &nbsp;<b>Measured by outcomes enabled</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 03 ══ -->
+<section class="ex">
+  <div class="ex__hd">
+    <span class="ex__n">03</span><span class="ex__t">Ledger</span>
+    <p class="ex__why">No cards, no arrows, no icons — two columns and a hairline per pair. The quietest option and the most
+    editorial. It does reintroduce rules, which the sheet has just finished removing everywhere else.</p>
+  </div>
+  <div class="card">
+    <p class="cm-label">The transformation</p>
+    <h3 class="cm-headline" style="margin-bottom:0">Design moved from order&#8209;taker to strategic partner.</h3>
+    <div class="p3">
+      <div class="p3__cap"><p>Before</p><p>After</p></div>
+      <dl style="margin:0">
+        <div class="p3__row"><dt>Receives specs from product and engineering</dt><dd>Co-creates product strategy and roadmap</dd></div>
+        <div class="p3__row"><dt>Executes UI requests with little context</dt><dd>Drives user research and insight synthesis</dd></div>
+        <div class="p3__row"><dt>No access to strategy, research, or roadmap</dt><dd>Direct input into platform vision and OKRs</dd></div>
+        <div class="p3__row"><dt>Brought in when design was &ldquo;needed&rdquo;</dt><dd>At the table before decisions are made</dd></div>
+        <div class="p3__row"><dt>Measured by output: screens delivered</dt><dd>Measured by impact: outcomes enabled</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 04 ══ -->
+<section class="ex">
+  <div class="ex__hd">
+    <span class="ex__n">04</span><span class="ex__t">Not this, but this</span>
+    <p class="ex__why">Each pair written as one sentence rather than two fragments, and set larger. Five sentences instead of ten
+    bullets. It reads as writing rather than as a table, and it is the only one where the section could carry no other furniture at all.</p>
+  </div>
+  <div class="card">
+    <p class="cm-label">The transformation</p>
+    <h3 class="cm-headline" style="margin-bottom:0">Design moved from order&#8209;taker to strategic partner.</h3>
+    <div class="p4">
+      <p class="p4__s"><span>No longer handed specs —</span> design co-creates the strategy and the roadmap.</p>
+      <p class="p4__s"><span>No longer executing UI requests —</span> design drives the research the decisions rest on.</p>
+      <p class="p4__s"><span>No longer outside the roadmap —</span> design has direct input into platform vision and OKRs.</p>
+      <p class="p4__s"><span>No longer brought in when needed —</span> design is at the table before the decision is made.</p>
+      <p class="p4__s"><span>No longer measured in screens —</span> design is measured in outcomes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 05 ══ -->
+<section class="ex">
+  <div class="ex__hd">
+    <span class="ex__n">05</span><span class="ex__t">The step up</span>
+    <p class="ex__why">The before sits small and grey, the after sits below it, larger and indented behind a short mark — so
+    each pair is literally a step up the page. Uses position rather than colour to carry the change, and needs no arrows.</p>
+  </div>
+  <div class="card">
+    <p class="cm-label">The transformation</p>
+    <h3 class="cm-headline" style="margin-bottom:0">Design moved from order&#8209;taker to strategic partner.</h3>
+    <div class="p5">
+      <div class="p5__row"><p class="p5__was">Receives specs from product and engineering</p><p class="p5__now">Co-creates product strategy and roadmap</p></div>
+      <div class="p5__row"><p class="p5__was">Executes UI requests with little context</p><p class="p5__now">Drives user research and insight synthesis</p></div>
+      <div class="p5__row"><p class="p5__was">No access to strategy, research, or roadmap</p><p class="p5__now">Direct input into platform vision and OKRs</p></div>
+      <div class="p5__row"><p class="p5__was">Brought in when design was &ldquo;needed&rdquo;</p><p class="p5__now">At the table before decisions are made</p></div>
+      <div class="p5__row"><p class="p5__was">Measured by output: screens delivered</p><p class="p5__now">Measured by impact: outcomes enabled</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="wrapx" style="padding:0 16px 80px">
+  <p style="font-size:15px;color:var(--ink-55);margin:0;max-width:82ch">Say a number and I will put it into the sheet. Note that all five drop the two icons and the two grey cards —
+  the cards were doing the separating, and once the pairs are the structure there is nothing left for them to separate.</p>
+</div>
+
+</body>
+</html>
