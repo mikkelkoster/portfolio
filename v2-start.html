@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Starting point — variations</title>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
+<link rel="stylesheet" href="v2.css?v=186">
+<style>
+  body{background:#e8e8e8}
+  .lab{font:500 12px/1 ui-monospace,monospace;letter-spacing:.14em;color:#c0392b;padding:26px 0 8px;text-transform:uppercase}
+  .lab b{font-weight:500;color:#666;letter-spacing:0;text-transform:none;font-family:inherit}
+  .sheet{background:#fff;border-radius:18px;overflow:hidden;margin-bottom:8px}
+  .wrapx{max-width:1256px;margin:0 auto;padding:0 20px 60px}
+
+  /* shared bits */
+  .prod{background:var(--surface);border-radius:14px;padding:26px 28px}
+  .prod b{display:block;font-size:19px;font-weight:500;letter-spacing:-.02em;margin-bottom:6px}
+  .prod span{font-size:14px;color:var(--ink-55)}
+  .out{border:1px dashed var(--line);border-radius:14px;padding:26px 28px;color:var(--ink-55)}
+  .out b{display:block;font-size:19px;font-weight:500;letter-spacing:-.02em;margin-bottom:6px;color:var(--ink-55)}
+  .out span{font-size:14px}
+
+  /* A — inside / outside */
+  .vA{display:grid;gap:24px;margin-top:44px}
+  @media(min-width:900px){.vA{grid-template-columns:1fr auto;align-items:center;gap:40px}}
+  .vA__box{border:1px solid var(--line);border-radius:18px;padding:22px;position:relative}
+  .vA__box-lab{position:absolute;top:-9px;left:22px;background:#fff;padding:0 10px;font-size:13px;color:var(--ink-55)}
+  .vA__pair{display:grid;gap:14px}
+  @media(min-width:640px){.vA__pair{grid-template-columns:1fr 1fr}}
+
+  /* B — three columns, the third dashed */
+  .vB{display:grid;gap:16px;margin-top:44px}
+  @media(min-width:900px){.vB{grid-template-columns:1fr 1fr 1fr}}
+
+  /* C — a row with a gap that means something */
+  .vC{display:grid;gap:14px;margin-top:44px;align-items:stretch}
+  @media(min-width:900px){.vC{grid-template-columns:1fr 1fr 60px 1fr}}
+  .vC__gap{display:flex;align-items:center;justify-content:center;color:var(--ink-25);font-size:13px}
+
+  /* D — ledger of functions, design's row empty */
+  .vD{margin-top:44px}
+  .vD__row{display:grid;gap:6px 40px;padding:18px 0;border-top:1px solid var(--line)}
+  @media(min-width:900px){.vD__row{grid-template-columns:220px 1fr}}
+  .vD__row:last-child{border-bottom:1px solid var(--line)}
+  .vD__k{font-size:17px;color:var(--ink)}
+  .vD__v{font-size:17px;color:var(--ink-55)}
+  .vD__row--none .vD__k,.vD__row--none .vD__v{color:var(--ink-25)}
+</style></head><body>
+<div class="wrapx">
+
+<p class="lab">A &nbsp;<b>Inside / outside — the border is the company, design is beyond it</b></p>
+<div class="sheet"><div class="cm-section--light">
+  <p class="cm-label" data-n="03"><span>The starting point</span></p>
+  <h3 class="cm-headline">Two products with real traction — built fast, and built by engineers.</h3>
+  <div class="vA">
+    <div class="vA__box">
+      <span class="vA__box-lab">Inside the company</span>
+      <div class="vA__pair">
+        <div class="prod"><b>Whistleblower Software</b><span>#1-rated on G2</span></div>
+        <div class="prod"><b>Formalize</b><span>End-to-end compliance</span></div>
+      </div>
+    </div>
+    <div class="out" style="min-width:200px"><b>Design</b><span>Freelance, on request</span></div>
+  </div>
+</div></div>
+
+<p class="lab">B &nbsp;<b>Three columns — two solid, one dashed, same width</b></p>
+<div class="sheet"><div class="cm-section--light">
+  <p class="cm-label" data-n="03"><span>The starting point</span></p>
+  <h3 class="cm-headline">Two products with real traction — built fast, and built by engineers.</h3>
+  <div class="vB">
+    <div class="prod"><b>Whistleblower Software</b><span>Shipped fast, engineering-first. #1-rated on G2.</span></div>
+    <div class="prod"><b>Formalize</b><span>Shipped fast, engineering-first. End-to-end compliance.</span></div>
+    <div class="out"><b>Design</b><span>No full-time designers. One or two freelancers, pulled in for the hard screens.</span></div>
+  </div>
+</div></div>
+
+<p class="lab">C &nbsp;<b>A row with a labelled gap between the products and design</b></p>
+<div class="sheet"><div class="cm-section--light">
+  <p class="cm-label" data-n="03"><span>The starting point</span></p>
+  <h3 class="cm-headline">Two products with real traction — built fast, and built by engineers.</h3>
+  <div class="vC">
+    <div class="prod"><b>Whistleblower Software</b><span>#1-rated on G2</span></div>
+    <div class="prod"><b>Formalize</b><span>End-to-end compliance</span></div>
+    <div class="vC__gap">·&nbsp;·&nbsp;·</div>
+    <div class="out"><b>Design</b><span>Freelance, on request</span></div>
+  </div>
+</div></div>
+
+<p class="lab">D &nbsp;<b>Ledger of functions — the one that isn't there reads as a gap</b></p>
+<div class="sheet"><div class="cm-section--light">
+  <p class="cm-label" data-n="03"><span>The starting point</span></p>
+  <h3 class="cm-headline">Two products with real traction — built fast, and built by engineers.</h3>
+  <div class="vD">
+    <div class="vD__row"><p class="vD__k">Engineering</p><p class="vD__v">Two products in market, shipped fast</p></div>
+    <div class="vD__row"><p class="vD__k">Product management</p><p class="vD__v">No PMs. Engineering set the direction.</p></div>
+    <div class="vD__row vD__row--none"><p class="vD__k">Design</p><p class="vD__v">No full-time designers. One or two freelancers, on request.</p></div>
+  </div>
+</div></div>
+
+</div></body></html>
