@@ -1148,10 +1148,6 @@ a { color: inherit; text-decoration: none; }
 .cm-section--dark .cm-body,
 .cm-section--dark .cm-label { color: var(--ink-55); }
 
-/* ── Statement, aside, figure caption, pull quote ───────
-   Four small components the case sheet gained when its sections stopped all
-   having the same shape. */
-
 /* A headline carrying a section on its own, with no paragraph restating it. */
 .cm-statement { font-size: clamp(30px, 3.6vw, 56px); line-height: 1.1; letter-spacing: -0.035em; max-width: 20ch; }
 
@@ -1159,12 +1155,8 @@ a { color: inherit; text-decoration: none; }
    than folded back into a sentence. */
 /* No rule above it. Nothing else in the sheet separates with a line — the
    section dividers came out for the same reason — so the space does it. */
-.cm-aside { display: flex; flex-wrap: wrap; gap: 48px; margin: 56px 0 0; }
-.cm-aside dt { font-size: 22px; color: var(--ink); margin-bottom: 2px; }
-.cm-aside dd { font-size: 16px; color: var(--ink-55); margin: 0; max-width: 26ch; }
 
 /* A caption belongs to its figure, so it lives in the figure. */
-.cm-figure figcaption { font-size: 15px; color: var(--ink-55); margin-top: 14px; }
 
 /* One line of somebody else's words, placed where the reader will reach it.
    The full recommendations stay in the row at the end. */
@@ -1407,8 +1399,6 @@ a { color: inherit; text-decoration: none; }
    paragraphs, default margins, and an avatar drawing at its natural 800px.
    They use the front page's card now, which is the same card the reader has
    already seen once. */
-.cm-car__col--quote { width: clamp(260px, calc((100% - 48px) / 3), 420px); }
-.t-role--prev { color: var(--ink-25); margin-top: 2px; }
 .cm-car__col--ds { width: auto; }
 /* One card per screen on a phone, with the least sliver that still says the
    row continues. This has to sit AFTER the modifiers: --narrow and --quote
@@ -1419,7 +1409,6 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 900px) {
   .cm-car__col,
   .cm-car__col--narrow,
-  .cm-car__col--quote { width: calc(100% - 16px); }
 }
 /* No dimming. It belonged to a design that showed one card at a time; here
    several are visible and fading the neighbours just makes the row murky. */
