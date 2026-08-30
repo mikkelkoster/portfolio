@@ -1513,39 +1513,38 @@ a { color: inherit; text-decoration: none; }
   margin: 0 auto;
 }
 
-/* ── Before / after ────────────────────────────────────── */
-.cm-transform-ba { display: grid; gap: 24px; align-items: stretch; margin-top: 48px; }
-@media (min-width: 900px) { .cm-transform-ba { grid-template-columns: 1fr auto 1fr; } }
-.cm-transform-col { background: var(--surface); border: 0; border-radius: 16px; padding: 32px; }
-.cm-transform-label { font-size: 15px; font-weight: 400; color: var(--ink-55); margin: 0 0 14px; }
-/* Drawn, same viewBox and line weight as the challenge icons and the front
-   page's. They take the same grey-then-ink step the bullets below them
-   already make, so the two columns read as before and after before a word of
-   either is read. */
-.cm-transform-icon { display: block; margin-bottom: 18px; color: var(--ink-55); }
-.cm-transform-col--after .cm-transform-icon { color: var(--ink); }
-.cm-transform-title { font-size: 22px; font-weight: 400; letter-spacing: -0.02em; color: var(--ink); margin: 0 0 20px; text-wrap: balance; }
-.cm-transform-divider { display: flex; align-items: center; justify-content: center; color: var(--ink); font-size: 22px; }
-/* The bullets were the browser's own discs, sitting inside the UA's 40px
-   indent, so they hung well right of the card's title. Drawn instead, flush
-   with the left edge the title starts on, and the text keeps a hanging indent
-   when it wraps.
-   The two colour rules below already existed but were inert: they set a
-   background on a pseudo-element nothing ever gave `content` to. They work now
-   — grey on the before column, ink on the after. */
-.cm-transform-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.cm-transform-list li { position: relative; padding-left: 20px; }
-.cm-transform-list li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.62em;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--ink-25);
+/* ── The transformation ledger ───────────────────────────
+   Two grey cards holding two five-item lists became one table of five rows,
+   because the content is five MATCHED PAIRS and the cards were presenting
+   them as two independent lists — the reader had to pair them up and most
+   would not. The comparison is the whole point of the section, so it is the
+   structure now.
+   The cards, the two icons and the arrow between them all went with it: the
+   cards were doing the separating, and once the pairs are the structure there
+   is nothing left for them to separate.
+   These hairlines are the one place in the sheet that keeps a rule. They
+   delimit the rows of a table, which is a different job from the section
+   dividers that came out — those were separating a block from its heading,
+   where space does it better. */
+.cm-ledger { margin: 44px 0 0; }
+.cm-ledger__head { display: grid; gap: 6px 48px; padding-bottom: 20px; }
+@media (min-width: 900px) { .cm-ledger__head { grid-template-columns: 1fr 1fr; } }
+.cm-ledger__lab { font-size: 15px; color: var(--ink-55); margin: 0 0 6px; }
+.cm-ledger__t { font-size: 20px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); margin: 0; }
+.cm-ledger__row {
+  display: grid;
+  gap: 6px 48px;
+  padding: 20px 0;
+  border-top: var(--rule) solid var(--line);
 }
-.cm-transform-col--after .cm-transform-list li::before { background: var(--ink); }
+@media (min-width: 900px) { .cm-ledger__row { grid-template-columns: 1fr 1fr; } }
+.cm-ledger__row:last-child { border-bottom: var(--rule) solid var(--line); }
+/* Grey on the left, ink on the right — the same step the whole sheet uses to
+   say "this was, this is". */
+.cm-ledger dt { font-size: 17px; line-height: 1.5; color: var(--ink-25); }
+.cm-ledger dd { font-size: 17px; line-height: 1.5; color: var(--ink); margin: 0; }
+
+/* ── Before / after ────────────────────────────────────── */
 
 .cm-ba-dark { display: grid; gap: 24px; margin-top: 48px; }
 @media (min-width: 900px) { .cm-ba-dark { grid-template-columns: 1fr auto 1fr; align-items: center; } }
@@ -1558,10 +1557,8 @@ a { color: inherit; text-decoration: none; }
    The titles balance because in a stacked card "Move containers from A to B"
    put the B alone on a second line. */
 @media (max-width: 899px) {
-  .cm-ba-dark__arrow svg,
-  .cm-transform-arrow { transform: rotate(90deg); }
-  .cm-transform-arrow { display: inline-block; }
-  .cm-ba-dark__title, .cm-transform-title { font-size: 18px; }
+  .cm-ba-dark__arrow svg { transform: rotate(90deg); }
+  .cm-ba-dark__title { font-size: 18px; }
 }
 .cm-ba-dark__body { font-size: 15px; line-height: 1.6; color: var(--ink-55); margin: 0; }
 .cm-ba-dark__arrow { color: var(--ink); display: flex; justify-content: center; align-items: center; }
