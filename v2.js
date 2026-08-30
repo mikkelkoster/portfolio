@@ -40,6 +40,11 @@
   /* ── Nav hairline on scroll ────────────────────────── */
   (() => {
     const nav = document.getElementById('nav');
+    /* Guarded. Without it a page with no nav throws here, and because every
+       block in this file shares one scope that took the carousels, the films
+       and the modal down with it — a missing header silently disabling the
+       whole script. */
+    if (!nav) return;
     const onScroll = () => nav.classList.toggle('is-stuck', scrollY > 8);
     addEventListener('scroll', onScroll, { passive: true });
     onScroll();
