@@ -1174,6 +1174,10 @@ a { color: inherit; text-decoration: none; }
 /* One line of somebody else's words, placed where the reader will reach it.
    The full recommendations stay in the row at the end. */
 .cm-pull { margin: 0; }
+/* The sheet ends on the quotes, and a closing block needs more room under it
+   than a section that has another section coming. Same reason the last row
+   carries extra margin. */
+[id^="modal-content-"] > .cm-section--light:last-child { padding-bottom: clamp(96px, 11vw, 170px); }
 .cm-pull-pair { display: grid; gap: 56px; }
 /* Two quotes share the row from 900 up. At half the column the display size
    would run the shorter quote to four lines and the longer to five, so the
@@ -1315,6 +1319,10 @@ a { color: inherit; text-decoration: none; }
    out to be a sibling at the same time — every other row in the sheet is one,
    which is what lets a row bleed while its heading stays on the gutter. */
 .cm-close-section { background: var(--bg); color: var(--ink); }
+/* A section ending on the team photo does not need the full gap under it —
+   the photo is the closing image, and a section-sized void below it read as
+   the sheet having finished early. */
+.cm-close-section:has(> .cm-team:last-child) { padding-bottom: calc(var(--sec) * 0.28); }
 .cm-close-headline {
   font-size: clamp(28px, 3.4vw, 52px);
   font-weight: 400;
@@ -1322,7 +1330,9 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: -0.035em;
   color: var(--ink);
   margin: 0 0 56px;
-  max-width: 22ch;
+  /* 22ch put all three close headlines on three lines, and the last line was
+     a word or two — the shape read as an overflow rather than a decision. */
+  max-width: 30ch;
 }
 /* Five stats in a grid hard-pinned to four columns left the fifth alone on a
    row of its own. auto-fit takes the count from the content instead, so the
@@ -1663,6 +1673,12 @@ a { color: inherit; text-decoration: none; }
   height: clamp(88px, 11vw, 148px);
 }
 .flow__link--plus { font-size: 22px; line-height: 1; color: var(--ink-55); }
+/* The two captions the comparison actually turns on. Everything else in the
+   two chains is identical wording, so without a mark the reader has to spot a
+   two-letter difference at the end of a row. Underlined rather than coloured
+   or bolded: colour is reserved for pressable things here, and weight is
+   already carrying the row labels. */
+.flow__key { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 /* The first chain has three steps where the second has five, so at a shared
    height the short row looked like a thinner version of the same thing. The
    lead row goes bigger: it is the state the reader has to understand before
