@@ -599,22 +599,31 @@ window.initPhoneStage = function (canvas, config) {
        Sharing the screen's geometry means it inherits the transform exactly,
        and polygonOffset biases it toward the viewer so it wins the depth
        test without needing to know which way the mesh's normals face. */
-    /* 1536, not 512, and the reason it took three attempts to find is that it
-       only goes wrong on a 2x display.
+    /* 1024, and both bounds on that number were found the hard way.
        This canvas is the alpha mask that rounds the display's corners and
-       paints the Dynamic Island. In the closest shots the screen fills the
-       canvas height, so at devicePixelRatio 1 a 512-wide mask is still being
-       minified 1.14x and looks fine — which is what a 1x test machine sees.
-       At devicePixelRatio 2 the same mask is MAGNIFIED 1.76x, and
-       magnification reads the base level with no mip to soften it, so the
-       corner radius and the island's edge break into the stipple that reads
-       as the screen shimmering against the bezel.
-       1536 is minified 1.70x at 2x and 1.14x at 3x — clean on both — for
-       about 20MB, where 2048 would have cost 35MB for no visible gain. Built
-       once per stage, and only the Matas card carries a phone. */
+       paints the Dynamic Island.
+
+       The LOWER bound is the shimmer. In the closest shots the screen fills
+       the canvas height, so at devicePixelRatio 1 a 512-wide mask is minified
+       1.14x and looks correct — which is all a 1x test machine ever sees. At
+       devicePixelRatio 2 the same mask is MAGNIFIED 1.76x, and magnification
+       reads the base level with no mip to soften it, so the corner radius and
+       the island's edge break into stipple. That is the shimmer, and it is
+       why it survived being "fixed" on a 1x screen.
+
+       The UPPER bound is the device itself. At 1536 the phone rendered FLAT —
+       the GLB still downloaded 200 OK, but the draw calls failed and all that
+       was left was this overlay and the screen plane, which is exactly the
+       "device is 2D" symptom. 1536 with mips is ~26MB of texture sitting
+       alongside the model and the 720x6953 plates, and something in that
+       budget gives. 1024 is ~12MB and the model survives.
+
+       1024 is minified 1.14x at devicePixelRatio 2 — just clean, which is the
+       case that was breaking. At 3x it would be magnified 1.32x and soft
+       again; that needs a smaller mask drawn per shot, not a bigger one. */
     const bez = document.createElement("canvas");
-    bez.width = 1536;
-    bez.height = Math.round(1536 / screenAspect);
+    bez.width = 1024;
+    bez.height = Math.round(1024 / screenAspect);
     const bg = bez.getContext("2d");
     bg.fillStyle = "#05060a";
     bg.fillRect(0, 0, bez.width, bez.height);
