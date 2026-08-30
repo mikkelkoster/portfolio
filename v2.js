@@ -493,8 +493,26 @@
     const OUT = 'transform .52s cubic-bezier(0.4, 0, 0.8, 0.55)';
     let lastTrigger = null;
 
+    /* One sheet, three cases. The trigger names which content block to show;
+       the rest are hidden, so their carousels measure zero until the sheet
+       opens and remeasure() runs against a laid-out track. */
+    const contents = panel.querySelectorAll('[id^="modal-content-"]');
+    const showCase = (name) => {
+      let found = false;
+      contents.forEach(c => {
+        const mine = c.id === 'modal-content-' + name;
+        c.hidden = !mine;
+        if (mine) found = true;
+      });
+      /* An unknown name would hide everything and open an empty sheet. */
+      if (!found && contents.length) contents[0].hidden = false;
+    };
+
     const open = (trigger) => {
       lastTrigger = trigger || null;
+      showCase(trigger && trigger.dataset.case || 'maersk');
+      const label = trigger && trigger.dataset.case;
+      if (label) modal.setAttribute('aria-label', label + ' case study');
       document.body.style.overflow = 'hidden';
       scroller.scrollTop = 0;
       modal.classList.remove('is-at-end');
