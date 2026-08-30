@@ -50,7 +50,10 @@
      that has to be kept in step with the gutter. Full width below 760, where
      two thirds of a phone is a 218px column. */
   --cm-measure: 100%;
-  --hero-pb:    clamp(48px, 8vh, 104px);
+  /* The hero's gap to the section under it — a rhythm value like any other,
+     so it comes off --sec too rather than being its own clamp. It was 104,
+     which is 7px from the minor value it was pretending not to be. */
+  --hero-pb:    calc(var(--sec) * 0.62);
   --maxw:       1600px;
   --gutter:     48px;
   /* Where the content column's edge falls on any viewport: the gutter while
@@ -101,6 +104,12 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Layout primitives ─────────────────────────────────── */
 .wrap { max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
+/* Two values, and both come off --sec so they cannot drift apart:
+     --sec          a major break between chapters
+     --sec * 0.62   a minor one between related blocks
+   There were five in play — 156, 97, 226 from an #about special case, 116
+   in the case sheets, and the hero's own 48 — which is not a rhythm, it is
+   five unrelated numbers. */
 .section { padding-block: var(--sec); }
 .section--tight { padding-block: calc(var(--sec) * 0.62); }
 .rule { height: var(--rule); background: var(--line); border: 0; margin: 0; }
@@ -157,11 +166,18 @@ a { color: inherit; text-decoration: none; }
    so putting .label and .wrap on the same element killed .wrap's auto
    centring and the label sat at the window edge while the content beside it
    was centred in the 1600 column. */
+/* One eyebrow for the whole site. The front page had 14px/500 in near-black
+   and the case sheets had 18px/400 in grey — two systems for the same job,
+   and the reader meets both within one click. The 18px grey is the better
+   of the two and the one the reference uses: it reads as the section's name
+   spoken quietly, where 14px/500 reads as a tag stuck on top of it.
+   Every .label on the page already carried .muted, so the colour is not a
+   change in practice — only the size and weight are. */
 .label {
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0;
-  color: var(--ink);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  color: var(--ink-55);
   margin-block: 0;
 }
 .muted { color: var(--ink-55); }
@@ -902,7 +918,8 @@ a { color: inherit; text-decoration: none; }
 
 /* The stats end this section on a row of large numerals, which need more
    room beneath them than a paragraph would before the next label starts. */
-#about { padding-bottom: calc(var(--sec) * 1.45); }
+/* Was * 1.45, a 226px one-off that existed nowhere else on the page. */
+#about { padding-bottom: var(--sec); }
 
 /* ── Beyond the work ───────────────────────────────────────
    The original ran three tall image cards. Icons instead: the pictures were
@@ -1109,10 +1126,12 @@ a { color: inherit; text-decoration: none; }
    between them read as a break in the middle of a thought. The gap BELOW the
    row keeps the section rhythm; only the one above it closes up. */
 .cm-section--light:has(+ .cm-car-wrap),
-.cm-section--dark:has(+ .cm-car-wrap) { padding-bottom: clamp(24px, 2.6vw, 44px); }
+.cm-section--dark:has(+ .cm-car-wrap) { padding-bottom: calc(var(--sec) * 0.28); }
 .cm-section--light,
 .cm-section--dark {
-  padding: clamp(64px, 7vw, 116px) var(--cm-gutter);
+  /* The minor value, same token as the page's tight sections. The sheet had
+     its own clamp, which is how it became a fifth number. */
+  padding: calc(var(--sec) * 0.62) var(--cm-gutter);
 }
 /* Every section sits on white. There were two ink-ground sections and an
    ink-ground closing block; they were the only thing in the build that
