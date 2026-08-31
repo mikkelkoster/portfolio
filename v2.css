@@ -1120,6 +1120,17 @@ a { color: inherit; text-decoration: none; }
 }
 .cm-close.is-visible { opacity: 1; }
 .cm-close:hover { background: #fff; }
+/* Over a dark picture the light disc disappeared into it. The live site keys
+   this off section classes, which does not transfer: every section here is
+   white, and what goes dark behind the button is the photographs and the
+   monitor scenes inside them. So it is measured from the pixel, not inferred
+   from the markup — see updateCloseTheme in v2.js. */
+.cm-close.is-on-dark {
+  background: rgba(0,0,0,0.34);
+  border-color: rgba(255,255,255,0.36);
+  color: #fff;
+}
+.cm-close.is-on-dark:hover { background: rgba(0,0,0,0.5); }
 .cm-close svg { width: 18px; height: 18px; }
 
 /* ── Section rhythm ─────────────────────────────────────── */
@@ -1324,6 +1335,9 @@ a { color: inherit; text-decoration: none; }
    the sheet having finished early. */
 .cm-close-section:has(> .cm-team:last-child),
 .cm-close-section:has(> .cm-photos:last-child) { padding-bottom: calc(var(--sec) * 0.28); }
+/* The quotes are the close's last beat, not a new section. A full section gap
+   above them read as a break after the result rather than the end of it. */
+.cm-close-section + .cm-section--light { padding-top: calc(var(--sec) * 0.36); }
 .cm-close-headline {
   font-size: clamp(28px, 3.4vw, 52px);
   font-weight: 400;
@@ -1586,10 +1600,10 @@ a { color: inherit; text-decoration: none; }
    pointer event because nothing inside it competes for them. */
 .cm-reveal, .cm-reveal * { -webkit-user-select: none; user-select: none; }
 .cm-reveal img { -webkit-user-drag: none; pointer-events: none; }
-/* 28px read as one tall image with a seam. The two sliders are separate
-   comparisons and want the space between two figures, not between two rows of
-   the same one. */
-.cm-reveal + .cm-reveal { margin-top: 56px; }
+/* These are two separate comparisons, not two rows of one image, so they take
+   the space between two figures. 28 read as a seam; 56 still had them touching
+   as a pair. */
+.cm-reveal + .cm-reveal { margin-top: 88px; }
 .cm-reveal__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 /* clip-path rather than width, so the before image is cropped instead of
    squashed — the two halves have to stay in register as the divider moves. */

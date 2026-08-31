@@ -592,9 +592,11 @@
            width after that (a lazily-loaded image) has its own listener; this
            covers the open itself. */
         modalCarousels.forEach(c => c.remeasure());
+        updateCloseTheme();
       };
       panel.addEventListener('transitionend', settle);
       closeBtn.focus({ preventScroll: true });
+      queueCloseTheme();
       /* Remeasure the rows now they are on screen. Several of their columns
          size to a lazily-loaded image, so the widths measured at load are
          not the widths the reader is looking at — and the arrows and pill
@@ -604,7 +606,7 @@
 
     const close = () => {
       modal.classList.remove('is-settled');  // the backstop cannot travel with the panel
-      closeBtn.classList.remove('is-visible');
+      closeBtn.classList.remove('is-visible', 'is-on-dark');
       /* Reset the scroll first, while the panel still covers it. Animating a
          panel that is taller than the viewport out by 100% sweeps its whole
          length past the screen; moving it one viewport plus a margin is the
@@ -620,6 +622,79 @@
         if (lastTrigger) lastTrigger.focus({ preventScroll: true });
       }, 520);
     };
+
+    /* ── Close button contrast ──────────────────────────────
+       Read the pixel directly behind the button rather than inferring it from
+       classes. The live site walks up for a .cm-section--dark; here every
+       section is white, and what actually goes dark is a photograph or one of
+       the monitor scenes inside a carousel, so a class tells you nothing.
+
+       elementsFromPoint gives the stack under the button; the first thing that
+       paints something opaque wins. For an image that means mapping the screen
+       point back into the file's own pixels, which depends on object-fit —
+       cover and contain scale differently and both centre what is left. */
+    const probe = document.createElement('canvas');
+    probe.width = probe.height = 1;
+    const pctx = probe.getContext('2d', { willReadFrequently: true });
+
+    const lumOf = (r, g, b) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+
+    const sampleImage = (img, cx, cy) => {
+      const nw = img.naturalWidth, nh = img.naturalHeight;
+      if (!nw) return null;
+      const r = img.getBoundingClientRect();
+      const fit = getComputedStyle(img).objectFit;
+      let sx, sy;
+      if (fit === 'cover' || fit === 'contain') {
+        const s = fit === 'cover'
+          ? Math.max(r.width / nw, r.height / nh)
+          : Math.min(r.width / nw, r.height / nh);
+        sx = (cx - (r.left + (r.width - nw * s) / 2)) / s;
+        sy = (cy - (r.top + (r.height - nh * s) / 2)) / s;
+      } else {
+        sx = (cx - r.left) / r.width * nw;
+        sy = (cy - r.top) / r.height * nh;
+      }
+      if (sx < 0 || sy < 0 || sx >= nw || sy >= nh) return null;
+      try {
+        pctx.clearRect(0, 0, 1, 1);
+        pctx.drawImage(img, sx | 0, sy | 0, 1, 1, 0, 0, 1, 1);
+        const d = pctx.getImageData(0, 0, 1, 1).data;
+        return d[3] < 8 ? null : lumOf(d[0], d[1], d[2]);   // transparent: keep looking
+      } catch (e) { return null; }
+    };
+
+    const updateCloseTheme = () => {
+      if (!modal.classList.contains('is-open')) return;
+      const r = closeBtn.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      closeBtn.style.pointerEvents = 'none';           // do not hit the button itself
+      const stack = document.elementsFromPoint(cx, cy);
+      closeBtn.style.pointerEvents = '';
+      let lum = 1;                                     // the sheet is white by default
+      for (const el of stack) {
+        if (el === closeBtn || closeBtn.contains(el)) continue;
+        if (el.tagName === 'IMG') {
+          const v = sampleImage(el, cx, cy);
+          if (v !== null) { lum = v; break; }
+          continue;
+        }
+        const bg = getComputedStyle(el).backgroundColor;
+        const m = bg && bg.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.5)) {
+          lum = lumOf(+m[1], +m[2], +m[3]); break;
+        }
+      }
+      closeBtn.classList.toggle('is-on-dark', lum < 0.5);
+    };
+
+    let themeQueued = 0;
+    const queueCloseTheme = () => {
+      if (themeQueued) return;
+      themeQueued = requestAnimationFrame(() => { themeQueued = 0; updateCloseTheme(); });
+    };
+    scroller.addEventListener('scroll', queueCloseTheme, { passive: true });
+    addEventListener('resize', queueCloseTheme, { passive: true });
 
     /* The backstop covers the floor while there is scrolling left to do, and
        lifts once the reader reaches the end so the sheet's rounded bottom sits
