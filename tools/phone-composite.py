@@ -1,5 +1,5 @@
 import math, collections, os
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter, ImageChops
 
 def hull(pts):
     pts=sorted(set(pts))
@@ -95,14 +95,73 @@ def screen_quad(path, thr=200):
     bl=min(bot,key=lambda k: math.dist(quad[k],quad[tl])); brc=bot[0] if bl==bot[1] else bot[1]
     return [quad[tl],quad[tr],quad[brc],quad[bl]], im
 
+def inset(q, d):
+    """Pull the quad in by d px along every edge. The fit lands within ~2px of the
+    glass, and on the low side the UI then bleeds onto the bezel."""
+    c=(sum(p[0] for p in q)/4, sum(p[1] for p in q)/4); lines=[]
+    for k in range(4):
+        a,b=q[k],q[(k+1)%4]
+        ex,ey=b[0]-a[0],b[1]-a[1]; L=math.hypot(ex,ey); ex,ey=ex/L,ey/L
+        nx,ny=-ey,ex
+        if (c[0]-a[0])*nx+(c[1]-a[1])*ny<0: nx,ny=-nx,-ny
+        lines.append(((a[0]+nx*d,a[1]+ny*d),(ex,ey)))
+    def it(l1,l2):
+        (x1,y1),(a1,b1)=l1; (x2,y2),(a2,b2)=l2
+        t=((x2-x1)*b2-(y2-y1)*a2)/(a1*b2-b1*a2); return (x1+a1*t,y1+b1*t)
+    return [it(lines[k-1],lines[k]) for k in range(4)]
+
+def occluders(base, quad, thr=235, lo=150):
+    """What sits in FRONT of the glass: the fingers curling over the edge and the
+    bezel shadow they cast across it. Brightness alone cannot say — these mockups
+    ship a placeholder app, so half the screen is legitimately dark. Connectivity
+    can: the hand is one enormous mass that reaches far outside the quad, while
+    every dark element of the placeholder lies wholly within it. Returns an alpha
+    where 255 keeps the UI; the held-back band ramps by luminance so a fingertip
+    is solid and the shadow's soft edge stays soft."""
+    w,h=base.size; g=base.convert('L'); gp=g.load()
+    inq=Image.new('L',(w,h),0); ImageDraw.Draw(inq).polygon([tuple(p) for p in quad],fill=255); ip=inq.load()
+    seen=bytearray(w*h); keep=None
+    for sy in range(h):
+        for sx in range(w):
+            j=sy*w+sx
+            if seen[j] or gp[sx,sy]>=thr: continue
+            q=collections.deque([(sx,sy)]); seen[j]=1; comp=[]; ins=0
+            while q:
+                x,y=q.popleft(); comp.append((x,y))
+                if ip[x,y]>=128: ins+=1
+                for dx,dy in ((1,0),(-1,0),(0,1),(0,-1)):
+                    nx,ny=x+dx,y+dy
+                    if 0<=nx<w and 0<=ny<h:
+                        k=ny*w+nx
+                        if not seen[k] and gp[nx,ny]<thr: seen[k]=1; q.append((nx,ny))
+            if len(comp)-ins>10000 and (keep is None or ins>keep[0]): keep=(ins,comp)
+    a=Image.new('L',(w,h),255)
+    if not keep: return a, 0
+    # Connectivity alone over-reaches: placeholder text that runs off the edge of
+    # the screen touches the bezel and joins the hand's component, then ghosts
+    # through the pasted UI. An opening separates them on stroke width — a letter
+    # is a few px thick, the shadow band and a fingertip are tens.
+    p=Image.new('L',(w,h),0); pp=p.load()
+    for x,y in keep[1]:
+        if ip[x,y]>=128: pp[x,y]=255
+    p=p.filter(ImageFilter.MinFilter(9)).filter(ImageFilter.MaxFilter(9))
+    pp=p.load(); ap=a.load(); n=0
+    for y in range(h):
+        for x in range(w):
+            if pp[x,y]<128: continue
+            v=gp[x,y]; ap[x,y]=0 if v<=lo else round(255*(v-lo)/(thr-lo)); n+=1
+    return a.filter(ImageFilter.GaussianBlur(1.0)), n
+
 JOBS=[('6a34624f7400e78c68c2c515_m1.png','matas-app-new.jpg','matas-scene-01'),
       ('6a34624fb70ca3d0d7dfc18d_m3.png','matas-points-ui.jpg','matas-scene-02'),
       ('6a34624f61bb6f90181cd492_m5.png','matas-rewards-ui.jpg','matas-scene-03')]
 CORNER=0.14
+INSET=2.5
 
 for mock,shot,out in JOBS:
     quad, base = screen_quad(f'tools/{mock}')
-    base=base.convert('RGBA'); w,h=base.size
+    quad = inset(quad, INSET)
+    w,h=base.size
     W=(math.dist(quad[0],quad[1])+math.dist(quad[3],quad[2]))/2
     H=(math.dist(quad[0],quad[3])+math.dist(quad[1],quad[2]))/2
     r=CORNER*W
@@ -110,9 +169,21 @@ for mock,shot,out in JOBS:
     ImageDraw.Draw(local).rounded_rectangle([0,0,round(W)-1,round(H)-1],radius=round(r),fill=255)
     mco=solve8([(0,0),(W,0),(W,H),(0,H)],quad)
     mask=local.transform((w,h),Image.PERSPECTIVE,mco,Image.BILINEAR).filter(ImageFilter.GaussianBlur(0.7))
+
+    # Let whatever sits in front of the glass stay in front of it.
+    occl, held = occluders(base, quad)
+    mask = ImageChops.multiply(mask, occl)
+
+    base=base.convert('RGBA')
     src=Image.open(f'public/images/matas/{shot}').convert('RGBA')
     t=W/H; sw,sh=src.size
-    if sw/sh>t: nw=int(sh*t); src=src.crop(((sw-nw)//2,0,(sw-nw)//2+nw,sh))
+    if sw/sh>t:
+        # Never crop an app screenshot horizontally — the side margins are the
+        # layout. Keep the full width and grow the canvas downward instead; the
+        # bottom rows of these captures are flat white, so the extension is invisible.
+        nh=round(sw/t); pad=Image.new('RGBA',(sw,nh))
+        pad.paste(src,(0,0)); pad.paste(src.crop((0,sh-1,sw,sh)).resize((sw,nh-sh)),(0,sh))
+        src=pad
     else:       nh=int(sw/t); src=src.crop((0,0,sw,nh))
     co=solve8([(0,0),(src.width,0),(src.width,src.height),(0,src.height)],quad)
     warped=src.transform((w,h),Image.PERSPECTIVE,co,Image.BICUBIC)
@@ -121,4 +192,6 @@ for mock,shot,out in JOBS:
         .save(f'public/images/matas/{out}.webp','WEBP',quality=90,method=6)
     sides=[math.dist(quad[i],quad[(i+1)%4]) for i in range(4)]
     print(f"  {out}: {round(W)}x{round(H)}  sides {[round(x) for x in sides]}  "
-          f"perspective taper {abs(sides[0]-sides[2]):.0f}/{abs(sides[1]-sides[3]):.0f}px")
+          f"taper {abs(sides[0]-sides[2]):.0f}/{abs(sides[1]-sides[3]):.0f}px  "
+          f"shot {'padded' if src.height>Image.open(f'public/images/matas/{shot}').height else 'cropped'} "
+          f"to {src.width}x{src.height}  in front of glass {100*held/(W*H):.1f}% of screen")
