@@ -532,6 +532,14 @@
         panel.style.transition = 'none';
         panel.style.transform = 'none';
         modal.classList.add('is-settled');   // arms the opaque backstop
+        /* Measure again once the sheet has actually come to rest. The pass at
+           the top of open() runs while the panel is still transformed and, on
+           a block that was display:none a moment earlier, reports a row that
+           has not been laid out — the pill came out 6px left of the first dot
+           and one card wide instead of three. Anything that changes a column
+           width after that (a lazily-loaded image) has its own listener; this
+           covers the open itself. */
+        modalCarousels.forEach(c => c.remeasure());
       };
       panel.addEventListener('transitionend', settle);
       closeBtn.focus({ preventScroll: true });
