@@ -1580,24 +1580,31 @@ a { color: inherit; text-decoration: none; }
   width: 44px; margin-left: -22px;      /* 2px line, 44px grab area */
   cursor: ew-resize; display: flex; align-items: center; justify-content: center;
 }
-.cm-reveal__handle span { width: 2px; height: 100%; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.14); }
-.cm-reveal__handle::after {
-  content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+.cm-reveal__line { width: 2px; height: 100%; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.14); }
+/* The dot is a real element rather than ::after, so the grip can sit inside
+   it — a pseudo-element paints over its own children and would have covered
+   the icon. */
+.cm-reveal__grip {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
   width: 38px; height: 38px; border-radius: 100px; background: #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  display: flex; align-items: center; justify-content: center; color: var(--ink);
 }
 .cm-reveal__handle:focus-visible { outline: none; }
-.cm-reveal__handle:focus-visible::after { box-shadow: 0 0 0 3px var(--blue); }
-.cm-reveal__tag {
-  position: absolute; top: 14px; z-index: 2;
-  font-size: 13px; color: var(--ink); background: rgba(255,255,255,.9);
-  border-radius: 100px; padding: 5px 12px;
+.cm-reveal__handle:focus-visible .cm-reveal__grip { box-shadow: 0 0 0 3px var(--blue); }
+/* Solid grey, not translucent white. These labels sit on captures of a white
+   app whose own panels are near-white, so a 90% white chip had nothing to
+   separate it from the screenshot behind it and read as part of the UI. Grey
+   is a value the app itself does not use at this size, and ink on it measures
+   well past the floor. */
+.cm-reveal__tag, .cm-reveal figcaption {
+  position: absolute; z-index: 2;
+  font-size: 13px; border-radius: 100px; padding: 6px 13px;
+  background: #e6e6e6; color: var(--ink);
 }
-.cm-reveal__tag--a { left: 14px; }
-.cm-reveal__tag--b { right: 14px; }
-.cm-reveal figcaption { position: absolute; left: 14px; bottom: 14px; z-index: 2;
-  font-size: 13px; color: var(--ink-55); background: rgba(255,255,255,.9);
-  border-radius: 100px; padding: 5px 12px; }
+.cm-reveal__tag--a { top: 14px; left: 14px; }
+.cm-reveal__tag--b { top: 14px; right: 14px; }
+.cm-reveal figcaption { left: 14px; bottom: 14px; color: var(--ink); }
 
 /* ── Two products, design outside them ───────────────────
    Replaces an SVG that was blue, set in a serif, and drew two macOS windows
