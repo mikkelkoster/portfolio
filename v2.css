@@ -922,7 +922,10 @@ a { color: inherit; text-decoration: none; }
 /* The stats end this section on a row of large numerals, which need more
    room beneath them than a paragraph would before the next label starts. */
 /* Was * 1.45, a 226px one-off that existed nowhere else on the page. */
-#about { padding-bottom: var(--sec); }
+/* No padding above it: the hero already carries its own 97px underneath, and
+   the section gap on top of that opened a 253px hole between the name and the
+   first thing it says. */
+#about { padding-top: 0; padding-bottom: var(--sec); }
 
 /* ── Beyond the work ───────────────────────────────────────
    The original ran three tall image cards. Icons instead: the pictures were
@@ -2077,14 +2080,13 @@ a { color: inherit; text-decoration: none; }
    a caption rather than the evidence for the claim. */
 /* 20px to match .cm-spend, .cm-oldnew and .cm-mech — this sits among them and
    was the only block still on the smaller radius. */
-.cm-figure { border-radius: 20px; overflow: hidden; margin-top: 56px; background: var(--surface); }
-/* Out past the section's gutter to the full width of the sheet. The map is one
-   wide artefact — 150 screens on a wall — and a gutter on either side made it
-   read as an illustration of the wall rather than the wall. Its ground is
-   already --surface, so at full bleed the grey runs edge to edge; the radius
-   goes with the inset, since a full-bleed block has no corners to round. */
-.cm-figure--bleed { margin-inline: calc(var(--cm-gutter) * -1); border-radius: 0; }
-.cm-figure--bleed img { width: 100%; display: block; }
+/* margin, not margin-top: a bare `figure` carries the UA stylesheet's
+   `margin: 1em 40px`, so overriding only the top left 40px standing on each
+   side and the map sat 80px narrower than every other image in the case. */
+.cm-figure { border-radius: 20px; overflow: hidden; margin: 56px 0 0; background: var(--surface); }
+/* Full width of the grid, not of the sheet: the same gutter every other image
+   in the case sits behind, so the map lines up with the breakers above it. */
+.cm-figure img { width: 100%; display: block; }
 .cm-svg-spread { display: grid; gap: 40px; margin-top: 72px; }
 @media (min-width: 900px) { .cm-svg-spread { grid-template-columns: repeat(3, 1fr); } }
 .cm-svg-spread-label { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 14px; }
