@@ -1453,7 +1453,7 @@ a { color: inherit; text-decoration: none; }
    --ds keeps its intrinsic width. */
 @media (max-width: 900px) {
   .cm-car__col,
-  .cm-car__col--narrow,
+  .cm-car__col--narrow { width: calc(100% - 18px); }
 }
 /* No dimming. It belonged to a design that showed one card at a time; here
    several are visible and fading the neighbours just makes the row murky. */
@@ -1520,6 +1520,15 @@ a { color: inherit; text-decoration: none; }
    author rule above beats it. Without this the footer stayed on screen while
    the JS believed it had put it away. */
 .cm-car__footer[hidden], .car-nav[hidden] { display: none; }
+/* Tighter under the row on a phone. 32px is right beside a wide desktop row;
+   under a single full-width card it reads as a gap rather than a join.
+   This has to sit AFTER .cm-car__cap and .cm-car__footer, not in the mobile
+   block further up: a media query adds no specificity, so at 900px the later
+   base rule was simply winning and neither value applied. */
+@media (max-width: 900px) {
+  .cm-car__cap { margin-top: 14px; }
+  .cm-car__footer { margin-top: 18px; }
+}
 .cm-car__controls { display: flex; gap: 8px; }
 .cm-car__btn {
   width: 44px; height: 44px; border-radius: 100px;
@@ -1674,7 +1683,11 @@ a { color: inherit; text-decoration: none; }
    when the point is that they are a matched pair. */
 @media (min-width: 640px) { .cm-inout__pair { grid-template-columns: repeat(2, minmax(0, 290px)); } }
 .cm-inout__prod { background: var(--surface); border-radius: 14px; padding: 26px 28px; }
-.cm-inout__out { border: var(--rule) dashed var(--line); border-radius: 14px; padding: 26px 28px; width: 230px; }
+/* 230px is the width it wants beside the box; stacked under it on a phone a
+   short dashed card floating at half width reads as unfinished rather than as
+   the pair's other half. */
+.cm-inout__out { border: var(--rule) dashed var(--line); border-radius: 14px; padding: 26px 28px; width: 100%; }
+@media (min-width: 900px) { .cm-inout__out { width: 230px; } }
 /* Dashed, and pointing INTO the box. Design was outside and got pulled in a
    task at a time — the broken line is the "on request" part, and the direction
    is the only thing in the diagram that says design came from outside rather
@@ -1783,7 +1796,11 @@ a { color: inherit; text-decoration: none; }
 /* In colour, on request. The rule elsewhere is that colour belongs to
    pressable things and the product UI in the films, which is why the portrait
    and every avatar are greyscaled. These three are the deliberate exception. */
-.cm-photos img { width: 100%; height: clamp(240px, 26vw, 380px); object-fit: cover; border-radius: 14px; display: block; }
+/* Anchored to the top, not centred. These are 0.77 portraits in a box nearer
+   1.4, so about 46% of the height is cropped on a phone — a centred window
+   takes the slice through the middle of the frame, which is a torso. 18% was
+   not far enough; two of the three still lost the head. */
+.cm-photos img { width: 100%; height: clamp(240px, 26vw, 380px); object-fit: cover; object-position: center top; border-radius: 14px; display: block; }
 
 /* ── The transformation ledger ───────────────────────────
    Two grey cards holding two five-item lists became one table of five rows,

@@ -134,3 +134,18 @@ for mock, srcdir, shot, out in JOBS:
 
     base.paste(warped, (0, 0), mask)
     base.convert('RGB').save(os.path.join(SP, out + '.png'))
+
+# ── Phone mockups: how the screen quad is found ───────────────────────────
+# The bezel is black against a mid-grey room, so the largest bright connected
+# region is the screen. Two things about turning that into a quad:
+#
+#   The paste mask is the region's CONVEX HULL, not the region. A phone screen
+#   is full of dark UI, which is not bright, so a mask of bright pixels is full
+#   of holes and the mockup's own placeholder app shows through every one.
+#
+#   The quad is the MINIMUM-AREA ENCLOSING RECTANGLE of that hull, not its
+#   extreme corners. On a rounded rectangle the extreme points sit on the
+#   corner arcs and fall about 10% short of the real corners, which leaves the
+#   warped screenshot inset and a band of the original screen showing above and
+#   below it. Rotating calipers over the hull edges returns the rectangle the
+#   rounding was cut from. Overshooting is safe: the hull mask clips it back.

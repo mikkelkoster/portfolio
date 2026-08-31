@@ -395,11 +395,18 @@ source directory and an output; `QUADS` holds each screen's four corners,
 measured once and checked on an overlay.
 
 Phone mockups detect their own screen: the bezel is black against a mid-grey
-room, so the largest bright connected region is the screen and its extreme
-corners give the quad. **The paste mask has to be that region's convex hull.**
-A phone screen is full of dark UI, which is not bright, so a mask of bright
-pixels is full of holes and the mockup's placeholder app shows through every
-one of them.
+room, so the largest bright connected region is the screen. Two corrections
+that both had to be made:
+
+- **The paste mask is that region's convex hull, not the region.** A phone
+  screen is full of dark UI, which is not bright, so a mask of bright pixels is
+  full of holes and the mockup's placeholder app shows through every one.
+- **The quad is the minimum-area enclosing rectangle of the hull, not its
+  extreme corners.** On a rounded rectangle the extreme points sit on the
+  corner arcs and fall ~10% short of the real corners, which leaves the warped
+  screenshot inset with a band of the original screen showing above and below.
+  Rotating calipers returns the rectangle the rounding was cut from.
+  Overshooting is safe — the hull mask clips it back.
 
 ### Carried over from the main build
 Both lessons were learned the expensive way in `index.html` and are
