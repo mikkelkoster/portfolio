@@ -300,11 +300,12 @@ typeface at two weights, and colour reserved for two things only.
 
 | File | Role |
 |---|---|
-| `v2.html` | front page |
-| `v2-maersk.html` | one worked case study |
-| `v2.css` | the whole system, shared by both |
-| `v2.js` | reveal, nav hairline, and the film loader |
+| `v2.html` | front page **and all three case sheets**, as modal content blocks |
+| `v2-maersk.html`, `v2-formalize.html`, `v2-matas.html` | standalone previews — nothing links to them since the cards became modal triggers |
+| `v2.css` | the whole system |
+| `v2.js` | reveal, nav hairline, film loader, carousels, the modal, the before/after slider |
 | `public/js/stage-configs-mono.js` | grey grounds for the films |
+| `tools/mockup-composite.py` | puts screenshots inside photographic device mockups |
 
 ### The system
 | Token | Value |
@@ -321,17 +322,84 @@ what stops it reading as shouty. Gutters 48px, 24px below 900. Section rhythm
 156px, 88px below 900.
 
 **Colour appears in exactly two places**: blue on things you can press, and
-the product UI inside the films. Everything else is ink, grey, or white. The
-portrait is greyscaled for the same reason. Adding a third source of colour
-is what would break this.
+the product UI inside the films and screenshots. Everything else is ink, grey
+or white — the portrait and every avatar are greyscaled for that reason. The
+three Formalize event photographs are a deliberate exception, made on request.
 
-### The films
-`stage-configs-mono.js` is `stage-configs.js` with the three coloured grounds
-(`#3f86af`, `#4a6cae`, rose `#E8899F`) replaced by one neutral grey sweep.
-Shots, sticky chrome and models are untouched and come straight from the
-colour version — **if a camera move changes there, re-derive this file**.
-The point is dstudio's trick: a monochrome environment so the UI on the
-screen is the only thing carrying hue.
+`.cm-section--dark` no longer inverts. The class is kept so the markup can
+still be targeted, but every section sits on white; the 150px of section
+padding is the division. Anything that reads darkness off that class name will
+be wrong — see the close button below.
+
+### One sheet, three cases
+`#cm-panel` holds `#modal-content-maersk`, `-formalize` and `-matas`. The
+trigger's `data-case` picks one and hides the rest; an unknown name falls back
+to the first block rather than opening an empty sheet.
+
+Hidden blocks have no layout, so their rows measure zero. `open()` runs while
+the panel is still transformed, which is too early — the carousel pill came out
+6px left of the first dot and one card wide instead of three. **Rows remeasure
+again on the settle transition**, when the sheet has actually come to rest.
+
+| Track | Case | Content |
+|---|---|---|
+| `cm-c1` / `cm-c2` / `cm-c4` | Maersk | hero scenes · result cards · design-system sheets |
+| `cm-f1` / `cm-f2` | Formalize | hero scenes · the journey |
+| `cm-m1` / `cm-m2` | Matas | hero scenes · what members asked for |
+
+### Components
+Built for one sheet, reused across the others where they fit.
+
+| Class | What it is |
+|---|---|
+| `.cm-reveal` | before/after with a draggable divider. `clip-path`, not width — narrowing would squash the top image and the halves would drift out of register |
+| `.cm-ledger` | matched pairs as table rows. `--three` for a scale, which does *not* grey its `dt` |
+| `.cm-challenge-card` | white card, grey on hover, drawn 24px icon. No icon font is loaded — icons are inline SVG at 1.4 stroke |
+| `.cm-many` / `.cm-chip` | many things resolving into one. A dashed chip is an open slot |
+| `.cm-inout` | a bordered box holding what is inside, a dashed card outside it |
+| `.cm-spend` | two bars drawn to the *spend*, not the group size, with a note saying so |
+| `.cm-shots` | product screens, each pinned by percentage and clipped by its card |
+| `.cm-duo`, `.cm-photos`, `.cm-pull` | two labelled columns · a photo row · a pull quote |
+
+### The close button reads the pixel, not the class
+The live site walks up from the button looking for `.cm-section--dark`. That
+cannot work here: every section is white, and what goes dark behind the button
+is a photograph or a monitor scene. `updateCloseTheme` in `v2.js` takes
+`elementsFromPoint` under the button and, for an image, maps that screen point
+back into the file's own pixels — which depends on `object-fit`, since this
+build uses both `cover` and `contain` and they centre the leftover differently.
+A transparent pixel is skipped rather than read as black. One 1×1 canvas is
+reused; throttled to a frame.
+
+### Images: fork, never recolour in place
+`index.html` uses the colour originals. Every image v2 recolours is forked to
+`-mono` — 9 Maersk result plates and 6 Formalize journey plates. Recolouring
+in place silently changes the live site; it happened once, caught during an
+audit.
+
+Three things that bit, in order:
+- **Ground repaint must blend toward the target, never add a delta.** A pixel
+  already at `#f7f7f7` sits 3.7 from the plate colour, so it falls inside the
+  match band and a delta shifts it a second time. Blending is idempotent.
+- **The source exports carry a 2px border at columns 0–1.** A crop-to-content
+  pass reads it as artwork, so the bbox starts at x=0 and the border ends up
+  scaled into the middle of the card as a vertical rule. Inset 3px before
+  measuring.
+- **Canvas size sets the padding, fill sets the picture.** Shrink both together
+  to make artwork smaller without the gap growing back.
+
+### `tools/mockup-composite.py`
+Warps a screenshot into a photographic mockup's screen and outputs a
+monochrome scene where the only colour is the UI. `JOBS` names the mockup, a
+source directory and an output; `QUADS` holds each screen's four corners,
+measured once and checked on an overlay.
+
+Phone mockups detect their own screen: the bezel is black against a mid-grey
+room, so the largest bright connected region is the screen and its extreme
+corners give the quad. **The paste mask has to be that region's convex hull.**
+A phone screen is full of dark UI, which is not bright, so a mask of bright
+pixels is full of holes and the mockup's placeholder app shows through every
+one of them.
 
 ### Carried over from the main build
 Both lessons were learned the expensive way in `index.html` and are
@@ -341,6 +409,10 @@ implemented here from the start, not rediscovered:
 - A film runs for as long as it is **more than 12% on screen**, rather than
   only the most-visible one. Pausing is for cards that have gone.
 
-### Promoting it
-`git mv v2.html index.html` if it wins — that keeps the file's history
-instead of reading as a wholesale rewrite.
+### Before promoting it
+- `git mv v2.html index.html` keeps the file's history instead of reading as a
+  wholesale rewrite.
+- Remove the `no-store` meta from every v2 page.
+- `maersk-stage-poster.jpg` predates the mono ground change.
+- The three standalone `v2-*.html` pages are unreachable from the front page;
+  decide whether they go.
