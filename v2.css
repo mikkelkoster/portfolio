@@ -1475,25 +1475,6 @@ a { color: inherit; text-decoration: none; }
    and the one in the operator shot starts losing its right edge. */
 @media (max-width: 900px) { .cm-car__slide { aspect-ratio: 5 / 4; } }
 
-/* Matas is a phone product, so its hero row holds portrait screenshots rather
-   than the desktop mockups the other two cases use. Narrower columns and a
-   9:16 slide — the screenshots are 1:2, so cover trims a little top and
-   bottom rather than pillarboxing a tall image inside a landscape box. */
-.cm-car__col--phone { width: clamp(200px, 22%, 300px); }
-/* The three screenshots are not one ratio — the home screen is 1:2 and the
-   two inner screens are nearer 1:2.8 — so no single box fits all three
-   without either cropping or pillarboxing. 0.42 splits them, and anchoring
-   to the top means what gets lost is the far end of a long scrolling screen
-   rather than the header that identifies it. */
-.cm-car-wrap--phone .cm-car__slide { aspect-ratio: 0.42; }
-/* Contain, not cover. Cover clipped the home screen's right edge — on a page
-   whose subject is the interface, cropping the interface is the one thing the
-   frame must not do. The slide already paints --surface, so the margin the
-   contain leaves reads as padding around a screenshot. */
-.cm-car-wrap--phone .cm-car__slide img { object-fit: contain; }
-@media (max-width: 900px) {
-  .cm-car__col--phone { width: clamp(180px, 52%, 260px); }
-}
 /* One grey card, top to bottom. The illustration plates were a pale blue that
    sat 20 levels off this grey — close enough to look like a mistake rather
    than a choice, so the plates were repainted to --surface and the card now
@@ -1638,6 +1619,39 @@ a { color: inherit; text-decoration: none; }
 .cm-reveal__tag--a { top: 14px; left: 14px; }
 .cm-reveal__tag--b { top: 14px; right: 14px; }
 .cm-reveal figcaption { left: 14px; bottom: 14px; color: var(--ink); }
+
+/* ── Equal spend ─────────────────────────────────────────
+   Half the membership and the top one per cent spend about the same. Two bars
+   of equal length say it; the labels carry the group sizes, because a bar
+   drawn to 1% would be a sliver and read as the finding rather than the setup.
+   The note under them says which quantity the bars are, since a reader will
+   assume they are the groups otherwise. */
+.cm-spend { margin-top: 44px; max-width: var(--cm-measure); }
+.cm-spend__row { display: grid; gap: 10px; align-items: center; }
+@media (min-width: 700px) { .cm-spend__row { grid-template-columns: 200px 1fr; gap: 24px; } }
+.cm-spend__k b { display: block; font-size: 17px; font-weight: 500; color: var(--ink); }
+.cm-spend__k span { font-size: 14px; color: var(--ink-55); }
+.cm-spend__bar { height: 12px; border-radius: 100px; background: var(--surface); overflow: hidden; }
+.cm-spend__bar span { display: block; height: 100%; background: var(--ink); border-radius: 100px; }
+.cm-spend__eq { font-size: 14px; color: var(--ink-55); margin: 14px 0; }
+@media (min-width: 700px) { .cm-spend__eq { margin-left: 224px; } }
+.cm-spend__note { font-size: 14px; color: var(--ink-25); margin: 18px 0 0; }
+
+/* Three columns rather than two, for the frequency scale. dt is the first
+   column and the two dd's follow, which is what a definition list already
+   does — no extra markup. */
+@media (min-width: 900px) {
+  .cm-ledger--three .cm-ledger__head,
+  .cm-ledger--three .cm-ledger__row { grid-template-columns: repeat(3, 1fr); }
+}
+/* All three columns in ink. The base ledger greys its dt because there it is
+   the "before" half of a pair; this one is a scale, and greying the low-
+   frequency member implied they were the state being corrected. */
+.cm-ledger--three dt, .cm-ledger--three dd { color: var(--ink); }
+
+/* A phone capture is 1:2, so the reveal frame would be twice as tall as the
+   sheet is wide. Cap it and let the frame sit centred at a readable size. */
+.cm-reveal--phone { max-width: 380px; margin-left: auto; margin-right: auto; }
 
 /* ── Two products, design outside them ───────────────────
    Replaces an SVG that was blue, set in a serif, and drew two macOS windows
