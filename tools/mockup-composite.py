@@ -139,9 +139,11 @@ for mock, srcdir, shot, out in JOBS:
 # The bezel is black against a mid-grey room, so the largest bright connected
 # region is the screen. Two things about turning that into a quad:
 #
-#   The paste mask is the region's CONVEX HULL, not the region. A phone screen
-#   is full of dark UI, which is not bright, so a mask of bright pixels is full
-#   of holes and the mockup's own placeholder app shows through every one.
+#   The paste mask is the RECTANGLE, drawn rounded and warped into place — not
+#   the bright region, and not its hull. The region is full of holes because a
+#   screen's dark UI is not bright, and the placeholder shows through them. The
+#   hull closes the holes but still tracks the bright pixels, so a dark edge in
+#   the original screen pulls it inward and clips the new screenshot there.
 #
 #   The quad is the MINIMUM-AREA ENCLOSING RECTANGLE of that hull, not its
 #   extreme corners. On a rounded rectangle the extreme points sit on the
