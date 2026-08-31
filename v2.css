@@ -1339,8 +1339,12 @@ a { color: inherit; text-decoration: none; }
 /* A section ending on the team photo does not need the full gap under it —
    the photo is the closing image, and a section-sized void below it read as
    the sheet having finished early. */
-.cm-close-section:has(> .cm-team:last-child),
-.cm-close-section:has(> .cm-photos:last-child) { padding-bottom: calc(var(--sec) * 0.28); }
+/* Close up under a trailing figure only when something follows it. On Maersk
+   and Formalize the quotes come next, so the tight gap joins them; on Matas the
+   close IS the last block, and the same rule left the photograph sitting almost
+   on the bottom edge of the sheet. */
+.cm-close-section:has(> .cm-team:last-child):has(+ *),
+.cm-close-section:has(> .cm-photos:last-child):has(+ *) { padding-bottom: calc(var(--sec) * 0.28); }
 /* The quotes are the close's last beat, not a new section. A full section gap
    above them read as a break after the result rather than the end of it. */
 .cm-close-section + .cm-section--light { padding-top: calc(var(--sec) * 0.36); }
@@ -1683,15 +1687,20 @@ a { color: inherit; text-decoration: none; }
    which is one of the two places colour is allowed here. */
 .cm-mech { display: grid; gap: 20px; margin-top: 40px; }
 @media (min-width: 760px) { .cm-mech { grid-template-columns: 1fr 1fr; gap: 24px; } }
-.cm-mech__panel { background: var(--surface); border-radius: 18px; padding: 36px 28px 0;
-                  display: flex; flex-direction: column; align-items: center; overflow: hidden; }
+.cm-mech__panel { background: var(--surface); border-radius: 18px; padding: 36px 28px 36px;
+                  display: flex; flex-direction: column; align-items: center; }
 .cm-mech__who { font-size: 14px; color: var(--ink-55); margin: 0 0 8px; }
 .cm-mech__what { font-size: 24px; font-weight: 500; letter-spacing: -0.025em; color: var(--ink); margin: 0 0 28px; }
 .cm-mech__badge { width: clamp(96px, 12vw, 128px); height: auto; display: block; margin-bottom: 32px; }
-/* The screen runs off the bottom of the panel rather than sitting inside it —
-   a phone capture is 1:2.7 and would otherwise set the panel's height. */
-.cm-mech__screen { width: min(100%, 260px); height: auto; display: block;
-                   border-radius: 12px 12px 0 0; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 10px 28px rgba(0,0,0,.09); }
+/* A fixed frame the capture is cropped by, rather than the capture running off
+   the bottom of the panel. Both screens are 1:2.7 and would set the panel's
+   height if shown whole; cropping them to one frame means both end at the same
+   line and both are rounded on all four corners, which running off the edge
+   could never give. */
+.cm-mech__shot { width: min(100%, 260px); height: clamp(260px, 32vw, 360px);
+                 overflow: hidden; border-radius: 14px;
+                 box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 10px 28px rgba(0,0,0,.09); }
+.cm-mech__screen { width: 100%; height: auto; display: block; }
 
 /* ── Equal spend ─────────────────────────────────────────
    The live case's shape, on --surface instead of navy: a panel holding two
@@ -1713,10 +1722,16 @@ a { color: inherit; text-decoration: none; }
 .cm-spend__bar { width: 100%; height: clamp(180px, 24vw, 260px);
                  background: var(--bg); border-radius: 12px; overflow: hidden;
                  display: flex; flex-direction: column; }
+/* Rose, with the number in ink on top of it — white on this pink measures
+   1.4:1 and would not be readable; ink measures 10.8:1. */
 .cm-spend__fill { display: flex; align-items: center; justify-content: center;
-                  background: var(--ink); color: #fff; font-size: 15px; font-weight: 500; }
-.cm-spend__fill--bottom { margin-top: auto; border-radius: 12px; }
-.cm-spend__fill--top { border-radius: 12px; }
+                  background: var(--rose); color: var(--ink); font-size: 15px; font-weight: 500; }
+/* Rounded only where the fill meets the end of its track. A fill is a portion
+   of the track, so the edge it shares with the track takes the track's radius
+   and the edge that cuts through the middle stays square — rounding all four
+   made each fill read as its own floating pill. */
+.cm-spend__fill--bottom { margin-top: auto; border-radius: 0 0 12px 12px; }
+.cm-spend__fill--top { border-radius: 12px 12px 0 0; }
 .cm-spend__k { text-align: center; margin: 16px 0 0; }
 .cm-spend__k b { display: block; font-size: 17px; font-weight: 500; color: var(--ink); }
 .cm-spend__k span { font-size: 14px; color: var(--ink-55); }
@@ -2060,7 +2075,9 @@ a { color: inherit; text-decoration: none; }
 }
 /* A full-width image answering a headline. It sat 48px below it, which read as
    a caption rather than the evidence for the claim. */
-.cm-figure { border-radius: 12px; overflow: hidden; margin-top: 56px; }
+/* 20px to match .cm-spend, .cm-oldnew and .cm-mech — this sits among them and
+   was the only block still on the smaller radius. */
+.cm-figure { border-radius: 20px; overflow: hidden; margin-top: 56px; background: var(--surface); }
 .cm-svg-spread { display: grid; gap: 40px; margin-top: 72px; }
 @media (min-width: 900px) { .cm-svg-spread { grid-template-columns: repeat(3, 1fr); } }
 .cm-svg-spread-label { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 14px; }
