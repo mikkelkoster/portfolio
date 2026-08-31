@@ -96,6 +96,32 @@ def grow(quad, px):
         out.append((x + dx/d*px, y + dy/d*px))
     return out
 
+def trim_dead(im, min_run=20, edge_slack=8):
+    """Drop a flat, contentless band at the left or right edge of a plate.
+
+    plate-4 carries 45px of one uniform colour down its right side, with a 6px
+    sliver of window edge beyond it. Warped into the screen that reads as ~27px
+    of blank against the bezel — the strip you see on scene-04. Only the sides
+    are trimmed: the Maersk plates open on 17 flat rows at the top that are part
+    of the UI, not dead space.
+    """
+    g = im.convert('L'); w, h = g.size; px = g.load()
+    def cvar(x):
+        v = [px[x, y] for y in range(0, h, 2)]; m = sum(v)/len(v)
+        return sum((k-m)**2 for k in v)/len(v)
+    def run(rev):
+        n = 0; skipped = 0
+        for x in (range(w-1, -1, -1) if rev else range(w)):
+            if cvar(x) < 4: n += 1
+            elif n == 0 and skipped < edge_slack: skipped += 1
+            else: break
+        return (n + skipped) if n >= min_run else 0
+    r, l = run(True), run(False)
+    if r or l:
+        print(f'  trimmed dead margin: left {l}px, right {r}px')
+        im = im.crop((l, 0, w - r, h))
+    return im
+
 import sys
 ONLY = sys.argv[1:]                      # regenerate a subset by output name
 for mock, srcdir, shot, out in JOBS:
@@ -103,7 +129,7 @@ for mock, srcdir, shot, out in JOBS:
     quad = QUADS[mock]
     base = Image.open(os.path.join(SP, mock)).convert('RGBA')
     W, H = base.size
-    src  = Image.open(os.path.join(REPO, 'public/images', srcdir, shot)).convert('RGBA')
+    src  = trim_dead(Image.open(os.path.join(REPO, 'public/images', srcdir, shot)).convert('RGBA'))
 
     # target aspect of the screen, averaged over both pairs of edges
     tw = (((quad[1][0]-quad[0][0])**2 + (quad[1][1]-quad[0][1])**2) ** .5 +

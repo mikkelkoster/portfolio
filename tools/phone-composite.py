@@ -145,11 +145,31 @@ def occluders(base, quad, thr=235):
     p=Image.new('L',(w,h),0); pp=p.load()
     for x,y in keep[1]:
         if ip[x,y]>=128: pp[x,y]=255
-    p=p.filter(ImageFilter.MinFilter(9)).filter(ImageFilter.MaxFilter(9))
+    # Opening by RECONSTRUCTION, not a plain opening. The erosion is only a test
+    # of thickness — a letter stroke is a few px across and vanishes under it,
+    # a finger is tens — and every blob that survives the test is then kept
+    # whole. A plain opening also rounds off what it keeps, and where a finger
+    # crosses the screen edge it is at its narrowest, so it was shaving the tips
+    # flat: the crop the hand looked wrongly cut by.
+    core=p.filter(ImageFilter.MinFilter(9)).load()
     pp=p.load(); ap=a.load(); n=0
-    for y in range(h):
-        for x in range(w):
-            if pp[x,y]>=128: ap[x,y]=0; n+=1
+    seen=bytearray(w*h)
+    for sy in range(h):
+        for sx in range(w):
+            j=sy*w+sx
+            if seen[j] or pp[sx,sy]<128: continue
+            q=collections.deque([(sx,sy)]); seen[j]=1; blob=[]; thick=False
+            while q:
+                x,y=q.popleft(); blob.append((x,y))
+                if core[x,y]>=128: thick=True
+                for dx,dy in ((1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)):
+                    nx,ny=x+dx,y+dy
+                    if 0<=nx<w and 0<=ny<h:
+                        k=ny*w+nx
+                        if not seen[k] and pp[nx,ny]>=128: seen[k]=1; q.append((nx,ny))
+            if not thick: continue
+            for x,y in blob: ap[x,y]=0
+            n+=len(blob)
     return a.filter(ImageFilter.GaussianBlur(1.0)), n
 
 JOBS=[('6a34624f7400e78c68c2c515_m1.png','matas-app-new.jpg','matas-scene-01'),
