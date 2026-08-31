@@ -464,6 +464,10 @@
 
     let dragging = false;
     frame.addEventListener('pointerdown', e => {
+      /* Stops the selection the browser would otherwise begin on mousedown.
+         The CSS refuses it too; this refuses it at the source, which is what
+         keeps a drag that starts on the frame and travels outside it clean. */
+      e.preventDefault();
       dragging = true;
       frame.setPointerCapture(e.pointerId);
       fromEvent(e);
@@ -484,6 +488,8 @@
       if (e.key === 'Home')       { set(0);   e.preventDefault(); }
       if (e.key === 'End')        { set(100); e.preventDefault(); }
     });
+
+    frame.addEventListener('dragstart', e => e.preventDefault());
 
     set(50);
   });

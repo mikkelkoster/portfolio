@@ -1568,8 +1568,16 @@ a { color: inherit; text-decoration: none; }
   background: var(--bg);
   box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 10px 28px rgba(0,0,0,.09);
   touch-action: pan-y;          /* vertical scroll still belongs to the page */
-  user-select: none;
 }
+/* Dragging across a picture is, to the browser, either a text selection or the
+   start of a native image drag. Both fire here: the first painted the left
+   image in selection blue, the second would hand the file to whatever the
+   pointer was released over. Selection is refused on the whole frame — Safari
+   still wants the prefix — and the images are taken out of hit-testing
+   entirely, which also stops them being drag sources. The frame keeps every
+   pointer event because nothing inside it competes for them. */
+.cm-reveal, .cm-reveal * { -webkit-user-select: none; user-select: none; }
+.cm-reveal img { -webkit-user-drag: none; pointer-events: none; }
 .cm-reveal + .cm-reveal { margin-top: 28px; }
 .cm-reveal__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 /* clip-path rather than width, so the before image is cropped instead of
