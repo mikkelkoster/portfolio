@@ -1552,6 +1552,53 @@ a { color: inherit; text-decoration: none; }
   margin: 0 auto;
 }
 
+/* ── Before / after reveal ───────────────────────────────
+   Four screenshots became two. Side by side, the reader has to hold one image
+   in their head while looking at the other; stacked in one frame with a
+   divider they drag, the comparison happens in one place and the changes
+   announce themselves.
+   The "after" is the base layer and the "before" is clipped over it, so the
+   frame shows the finished product when nothing has been touched. */
+.cm-reveal {
+  --x: 50%;
+  position: relative;
+  margin: 44px 0 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 10px 28px rgba(0,0,0,.09);
+  touch-action: pan-y;          /* vertical scroll still belongs to the page */
+  user-select: none;
+}
+.cm-reveal + .cm-reveal { margin-top: 28px; }
+.cm-reveal__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+/* clip-path rather than width, so the before image is cropped instead of
+   squashed — the two halves have to stay in register as the divider moves. */
+.cm-reveal__clip { position: absolute; inset: 0; clip-path: inset(0 calc(100% - var(--x)) 0 0); }
+.cm-reveal__handle {
+  position: absolute; top: 0; bottom: 0; left: var(--x);
+  width: 44px; margin-left: -22px;      /* 2px line, 44px grab area */
+  cursor: ew-resize; display: flex; align-items: center; justify-content: center;
+}
+.cm-reveal__handle span { width: 2px; height: 100%; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.14); }
+.cm-reveal__handle::after {
+  content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 38px; height: 38px; border-radius: 100px; background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.cm-reveal__handle:focus-visible { outline: none; }
+.cm-reveal__handle:focus-visible::after { box-shadow: 0 0 0 3px var(--blue); }
+.cm-reveal__tag {
+  position: absolute; top: 14px; z-index: 2;
+  font-size: 13px; color: var(--ink); background: rgba(255,255,255,.9);
+  border-radius: 100px; padding: 5px 12px;
+}
+.cm-reveal__tag--a { left: 14px; }
+.cm-reveal__tag--b { right: 14px; }
+.cm-reveal figcaption { position: absolute; left: 14px; bottom: 14px; z-index: 2;
+  font-size: 13px; color: var(--ink-55); background: rgba(255,255,255,.9);
+  border-radius: 100px; padding: 5px 12px; }
+
 /* ── Two products, design outside them ───────────────────
    Replaces an SVG that was blue, set in a serif, and drew two macOS windows
    with traffic lights — none of which this build uses. The claim is spatial:
@@ -1706,16 +1753,6 @@ a { color: inherit; text-decoration: none; }
    instead — the picture gets an edge, the layout does not gain a box.
    Maersk's bet and Matas's transformation keep the fill: theirs hold
    illustrations on a grey plate, which needs the card to sit on. */
-/* Top-aligned. The base row centres its columns, which is right when the two
-   sides are cards of similar height; here they are captures at different
-   ratios (856x660 against 968x672), so centring left the two screenshots
-   starting at different heights and the before/after stopped reading as one
-   comparison. The arrow keeps its own centring. */
-.cm-ba-dark--plain { align-items: start; }
-.cm-ba-dark--plain .cm-ba-dark__arrow { align-self: center; }
-.cm-ba-dark--plain .cm-ba-dark__col { background: none; padding: 0; }
-.cm-ba-dark--plain img { box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 10px 28px rgba(0,0,0,.09); }
-
 .cm-ba-dark__label { font-size: 15px; font-weight: 400; color: var(--ink-55); margin: 0 0 12px; }
 .cm-ba-dark__title { font-size: 20px; font-weight: 500; color: var(--ink); margin: 0 0 12px; text-wrap: balance; }
 /* Below 900 the two cards stack, so the arrow between them is pointing across

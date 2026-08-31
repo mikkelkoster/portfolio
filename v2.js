@@ -442,6 +442,52 @@
     return handle;
   }
 
+  /* ── Before / after reveal ──────────────────────────────
+     Pointer events, so mouse, pen and touch are one path. The handle carries
+     role="slider", which makes the arrow keys a real control rather than a
+     mouse-only affordance — and the position is a percentage, so it survives
+     a resize without recalculation. */
+  document.querySelectorAll('.cm-reveal').forEach(frame => {
+    const handle = frame.querySelector('.cm-reveal__handle');
+    if (!handle) return;
+    let pct = 50;
+
+    const set = (p) => {
+      pct = Math.max(0, Math.min(100, p));
+      frame.style.setProperty('--x', pct + '%');
+      handle.setAttribute('aria-valuenow', Math.round(pct));
+    };
+    const fromEvent = (e) => {
+      const r = frame.getBoundingClientRect();
+      set(((e.clientX - r.left) / r.width) * 100);
+    };
+
+    let dragging = false;
+    frame.addEventListener('pointerdown', e => {
+      dragging = true;
+      frame.setPointerCapture(e.pointerId);
+      fromEvent(e);
+    });
+    frame.addEventListener('pointermove', e => { if (dragging) fromEvent(e); });
+    const stop = e => {
+      if (!dragging) return;
+      dragging = false;
+      if (frame.hasPointerCapture(e.pointerId)) frame.releasePointerCapture(e.pointerId);
+    };
+    frame.addEventListener('pointerup', stop);
+    frame.addEventListener('pointercancel', stop);
+
+    handle.addEventListener('keydown', e => {
+      const step = e.shiftKey ? 10 : 2;
+      if (e.key === 'ArrowLeft')  { set(pct - step); e.preventDefault(); }
+      if (e.key === 'ArrowRight') { set(pct + step); e.preventDefault(); }
+      if (e.key === 'Home')       { set(0);   e.preventDefault(); }
+      if (e.key === 'End')        { set(100); e.preventDefault(); }
+    });
+
+    set(50);
+  });
+
   document.querySelectorAll('[data-car]').forEach(root => {
     const pre = root.dataset.car;
     initCarousel({
