@@ -110,14 +110,15 @@ def inset(q, d):
         t=((x2-x1)*b2-(y2-y1)*a2)/(a1*b2-b1*a2); return (x1+a1*t,y1+b1*t)
     return [it(lines[k-1],lines[k]) for k in range(4)]
 
-def occluders(base, quad, thr=235, lo=150):
+def occluders(base, quad, thr=235):
     """What sits in FRONT of the glass: the fingers curling over the edge and the
     bezel shadow they cast across it. Brightness alone cannot say — these mockups
     ship a placeholder app, so half the screen is legitimately dark. Connectivity
     can: the hand is one enormous mass that reaches far outside the quad, while
     every dark element of the placeholder lies wholly within it. Returns an alpha
-    where 255 keeps the UI; the held-back band ramps by luminance so a fingertip
-    is solid and the shadow's soft edge stays soft."""
+    where 255 keeps the UI and 0 holds it back. Held solidly, not ramped by
+    luminance: a lit fingertip reads 200-235, so a ramp made the bright half of
+    each tip transparent and the UI sliced it off along the screen edge."""
     w,h=base.size; g=base.convert('L'); gp=g.load()
     inq=Image.new('L',(w,h),0); ImageDraw.Draw(inq).polygon([tuple(p) for p in quad],fill=255); ip=inq.load()
     seen=bytearray(w*h); keep=None
@@ -148,8 +149,7 @@ def occluders(base, quad, thr=235, lo=150):
     pp=p.load(); ap=a.load(); n=0
     for y in range(h):
         for x in range(w):
-            if pp[x,y]<128: continue
-            v=gp[x,y]; ap[x,y]=0 if v<=lo else round(255*(v-lo)/(thr-lo)); n+=1
+            if pp[x,y]>=128: ap[x,y]=0; n+=1
     return a.filter(ImageFilter.GaussianBlur(1.0)), n
 
 JOBS=[('6a34624f7400e78c68c2c515_m1.png','matas-app-new.jpg','matas-scene-01'),

@@ -1691,13 +1691,13 @@ a { color: inherit; text-decoration: none; }
                   display: flex; flex-direction: column; align-items: center; }
 .cm-mech__who { font-size: 14px; color: var(--ink-55); margin: 0 0 8px; }
 .cm-mech__what { font-size: 24px; font-weight: 500; letter-spacing: -0.025em; color: var(--ink); margin: 0 0 28px; }
-.cm-mech__badge { width: clamp(96px, 12vw, 128px); height: auto; display: block; margin-bottom: 32px; }
-/* A fixed frame the capture is cropped by, rather than the capture running off
-   the bottom of the panel. Both screens are 1:2.7 and would set the panel's
-   height if shown whole; cropping them to one frame means both end at the same
-   line and both are rounded on all four corners, which running off the edge
-   could never give. */
-.cm-mech__shot { width: min(100%, 260px); height: clamp(260px, 32vw, 360px);
+.cm-mech__badge { width: clamp(150px, 19vw, 200px); height: auto; display: block; margin-bottom: 32px; }
+/* A fixed frame the capture sits in, rather than running off the bottom of the
+   panel — that way both end on the same line and both are rounded on all four
+   corners. The ratio is the points capture's own 657:1800, so the frame shows
+   the whole screen at any width and needs no length of its own; the rewards
+   capture is 649:1800 and loses ~13px off the bottom to match. */
+.cm-mech__shot { width: min(100%, 394px); aspect-ratio: 657 / 1800;
                  overflow: hidden; border-radius: 14px;
                  box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 10px 28px rgba(0,0,0,.09); }
 .cm-mech__screen { width: 100%; height: auto; display: block; }
@@ -2078,6 +2078,13 @@ a { color: inherit; text-decoration: none; }
 /* 20px to match .cm-spend, .cm-oldnew and .cm-mech — this sits among them and
    was the only block still on the smaller radius. */
 .cm-figure { border-radius: 20px; overflow: hidden; margin-top: 56px; background: var(--surface); }
+/* Out past the section's gutter to the full width of the sheet. The map is one
+   wide artefact — 150 screens on a wall — and a gutter on either side made it
+   read as an illustration of the wall rather than the wall. Its ground is
+   already --surface, so at full bleed the grey runs edge to edge; the radius
+   goes with the inset, since a full-bleed block has no corners to round. */
+.cm-figure--bleed { margin-inline: calc(var(--cm-gutter) * -1); border-radius: 0; }
+.cm-figure--bleed img { width: 100%; display: block; }
 .cm-svg-spread { display: grid; gap: 40px; margin-top: 72px; }
 @media (min-width: 900px) { .cm-svg-spread { grid-template-columns: repeat(3, 1fr); } }
 .cm-svg-spread-label { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 14px; }
