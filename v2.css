@@ -1509,7 +1509,7 @@ a { color: inherit; text-decoration: none; }
    sides, which is the only way the two can actually match: one of them is
    inside the image and cannot be reached from here. */
 .cm-car__text-card--flush .cm-car__card-body-wrap { padding-top: 0; }
-.cm-car__text-card--flush .cm-car__card-img { aspect-ratio: 800 / 320; }
+.cm-car__text-card--flush .cm-car__card-img { aspect-ratio: 800 / 350; }
 .cm-car__card-num { font-size: 13px; color: var(--ink-55); margin: 0 0 10px; font-variant-numeric: tabular-nums; }
 .cm-car__card-title { font-size: 18px; font-weight: 500; letter-spacing: -0.02em; margin: 0 0 8px; color: var(--ink); }
 .cm-car__card-body { font-size: 15px; line-height: 1.55; color: var(--ink-55); margin: 0; }
@@ -1722,6 +1722,10 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
   border-radius: 16px;
   background: var(--surface);
+  /* The card is --surface on a white page, which is a 8-level difference and
+     effectively no edge at all. The captures are white-grounded, so without a
+     line the UI ran straight into the page. */
+  border: var(--rule) solid var(--line);
 }
 /* Centred horizontally and pinned by percentage from the top, at a width that
    leaves an even margin either side. A capture taller than its card runs past
