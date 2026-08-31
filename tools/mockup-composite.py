@@ -96,7 +96,10 @@ def grow(quad, px):
         out.append((x + dx/d*px, y + dy/d*px))
     return out
 
+import sys
+ONLY = sys.argv[1:]                      # regenerate a subset by output name
 for mock, srcdir, shot, out in JOBS:
+    if ONLY and out not in ONLY: continue
     quad = QUADS[mock]
     base = Image.open(os.path.join(SP, mock)).convert('RGBA')
     W, H = base.size
@@ -114,9 +117,23 @@ for mock, srcdir, shot, out in JOBS:
     # the bottom of a dashboard reads as a shorter viewport; stretched type reads
     # as a mistake.
     sw, sh = src.size
-    if sw / sh > target:                 # too wide: trim the sides evenly
-        nw = int(round(sh * target)); x0 = (sw - nw)//2
-        src = src.crop((x0, 0, x0+nw, sh))
+    if sw / sh > target:
+        # Too wide for this screen. Trimming the sides was taking 81px off each
+        # of plate-3 — the whole left nav and part of the right of the UI — and
+        # the side margins of a dashboard are its layout. Grow the canvas
+        # downward instead, which costs nothing when the plate's last row is one
+        # flat colour across its full width (it is, for every plate here).
+        nh = int(round(sw / target))
+        last = src.crop((0, sh-1, sw, sh)).convert('RGB')
+        if len(set(last.getdata())) == 1:
+            pad = Image.new('RGBA', (sw, nh))
+            pad.paste(src, (0, 0)); pad.paste(src.crop((0, sh-1, sw, sh)).resize((sw, nh-sh)), (0, sh))
+            src = pad
+        else:
+            nw = int(round(sh * target)); x0 = (sw - nw)//2
+            print(f'  ! {out}: last row is not flat, falling back to trimming '
+                  f'{x0}px off each side')
+            src = src.crop((x0, 0, x0+nw, sh))
     else:                                # too tall: trim from the bottom only
         nh = int(round(sw / target))
         src = src.crop((0, 0, sw, nh))
@@ -133,7 +150,10 @@ for mock, srcdir, shot, out in JOBS:
     mask = mask.resize((W, H), Image.LANCZOS)
 
     base.paste(warped, (0, 0), mask)
-    base.convert('RGB').save(os.path.join(SP, out + '.png'))
+    dest = {'maersk': 'maersk', 'formalize/plates': 'formalize'}[srcdir]
+    w2 = 1800
+    base.convert('RGB').resize((w2, round(w2*H/W)), Image.LANCZOS).save(
+        os.path.join(REPO, 'public/images', dest, out + '.webp'), 'WEBP', quality=90, method=6)
 
 # ── Phone mockups: how the screen quad is found ───────────────────────────
 # The bezel is black against a mid-grey room, so the largest bright connected
