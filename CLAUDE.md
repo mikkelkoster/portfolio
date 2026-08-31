@@ -409,8 +409,24 @@ that both had to be made:
   shows through every one. The hull closes the holes but still follows the
   bright pixels, so wherever the original screen was dark near an edge the hull
   cuts inward and clips the new screenshot there: 5.7% off one of these three,
-  which read as a crop on the left and right. A rounded rectangle at r ≈ 0.085
-  of the short side clips 0.8% — the corners, and nothing else.
+  which read as a crop on the left and right. A rounded rectangle clips 0.8% —
+  the corners, and nothing else. Its radius is 14% of the screen width, which
+  is what these phones actually are (55pt on a 393pt screen); measuring it from
+  the image kept failing, because a march from the corner crosses bezel first
+  and an area estimate is contaminated by the same dark edges.
+- **Orient the quad before using it.** The min-area frame comes from whichever
+  hull edge minimised the area, so it can sit at any multiple of 90° to the
+  phone — one of these three came out upside down. The screen is portrait, so
+  the short pair of edges is the width; and none of these phones is inverted,
+  so of the two short edges the higher one is the top.
+- **A tilted phone is a trapezoid, not a rectangle.** The min-area rectangle is
+  only a seed. Forcing it as the quad left the screenshot drifting off the left
+  edge and past the bottom-left corner on the two angled shots, because a
+  rectangle cannot follow a perspective projection. `tools/phone-composite.py`
+  assigns each hull point to its nearest seed edge, drops the points near the
+  corners where the rounding curves away, fits a line to each side by total
+  least squares, and intersects them. The fitted quads taper 54px and 12px
+  across — which is the perspective the rectangle was throwing away.
 
 ### Carried over from the main build
 Both lessons were learned the expensive way in `index.html` and are
