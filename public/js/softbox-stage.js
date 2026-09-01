@@ -1368,6 +1368,34 @@ window.initSoftboxStage = function (canvas, config) {
     resize();
     showPlate(0);
     renderer.shadowMap.needsUpdate = true;   // the one shadow render
+
+    /* ── and then recompile the device, ONCE, on the next frame ─────────
+       This is what was making the enclosure vanish, and it is not a colour
+       problem — every previous attempt went at the colour and could not have
+       worked.
+
+       The shadow map is built lazily: autoUpdate is off and the flag above is
+       consumed by the first render. So on the very first frame the device's
+       materials compile while key.shadow.map is still null. They bind an
+       incomplete shadow sampler, and nothing ever marks them dirty again, so
+       that first bad program is the one every subsequent frame draws with. The
+       body, arm and foot come out flat and land within a few levels of the
+       backdrop; the screen, which is unlit, is unaffected — which is exactly
+       the "picture floating over its own contact shadow" this scene has been
+       chased around for weeks.
+
+       Proved by isolation: setting needsUpdate on those three materials and
+       changing NOTHING else brings the whole enclosure back. Forcing them
+       unlit also brought them back, which is why the colour theories kept
+       looking half-right.
+
+       One recompile, on the frame after the shadow map exists. */
+    let recompiled = false;
+    const recompileOnce = () => {
+      if (recompiled) return;
+      recompiled = true;
+      scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
+    };
     if (still) {
       /* Reduced motion: hold the establishing shot. The page still shows
          the product, it simply does not move. Dragging still works. */
@@ -1386,6 +1414,7 @@ window.initSoftboxStage = function (canvas, config) {
       camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
       sortSplats(rig.az + drag.az);
       renderFrame();
+      recompileOnce();
     });
   }
 

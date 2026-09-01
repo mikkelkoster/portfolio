@@ -1326,6 +1326,21 @@ window.initPhoneStage = function (canvas, config) {
     resize();
     showPlate(0);
     renderer.shadowMap.needsUpdate = true;
+
+    /* The twin of the recompile in softbox-stage.js — see the long note there.
+       The shadow map is built lazily, so the first frame compiles every
+       material while key.shadow.map is still null and nothing ever marks them
+       dirty again. On the monitor scene that flattened the enclosure into the
+       backdrop; here the phone is a dark body against a bright ground and
+       survives it, but the incomplete shadow sampler is the same, and it is
+       what filled the console with GL_INVALID_OPERATION on every draw call.
+       One recompile, on the frame after the shadow map exists. */
+    let recompiled = false;
+    const recompileOnce = () => {
+      if (recompiled) return;
+      recompiled = true;
+      scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
+    };
     if (still) {
       Object.assign(rig, SHOTS[0].from);
       showPlate(SHOTS[0].plate);
@@ -1340,6 +1355,7 @@ window.initPhoneStage = function (canvas, config) {
       camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
       sortSplats(rig.az + drag.az);
       renderFrame();
+      recompileOnce();
     });
   }
 
