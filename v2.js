@@ -583,6 +583,8 @@
       document.body.style.overflow = 'hidden';
       scroller.scrollTop = 0;
       modal.classList.remove('is-at-end');
+      /* The sheet opens at the top, so the backstop starts inset. */
+      modal.classList.add('is-at-start');
       panel.style.transition = 'none';
       panel.style.transform = 'translateY(100%)';
       panel.getBoundingClientRect();          // flush the reset
@@ -730,6 +732,20 @@
         const wasEnd = modal.classList.contains('is-at-end');
         const atEnd = wasEnd ? gap <= 28 : gap <= 2;
         if (atEnd !== wasEnd) modal.classList.toggle('is-at-end', atEnd);
+
+        /* The same state at the other end, and this one is not cosmetic.
+           The backstop exists to cover the band the compositor has outrun on a
+           fast fling, and it was pinned at top:40px — the sheet's resting
+           inset. But the moment the sheet is scrolled at all it fills the
+           viewport from y=0, so those top 40px had nothing behind them and a
+           fast scroll up showed straight through to the dimmed page. That is
+           the flash at the top of the sheet. The backstop now runs to y=0
+           whenever the sheet's own top is off screen, and only pulls back to
+           the inset once the reader is actually at the top. Same hysteresis as
+           above, for the same reason. */
+        const wasStart = modal.classList.contains('is-at-start');
+        const atStart = wasStart ? scroller.scrollTop <= 28 : scroller.scrollTop <= 2;
+        if (atStart !== wasStart) modal.classList.toggle('is-at-start', atStart);
       });
     }, { passive: true });
 

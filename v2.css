@@ -1073,24 +1073,47 @@ a { color: inherit; text-decoration: none; }
 .cm-modal.is-settled::after {
   content: '';
   position: fixed;
-  top: 40px;
+  /* Runs the full height by default. It used to start at 40px — the sheet's
+     resting inset — but the sheet only sits at that inset when the reader is
+     at the top; scrolled at all, it fills the viewport from zero, and those
+     top 40px then had no backstop behind them. That band is where a fast
+     scroll up flashed through to the dimmed page. The inset comes back only
+     with .is-at-start, below. */
+  top: 0;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: min(100vw - 32px, 1400px);
   background: var(--bg);
-  border-radius: 20px;
+  /* Square by default, for the same reason: a rounded corner at y=0 would
+     leave two notches of dimmed page where the sheet itself is square. Each
+     end rounds only when that end is actually in view. */
+  border-radius: 0;
   z-index: -1;
   pointer-events: none;
+}
+.cm-modal.is-settled.is-at-start::after {
+  top: 40px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
 }
 /* Pulled up off the floor once the reader has arrived at the end, so the gap
    under the sheet shows the dimmed page and not this. It stays full-height
    while there is still scrolling to do, which is when a fast fling could
    outrun the raster and see through. */
-.cm-modal.is-settled.is-at-end::after { bottom: 40px; }
+.cm-modal.is-settled.is-at-end::after {
+  bottom: 40px;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
 @media (max-width: 900px) {
-  .cm-modal.is-settled::after { top: 20px; width: calc(100vw - 16px); border-radius: 14px; }
-  .cm-modal.is-settled.is-at-end::after { bottom: 20px; }
+  .cm-modal.is-settled::after { width: calc(100vw - 16px); }
+  .cm-modal.is-settled.is-at-start::after {
+    top: 20px; border-top-left-radius: 14px; border-top-right-radius: 14px;
+  }
+  .cm-modal.is-settled.is-at-end::after {
+    bottom: 20px; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;
+  }
 }
 .cm-scroller {
   position: absolute;
