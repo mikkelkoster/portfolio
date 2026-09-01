@@ -1396,13 +1396,18 @@ window.initSoftboxStage = function (canvas, config) {
       recompiled = true;
       scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
     };
-    if (still) {
-      /* Reduced motion: hold the establishing shot. The page still shows
-         the product, it simply does not move. Dragging still works. */
-      Object.assign(rig, SHOTS[0].from);
-    } else {
-      buildTimeline(0);
-    }
+    /* The opening frame is set BEFORE the loop starts, in both branches.
+       buildTimeline only positions the rig on GSAP's first tick, so without
+       this the first frames rendered used the constructor's default rig — a
+       dead-on frontal at dist 14, which is no shot in the film — and on the
+       phone that also meant the model's own stock wallpaper instead of a
+       plate. Caught on a throttled load as an empty dark device, frontal,
+       nothing like the film's opening. It also makes the poster handoff exact,
+       since the poster IS SHOTS[0].from. */
+    Object.assign(rig, SHOTS[0].from);
+    /* Reduced motion holds that establishing shot rather than animating on
+       from it. The page still shows the product, it simply does not move. */
+    if (!still) buildTimeline(0);
     running = true;
     /* Mirrored onto the element so the running state is observable from
        outside — useful for testing that a card which has scrolled away has

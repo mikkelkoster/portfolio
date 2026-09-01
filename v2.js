@@ -78,9 +78,9 @@
              per-case colours, and the dev server sends only an ETag — an
              edited scene file otherwise sits behind a cached copy and the
              change looks like it did not take. */
-          .then(() => load("public/js/stage-configs-mono.js?v=143"))
-          .then(() => load("public/js/softbox-stage.js?v=143"))
-          .then(() => load("public/js/phone-stage.js?v=143"));
+          .then(() => load("public/js/stage-configs-mono.js?v=144"))
+          .then(() => load("public/js/softbox-stage.js?v=144"))
+          .then(() => load("public/js/phone-stage.js?v=144"));
       }
       return libs;
     };

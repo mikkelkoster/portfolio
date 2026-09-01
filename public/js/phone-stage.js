@@ -1356,12 +1356,17 @@ window.initPhoneStage = function (canvas, config) {
       recompiled = true;
       scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
     };
-    if (still) {
-      Object.assign(rig, SHOTS[0].from);
-      showPlate(SHOTS[0].plate);
-    } else {
-      buildTimeline(0);
-    }
+    /* The opening frame is set BEFORE the loop starts, in both branches.
+       buildTimeline only positions the rig on GSAP's first tick, so without
+       this the first frames rendered used the constructor's default rig — a
+       dead-on frontal at dist 14, which is no shot in the film — and on the
+       phone that also meant the model's own stock wallpaper instead of a
+       plate. Caught on a throttled load as an empty dark device, frontal,
+       nothing like the film's opening. It also makes the poster handoff exact,
+       since the poster IS SHOTS[0].from. */
+    Object.assign(rig, SHOTS[0].from);
+    showPlate(SHOTS[0].plate);
+    if (!still) buildTimeline(0);
     running = true;
     canvas.dataset.running = "1";
     renderer.setAnimationLoop(() => {
