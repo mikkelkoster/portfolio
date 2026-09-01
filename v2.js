@@ -713,8 +713,16 @@
       if (endQueued) return;
       endQueued = requestAnimationFrame(() => {
         endQueued = 0;
-        const atEnd = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4;
-        modal.classList.toggle('is-at-end', atEnd);
+        /* Hysteresis, because this class moves the backstop 40px and with it
+           whether the sheet's bottom corners are rounded or square. A single
+           4px threshold sits inside the noise of a momentum scroll — sub-pixel
+           scrollTop, elastic settle — so at rest near the bottom it flipped
+           back and forth every frame and the corners visibly buzzed. It now
+           takes 2px to latch on and 28px of travel to let go. */
+        const gap = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop;
+        const wasEnd = modal.classList.contains('is-at-end');
+        const atEnd = wasEnd ? gap <= 28 : gap <= 2;
+        if (atEnd !== wasEnd) modal.classList.toggle('is-at-end', atEnd);
       });
     }, { passive: true });
 

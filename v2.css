@@ -482,7 +482,11 @@ a { color: inherit; text-decoration: none; }
   width: 100%; height: 100%;
   object-fit: cover;
 }
-.case__poster { filter: grayscale(1); }
+/* No grayscale. The posters are now the films' own opening frames, captured
+   from the live scene under prefers-reduced-motion — which holds SHOTS[0].from
+   — so the still and the first rendered frame are the same picture. Filtering
+   one of them made the handoff a visible colour pop, and the poster no longer
+   matched what it was standing in for. */
 .case__canvas { opacity: 0; transition: opacity .6s ease; }
 .case__canvas.is-live { opacity: 1; }
 .case__head {
@@ -1724,7 +1728,10 @@ a { color: inherit; text-decoration: none; }
    actually shows above the screen it lives on. On --surface rather than the
    original pink, and the badges keep their colour because they are product UI,
    which is one of the two places colour is allowed here. */
-.cm-mech { display: grid; gap: 20px; margin-top: 40px; }
+/* 72, not 40. These panels are a new idea rather than a continuation of the
+   paragraph above them, and at 40 they sat closer to that paragraph than the
+   panels sit to each other. */
+.cm-mech { display: grid; gap: 20px; margin-top: 72px; }
 @media (min-width: 760px) { .cm-mech { grid-template-columns: 1fr 1fr; gap: 24px; } }
 .cm-mech__panel { background: var(--surface); border-radius: 18px; padding: 36px 28px 36px;
                   display: flex; flex-direction: column; align-items: center; }
@@ -1747,7 +1754,7 @@ a { color: inherit; text-decoration: none; }
    as a pair on one screen. Below the base rules, not above: a media query adds
    no specificity, so source order is what decides this. */
 @media (max-width: 759px) {
-  .cm-mech { margin-top: 24px; }
+  .cm-mech { margin-top: 44px; }
   .cm-mech__panel { padding: 28px 20px; }
   .cm-mech__what { font-size: 21px; margin-bottom: 20px; }
   .cm-mech__badge { width: 150px; margin-bottom: 14px; }
@@ -1816,10 +1823,14 @@ a { color: inherit; text-decoration: none; }
 /* The rule is a pseudo-element, not a border-left. A border follows the box's
    own border-radius, so on a 12px-rounded card it bows away at both ends —
    which is what read as a curved line. This one is a straight 2px bar. */
-.cm-freq__band { position: relative; background: var(--surface); border-radius: 12px; padding: 18px 20px 18px 22px; }
+/* Square on the left, rounded on the right. The rule is a straight bar and the
+   card was rounded on all four corners, so the ground showed through in two
+   little crescents where the corner curved away from it and the bar read as
+   detached from the card it belongs to. */
+.cm-freq__band { position: relative; background: var(--surface); border-radius: 0 12px 12px 0; padding: 18px 20px 18px 22px; }
 .cm-freq__band::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
-  background: var(--rose); border-radius: 2px;
+  background: var(--rose);
 }
 .cm-freq__band b { display: block; font-size: 17px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
 .cm-freq__band span { font-size: 15px; color: var(--ink-55); }
