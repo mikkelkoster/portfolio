@@ -663,7 +663,22 @@ window.initPhoneStage = function (canvas, config) {
 
     const bezelTex = new THREE.CanvasTexture(bez);
     bezelTex.colorSpace = THREE.SRGBColorSpace;
-    bezelTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    /* No mips, no anisotropy, plain linear — and all three matter.
+       This texture is an ALPHA MASK that is always magnified: it is 1024 wide
+       and the display it rounds renders far larger than that. Magnification
+       never reads a mip, so the chain is dead weight, and anisotropic sampling
+       is actively harmful — it takes many samples along the steep UV gradient
+       that the rounded corners produce, straddles the mask's one-texel alpha
+       cliff, and returns a different mix per pixel per frame. That is the
+       static: black and white speckle crawling along the bezel's inner curve,
+       at the corners specifically, and only on hardware that actually
+       implements anisotropy — which is why it never showed on a software GL
+       test machine.
+       Plain LinearFilter gives one smooth ramp across that cliff instead. */
+    bezelTex.generateMipmaps = false;
+    bezelTex.minFilter = THREE.LinearFilter;
+    bezelTex.magFilter = THREE.LinearFilter;
+    bezelTex.anisotropy = 1;
     bezelTex.needsUpdate = true;
     const bezel = new THREE.Mesh(overlayGeo, new THREE.MeshBasicMaterial({
       map: bezelTex,

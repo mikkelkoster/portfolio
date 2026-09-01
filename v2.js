@@ -78,9 +78,9 @@
              per-case colours, and the dev server sends only an ETag — an
              edited scene file otherwise sits behind a cached copy and the
              change looks like it did not take. */
-          .then(() => load("public/js/stage-configs-mono.js?v=142"))
-          .then(() => load("public/js/softbox-stage.js?v=142"))
-          .then(() => load("public/js/phone-stage.js?v=142"));
+          .then(() => load("public/js/stage-configs-mono.js?v=143"))
+          .then(() => load("public/js/softbox-stage.js?v=143"))
+          .then(() => load("public/js/phone-stage.js?v=143"));
       }
       return libs;
     };
@@ -137,18 +137,18 @@
               enclosure: cfg.enclosure,
               model: modelUrl,
               sticky: cfg.sticky,
-              /* Enough to render at the device's own resolution rather than
-                 below it. setPixelRatio takes min(dpr, 2, sqrt(budget/wh)),
-                 and at this card size 3.2e6 resolved to 1.68 — so on any 2x
-                 screen the scene drew 2262x1414 and the browser resampled it
-                 up to 2688x1680 every frame. A fractional upscale of a moving
-                 high-contrast silhouette is what read as static: black and
-                 white pixels crawling along the phone's bezel and body edge,
-                 worst on the Matas card because a dark body on a bright ground
-                 with a hard alpha mask is the hardest case in the set.
-                 4.6e6 clears 4 * 1344 * 840, so the ratio lands on 2 and
-                 nothing is resampled. */
-              pixelBudget: 4.6e6,
+              /* These films run the full width of the page here, not a third
+                 of it. The default budget pins a frame this size to 1x and
+                 the browser upscales it, which is what softened the wide
+                 opening shot. Enough for 1.5x at this size.
+
+                 It was briefly raised to 4.6e6 to render at the device's own
+                 resolution, on the theory that the fractional upscale was the
+                 static on the Matas card. That was wrong — the static is the
+                 bezel mask's filtering, fixed in phone-stage.js — and going
+                 native cost about 30% of the frame while MAGNIFYING that mask
+                 further, which made the artefact worse rather than better. */
+              pixelBudget: 3.2e6,
             }));
             return new Promise((done) => {
               let settled = false;
