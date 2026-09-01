@@ -44,9 +44,13 @@ QUADS = {
 
 # mockup, source dir, screenshot, output name
 JOBS = [
-  ('6a344b1f9efa73909650e794_s6.png', 'maersk',           'maersk-dashboard.webp', 'maersk-shot-01'),
-  ('6a344b20e9f2052ffa9e43d1_s1.png', 'maersk',           'maersk-list.webp',      'maersk-shot-02'),
-  ('6a344b2092520a0bf5a75f0e_s2.png', 'maersk',           'maersk-detail.webp',    'maersk-shot-03'),
+  # Plates redrawn without a corner radius. The old ones carried the rounding
+  # baked in as black corners, which warped into the screen as four dark
+  # notches. Output names are the ones the sheet actually asks for — they read
+  # maersk-shot-0N here for a while after the files had been renamed.
+  ('6a344b1f9efa73909650e794_s6.png', 'maersk',           'Maersk 01.png',         'maersk-scene-overview'),
+  ('6a344b20e9f2052ffa9e43d1_s1.png', 'maersk',           'Maersk 02.png',         'maersk-scene-list'),
+  ('6a344b2092520a0bf5a75f0e_s2.png', 'maersk',           'Maersk 03.png',         'maersk-scene-detail'),
   # Formalize: the four screens the film already shows, so the sheet and the
   # film are the same product rather than two different tours of it.
   ('6a344b20e9f2052ffa9e43d1_s1.png', 'formalize/plates', 'plate-1.webp',          'formalize-scene-01'),
