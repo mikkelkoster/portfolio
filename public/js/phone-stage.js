@@ -516,6 +516,9 @@ window.initPhoneStage = function (canvas, config) {
     model.position.sub(centre.multiplyScalar(k));
     phone.add(model);
     phone.updateMatrixWorld(true);
+    /* The guard's frame of reference — the fitted model, not the group, so
+       the contact shadow and the ground plane stay out of the bounds. */
+    setGuardBounds(model);
 
     /* The screen is found by GEOMETRY, not by name. It is the thinnest
        textured mesh in the model — which is what being a screen means, and
@@ -1067,20 +1070,81 @@ window.initPhoneStage = function (canvas, config) {
   const rig = { az: 0, el: 0, dist: 14, tx: 0, ty: 0, roll: 0, key: 1, amb: 1 };
   const drag = { az: 0, el: 0 };
 
+  /* ── The device may never fill the frame ──────────────────────────
+     The twin of the guard in softbox-stage.js — see the long note there for
+     why this cannot live in the shot list. These two files duplicate their
+     shared blocks deliberately, so this is the second copy, not a stray one.
+
+     Measured against the shots as authored, the phone never trips it: the
+     closest is dist 15.8, which shows 9.7 units of height against a 7.0
+     phone, and because fov is vertical that headroom does not change with
+     the breakpoint. So this earns nothing today and is here to stop the
+     monitor's bug from ever being reinvented on this scene — a shot pushed
+     closer later cannot quietly lose the device.
+
+     The corners come from the loaded model's own bounds rather than from a
+     constant, since the GLB is fitted at runtime. Before it lands there is
+     nothing to keep in frame and the guard stands down. */
+  const KEEP = 0.06;
+  const LIM = 1 - KEEP;
+  let bodyCorners = null;
+  const _vp = new THREE.Matrix4();
+  const _v4 = new THREE.Vector4();
+
+  function setGuardBounds(obj) {
+    obj.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(obj);
+    if (!isFinite(b.min.x) || b.isEmpty()) return;
+    bodyCorners = [];
+    for (const x of [b.min.x, b.max.x])
+      for (const y of [b.min.y, b.max.y])
+        for (const z of [b.min.z, b.max.z])
+          bodyCorners.push(new THREE.Vector3(x, y, z));
+  }
+
+  function overflowFactor() {
+    if (!bodyCorners) return 0;
+    _vp.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const c of bodyCorners) {
+      _v4.set(c.x, c.y, c.z, 1).applyMatrix4(_vp);
+      if (_v4.w <= 1e-4) return 2.5;
+      const x = _v4.x / _v4.w, y = _v4.y / _v4.w;
+      if (x < x0) x0 = x; if (x > x1) x1 = x;
+      if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    return Math.max(Math.min(x1, -x0), Math.min(y1, -y0)) / LIM;
+  }
+
+  function placeCamera(target, az, el, dist) {
+    camera.position.set(
+      target.x + dist * Math.sin(az) * Math.cos(el),
+      target.y + dist * Math.sin(el),
+      target.z + dist * Math.cos(az) * Math.cos(el)
+    );
+    camera.up.set(0, 1, 0);
+    camera.lookAt(target);
+    camera.rotateZ(THREE.MathUtils.degToRad(rig.roll));
+    camera.updateMatrixWorld();
+    camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+  }
+
   function applyRig() {
     const az = THREE.MathUtils.degToRad(rig.az + drag.az);
     const el = THREE.MathUtils.degToRad(
       THREE.MathUtils.clamp(rig.el + drag.el, -22, 46)
     );
     const target = new THREE.Vector3(rig.tx, rig.ty, 0);
-    camera.position.set(
-      target.x + rig.dist * Math.sin(az) * Math.cos(el),
-      target.y + rig.dist * Math.sin(el),
-      target.z + rig.dist * Math.cos(az) * Math.cos(el)
-    );
-    camera.up.set(0, 1, 0);
-    camera.lookAt(target);
-    camera.rotateZ(THREE.MathUtils.degToRad(rig.roll));
+
+    let dist = rig.dist;
+    placeCamera(target, az, el, dist);
+    for (let i = 0; i < 3; i++) {
+      const over = overflowFactor();
+      if (over <= 1) break;
+      dist *= over;
+      placeCamera(target, az, el, dist);
+    }
+    rig.framedDist = dist;
 
     key.intensity = 2.5 * rig.key;
     ambient.intensity = 0.16 + 0.2 * rig.amb;

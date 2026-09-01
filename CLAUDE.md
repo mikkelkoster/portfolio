@@ -283,6 +283,33 @@ no gradient, just a darker screen for a third of a frame's budget.
 
 ---
 
+### OPEN: GL_INVALID_OPERATION on every draw call
+Both scene files log `Mismatch between texture format and sampler type
+(signed/unsigned/float/shadow)` until Chrome silences the context — 256-375
+entries per run, reproducible on localhost and on the deployed site, and
+present identically with and without the framing guard.
+
+Narrowed on 2026-09-01, by A/B under one CDP harness that counts the log
+entries rather than by eye:
+
+- **`shadowMap.enabled = false` silences it completely — 0 entries.** So it is
+  the shadow sampler. The note inside `softbox-stage.js` records shadows as
+  ruled out; that A/B was wrong, and the note should be read with that in mind.
+- **The PMREM environment map is NOT the cause** — `scene.environment = null`
+  still gives 340. That was the note's one remaining suspect and it is spent.
+- Counter-intuitively it gets *quieter* under throttling: 256 unthrottled,
+  14 on good 4G, 0 on slow 4G. Something is racing.
+
+One mechanism was tried and **did not work**: `renderer.shadowMap.needsUpdate`
+is set in `start()`, and the first `renderer.render()` of every frame is the
+BACKDROP scene, which holds no shadow caster — so the flag looked like it was
+being spent on the wrong scene. Moving it to just before the main-scene render
+changed nothing (still 256-375), so that is not the mechanism, and the change
+was reverted rather than shipped on theory alone.
+
+All three films render correctly throughout, so this is a warning rather than a
+fault. Next thing to pull: why throttling helps.
+
 ## Update this file
 Keep `CLAUDE.md` up to date as the project evolves:
 - New carousel IDs → add to the table
@@ -498,54 +525,81 @@ still publicly reachable at `/_sb`.
 The stylesheet and script are still named `v2.css` / `v2.js`. Renaming them buys
 nothing and would touch every reference.
 
-### OPEN: the monitor films lose the device on their macros
+### Icons and the share card — 2026-09-01
+The head had **no** `link rel=icon` and **no** `og:` tags at all, so nothing in
+`public/meta/` was ever reached and the assets there were still v1 — a navy
+square with blue MK, and a Fraunces/colour-portrait card. Both are redrawn in
+the v2 language and the tags are now in `index.html`.
+
+| Asset | Note |
+|---|---|
+| `public/meta/favicon.svg` | **the master.** 381 bytes, MK outlined from `GeneralSans-Medium.otf` — no font dependency, no webfont race |
+| `favicon-32 / -192 / -512`, `apple-touch-icon` | all rasterised from that SVG at 1024 and downsampled, so they cannot drift from it |
+| `/favicon.ico` | root path only, for crawlers that request it instead of reading the tags |
+| `public/meta/og-image.png` | 1200x630, 171KB. Source is `og-card.html` |
+| `public/meta/preview.html` | every icon size on light and dark, plus the card |
+
+**The MK is optically centred off the raster, not off its box.** General Sans'
+M carries a left side bearing and the tracking leaves a trailing gap after the
+K, so box-centring put the pair 19px right of centre and 14px low in a 512
+square. Measured and corrected to 58/58 and 156/156. The SVG bakes the same
+correction into its path coordinates.
+
+Medium, not Semibold, and sized so the ink is 83.6% of the square. 77% left it
+mushy at 16px; 89% put the M and K within a pixel of the edge at tab size.
+Semibold reads heavier than a system that is only 400 and 500.
+
+`og-card.html` at the root was the v1 source and is **overwritten** with the v2
+card. It has never been linked from any page.
+
+To re-render either: Chrome `--headless --window-size=1200,630
+--force-device-scale-factor=2 --screenshot`, then downsample to 1200x630. The
+2x pass is what keeps the 80px display type clean.
+
+There is nothing to cache-bust. No share card was ever advertised, so no
+scraper holds a stale one.
+
+### CLOSED: the monitor films losing the device on their macros — 2026-09-01
 Mikkel's standing requirement: **the desktop device must be visible at all
-times.** It currently is not, on both Maersk and Formalize.
+times.** It is now enforced, and not by numbers.
 
-This is NOT the vanishing-enclosure bug from `eb03990` — that fix is intact and
-live (graphite `#6e747b` against ground `0x6b6f73`, verified in the deployed
-config). This is framing. Measured off the live WebGL buffer: for ~7s of the
-~19s loop the frame washes to near-white, mid-tones collapsing from ~70% to 3%,
-because the two macro shots are framed inside the bezel and the screen runs edge
-to edge. The plate is still rendering — the supplier table is legible in the
-pixel data — it just has no device around it.
+The two previous fixes were both a table of hand-derived `dist` / `tx` values.
+Both were computed against ONE card aspect and were therefore wrong at every
+other breakpoint — visible width is `dist * tan(fov/2) * aspect`, and the card
+measures 1.60 on desktop against 1.33 on a phone. A constraint that depends on
+the viewport cannot be expressed as a constant in a shot list, which is why
+this kept coming back.
 
-It is authored that way. `stage-configs-mono.js` says so: *"The macros are meant
-to lose the frame; that is what makes them macros"*, and shot 3 is commented
-*"This one IS inside the bezel"*. So it needs an intentional change, not a fix.
+`applyRig` in **both** scene files now projects the body's eight bounding-box
+corners through the live projection matrix and, if the device covers the frame,
+pushes the camera back by the minimum that brings a CORNER inside — ground
+showing along one vertical edge of the frame and one horizontal edge. A corner
+is the weakest condition that still reads as body, thickness and silhouette, so
+the macros stay as close as they can while remaining macros *of* something.
+`KEEP = 0.06` is the ground margin per side. Three iterations converge, since
+projected size goes as 1/dist and the first multiply lands close.
 
-The header comment's geometry is stale in one respect: it assumes the card
-renders at **aspect 1.06 at every breakpoint**. Measured, it is 1.600 at desktop
-(1351x844) and 1.333 at mobile (342x257), with `fov` 34deg at both. Visible
-half-width is therefore `0.489 * dist` on desktop and `0.408 * dist` on mobile —
-mobile is the binding constraint, and any framing sum must use it.
+Measured over a full 26s loop, mid-tone share (120 <= L < 210) inside the card:
 
-The prepared fix keeps every `dist` exactly as authored and pans `tx` toward the
-screen edge, so the bezel stays in frame at the same closeness. Flattening the
-distances instead would push the macros to ~9-13 and make all four shots the
-same size. Required `|tx|` is `3.595 + 0.25 - 0.408 * dist` (enclosure
-half-width, plus a margin so the edge reads as an edge rather than a clip):
+| film | before | after |
+|---|---|---|
+| Maersk desktop | 7 of 47 frames under 5%, floor 2.7% | 0 frames, floor 14.0% |
+| Formalize desktop | 13 of 47 under 5%, floor 2.1% | 0 frames, floor 16.2% |
+| Maersk @390px | — | 0 frames, floor 7.8% |
+| Formalize @390px | — | 0 frames, floor 8.1% |
 
-| shot | dist | tx now | tx needed |
-|---|---|---|---|
-| formalize sh2 from | 4.07 | +1.90 | **+2.19** |
-| formalize sh2 to   | 3.70 | +1.25 | **+2.34** |
-| formalize sh3 from | 6.47 | -0.30 | **-1.21** |
-| formalize sh3 to   | 5.92 | +0.10 | **-1.43** |
-| maersk sh2 from    | 3.99 | -2.15 | **-2.22** |
-| maersk sh2 to      | 3.62 | -1.55 | **-2.37** |
-| maersk sh3 from    | 4.15 | +1.60 | **+2.15** |
-| maersk sh3 to      | 3.78 | +1.00 | **+2.30** |
+The maxima are unchanged (66.1% / 57.1%), which is the check that the guard
+only touches shots that need it and leaves the wides exactly as authored.
 
-Formalize sh3 has to commit to one side — both keyframes go left, or the camera
-swings across the screen mid-shot. Panning `tx` moves the look-at target, so it
-also changes which part of the UI each macro centres on; sh2's comment says it
-is aimed at the dense left columns of the supplier table, and that will shift.
+The shot list goes back to being pure authorship. Nothing in a config can
+reintroduce this, and it holds at breakpoints nobody thought to check. The
+header comment in `stage-configs-mono.js` still describes the old hand-derived
+geometry and its "the macros are meant to lose the frame" note — that intent is
+now overridden by the guard, deliberately.
 
-Bump the `?v=139` on the three stage scripts in `v2.js` when changing this. The
-dev server sends only an ETag, so an edited config sits behind a cached copy and
-the fix looks like it did not take — this has wasted time before.
+Reproduce the measurement by driving Chrome over CDP, parking a film so it
+fills the viewport, capturing `Page.captureScreenshot` every 550ms for a full
+loop, and histogramming the card's rect. Do not judge it by eye, and do not
+compare two separate page loads frame to frame — the loop is not deterministic
+across loads, so any such diff is dominated by animation phase.
 
-Verify by reading the buffer, not by eye: `gl.readPixels` on the live context
-inside a double-rAF, then check that no frame's mid-tone share (120 <= L < 210)
-drops near zero. Check at 390px as well as desktop.

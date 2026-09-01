@@ -1,14 +1,34 @@
 <!DOCTYPE html>
 <html>
-<head><style>
-body { background: #888; display: flex; gap: 24px; padding: 40px; align-items: flex-end; font-family: sans-serif; }
-div { text-align: center; }
-img { display: block; margin: 0 auto 8px; image-rendering: pixelated; }
-p { color: #fff; font-size: 12px; }
+<head><meta charset="utf-8"><style>
+body { background: #e9e9ed; font: 13px/1.4 system-ui, sans-serif; padding: 40px; margin: 0; }
+h2 { font-size: 13px; font-weight: 600; margin: 0 0 16px; text-transform: uppercase; letter-spacing: .06em; }
+.row { display: flex; gap: 28px; align-items: flex-end; margin-bottom: 44px; flex-wrap: wrap; }
+.row.dark { background: #202124; padding: 24px 28px; border-radius: 8px; color: #fff; }
+figure { margin: 0; text-align: center; }
+img { display: block; margin: 0 auto 8px; }
+figcaption { opacity: .6; font-size: 11px; }
+.og img { width: 600px; height: 315px; border-radius: 6px; }
 </style></head>
 <body>
-  <div><img src="favicon-32.png" width="32" height="32"><p>32px</p></div>
-  <div><img src="favicon-32.png" width="64" height="64"><p>64px (2x)</p></div>
-  <div><img src="apple-touch-icon.png" width="180" height="180"><p>180px</p></div>
+  <h2>Favicon — light</h2>
+  <div class="row">
+    <figure><img src="favicon.svg" width="16" height="16"><figcaption>16 · svg</figcaption></figure>
+    <figure><img src="favicon-32.png" width="16" height="16"><figcaption>16 · png</figcaption></figure>
+    <figure><img src="favicon.svg" width="32" height="32"><figcaption>32 · svg</figcaption></figure>
+    <figure><img src="favicon-32.png" width="32" height="32"><figcaption>32 · png</figcaption></figure>
+    <figure><img src="apple-touch-icon.png" width="90" height="90"><figcaption>apple-touch 180 @.5</figcaption></figure>
+    <figure><img src="favicon-192.png" width="192" height="192"><figcaption>192 · png</figcaption></figure>
+  </div>
+
+  <h2>Favicon — dark tab strip</h2>
+  <div class="row dark">
+    <figure><img src="favicon.svg" width="16" height="16"><figcaption>16</figcaption></figure>
+    <figure><img src="favicon.svg" width="32" height="32"><figcaption>32</figcaption></figure>
+    <figure><img src="favicon-192.png" width="128" height="128"><figcaption>128</figcaption></figure>
+  </div>
+
+  <h2>Share card — 1200 × 630</h2>
+  <div class="row og"><figure><img src="og-image.png"><figcaption>at 600px, roughly LinkedIn feed size</figcaption></figure></div>
 </body>
 </html>

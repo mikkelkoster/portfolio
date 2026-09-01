@@ -1,0 +1,25 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<!-- Reference only. favicon.svg is the master: the M and K are outlined from
+     GeneralSans-Medium.otf at these exact values, so it carries no font
+     dependency, and every PNG here is rasterised from it. -->
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@500&display=swap">
+<style>
+  html,body{margin:0;padding:0;width:512px;height:512px;background:#fff;}
+  body{display:flex;align-items:center;justify-content:center;
+       -webkit-font-smoothing:antialiased;}
+  .mk{
+    font-family:'General Sans';
+    font-weight:500;
+    font-size:278px;
+    letter-spacing:-0.03em;
+    color:#121212;
+    line-height:1;
+    /* the same optical pull the site's display type uses — General Sans
+       carries a 0.081em left side bearing, and tracking adds a right gap */
+    /* optical centring: measured off the raster, not the box —
+       General Sans' M carries a left side bearing and the tracking leaves a
+       trailing gap after the K, so the glyph pair sits right of centre. */
+    transform:translate(-12px,-7px);
+  }
+</style></head><body><div class="mk">MK</div></body></html>

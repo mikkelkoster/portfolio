@@ -1061,20 +1061,95 @@ window.initSoftboxStage = function (canvas, config) {
   const rig = Object.assign({}, SHOTS[0].from);
   const drag = { az: 0, el: 0 };
 
+  /* ── The device may never fill the frame ──────────────────────────
+     A shot framed inside the bezel stops reading as a DEVICE and becomes a
+     flat screenshot laid over the render — no body, no stand, no edge for
+     the eye to catch. That is the single failure this scene keeps coming
+     back to, and it has now been fixed twice by hand: once by moving the
+     shot distances, once by panning the look-at targets. Both fixes were
+     computed against ONE card aspect and were silently wrong at every
+     other breakpoint, because the visible width is `dist * tan(fov/2) *
+     aspect` and the aspect is 1.60 on desktop against 1.33 on a phone.
+     Numbers in the shot list cannot express a constraint that depends on
+     the viewport.
+
+     So it is enforced here instead, every frame, against the projection
+     actually in use. The shot list goes back to being pure authorship: say
+     where the camera should be, and this guarantees the frame still
+     contains the object. Nothing in a config can reintroduce the bug, and
+     it holds at breakpoints nobody thought to check.
+
+     The rule is a visible CORNER — ground showing along one vertical edge
+     of the frame and one horizontal edge — rather than the whole device.
+     A corner is enough to read body, thickness and silhouette, and it is
+     the weakest condition that does, so the macros stay as close as they
+     can while still being macros OF something. The guard only ever pulls
+     back, and only by the minimum the condition needs; a shot already
+     clear of it is left exactly as authored. */
+  const KEEP = 0.06;          // of the half-frame, per side — the ground margin
+  const LIM = 1 - KEEP;       // in NDC, where the frame edge is 1
+  const BODY_CORNERS = [];
+  for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) {
+    BODY_CORNERS.push(
+      new THREE.Vector3(sx * BODY_W / 2, sy * BODY_H / 2, sz * BODY_D / 2)
+    );
+  }
+  const _vp = new THREE.Matrix4();
+  const _v4 = new THREE.Vector4();
+
+  /* How much the frame would have to shrink for a corner of the body to come
+     inside it. >1 means the device is overflowing and the camera must back
+     off; <=1 means the shot is already legal. */
+  function overflowFactor() {
+    _vp.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const c of BODY_CORNERS) {
+      _v4.set(c.x, c.y, c.z, 1).applyMatrix4(_vp);
+      /* Behind the eye, where the perspective divide flips the sign and the
+         NDC is meaningless. The camera is inside the device — as far past
+         the condition as it is possible to be. */
+      if (_v4.w <= 1e-4) return 2.5;
+      const x = _v4.x / _v4.w, y = _v4.y / _v4.w;
+      if (x < x0) x0 = x; if (x > x1) x1 = x;
+      if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    /* The cheaper of the two vertical edges, and of the two horizontal ones.
+       Both must clear, which is what makes it a corner rather than an edge. */
+    return Math.max(Math.min(x1, -x0), Math.min(y1, -y0)) / LIM;
+  }
+
+  function placeCamera(target, az, el, dist) {
+    camera.position.set(
+      target.x + dist * Math.sin(az) * Math.cos(el),
+      target.y + dist * Math.sin(el),
+      target.z + dist * Math.cos(az) * Math.cos(el)
+    );
+    camera.up.set(0, 1, 0);
+    camera.lookAt(target);
+    camera.rotateZ(THREE.MathUtils.degToRad(rig.roll));
+    camera.updateMatrixWorld();
+    camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+  }
+
   function applyRig() {
     const az = THREE.MathUtils.degToRad(rig.az + drag.az);
     const el = THREE.MathUtils.degToRad(
       THREE.MathUtils.clamp(rig.el + drag.el, -6, 46)
     );
     const target = new THREE.Vector3(rig.tx, rig.ty, 0);
-    camera.position.set(
-      target.x + rig.dist * Math.sin(az) * Math.cos(el),
-      target.y + rig.dist * Math.sin(el),
-      target.z + rig.dist * Math.cos(az) * Math.cos(el)
-    );
-    camera.up.set(0, 1, 0);
-    camera.lookAt(target);
-    camera.rotateZ(THREE.MathUtils.degToRad(rig.roll));
+
+    /* Projected size goes as 1/dist, so one multiply lands very close and
+       the extra passes only clean up the perspective the approximation
+       ignores. Three is convergence, not a search. */
+    let dist = rig.dist;
+    placeCamera(target, az, el, dist);
+    for (let i = 0; i < 3; i++) {
+      const over = overflowFactor();
+      if (over <= 1) break;
+      dist *= over;
+      placeCamera(target, az, el, dist);
+    }
+    rig.framedDist = dist;
 
     /* The whole SET is relit per shot, not just the key.
        In the reference the backdrop swings from a bright lower sweep on the
