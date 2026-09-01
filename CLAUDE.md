@@ -388,6 +388,50 @@ Three things that bit, in order:
 - **Canvas size sets the padding, fill sets the picture.** Shrink both together
   to make artwork smaller without the gap growing back.
 
+### `tools/phone-composite.py` — what sits in front of the glass
+The mockups ship a placeholder fintech app, so plenty of the screen is
+legitimately dark and **brightness cannot tell the device UI from the hand**. A
+luminance ramp punches the placeholder straight through; that trap has now been
+walked into twice.
+
+Connectivity can tell: the hand is one mass of ~1.8M px reaching far outside the
+screen quad, while every dark element of the placeholder lies wholly inside it.
+Only components with real area on both sides are held back.
+
+Two refinements that are load-bearing:
+- **Hold solidly, never by a luminance ramp.** A lit fingertip reads 200-235, so
+  a ramp made the bright half of each tip transparent and the UI sliced it off
+  along the screen edge.
+- **Open by RECONSTRUCTION, not a plain opening.** The erosion is only a test of
+  thickness — a letter stroke fails it, a finger passes — and every blob that
+  passes is kept whole. A plain opening also rounds off what it keeps, and a
+  finger is narrowest exactly where it crosses the edge, so it shaved the tips
+  flat. This was a real reported bug, not a theoretical one.
+
+Raising the threshold is not the lever: 235 to 251 moves coverage by 0.2pp and
+253 leaks the placeholder in. The finger only overlaps ~1.8% of the glass.
+
+The quad is pulled in 2.5px — the fit lands within ~2px of the glass, accurate
+but leaving the UI on the bezel.
+
+### Plates: never crop a screenshot horizontally
+The side margins are the layout. Where a plate is proportionally wider than the
+screen, keep the full width and grow the canvas downward — these captures end in
+flat rows, so the extension is invisible. Cover-cropping the sides took 6.4% off
+`matas-app-new` and cut the nav off a Formalize screen.
+
+Plates also carry dead margins: `plate-4` has 45px of one flat colour down its
+right side plus a 6px window sliver, which warped to ~27px of blank against the
+bezel. `trim_dead` removes flat side bands before the fit. **Sides only** — the
+Maersk plates open on 17 flat rows at the top that are part of the UI.
+
+The Maersk monitor plates are `Maersk 01/02/03.png` (01 dashboard, 02 list, 03
+detail), redrawn without the corner radius. Worth knowing the rounding was never
+visible: the paste mask is the screen quad, so the old plates' black corners
+fell outside it. What did change is the crop — the new plates are 4:3 against
+the old 1.515:1, so cover-from-the-top keeps 74-83% of each plate's height where
+it kept 84-94%. `index.html` no longer uses the old plates but they are kept.
+
 ### `tools/mockup-composite.py`
 Warps a screenshot into a photographic mockup's screen and outputs a
 monochrome scene where the only colour is the UI. `JOBS` names the mockup, a
@@ -436,10 +480,72 @@ implemented here from the start, not rediscovered:
 - A film runs for as long as it is **more than 12% on screen**, rather than
   only the most-visible one. Pausing is for cards that have gone.
 
-### Before promoting it
-- `git mv v2.html index.html` keeps the file's history instead of reading as a
-  wholesale rewrite.
-- Remove the `no-store` meta from every v2 page.
-- `maersk-stage-poster.jpg` predates the mono ground change.
-- The three standalone `v2-*.html` pages are unreachable from the front page;
-  decide whether they go.
+### It was promoted — 2026-09-01
+`v2.html` **is** `index.html` now, live on mikkelkoster.com. The rename was done
+with `git mv` so the file kept its history. The `no-store` meta is gone; it was
+there so a phone reloading the preview could not sit on stale CSS, and on a real
+deploy it would defeat caching on every visit. The three standalone
+`v2-*.html` pages were deleted: nothing linked to them, they held one image and
+~2.7k characters each against 19-32 images in the sheets that replaced them, and
+their nav pointed at `v2.html`. They are in history if wanted.
+
+Two checklist lines turned out to be stale and were closed without action: all
+three stage posters resolve and share the same white ground, and `_sb.html`,
+`maersk.html` and `og-card.html` were never linked from the old front page
+either, so promoting changed nothing about them. `_sb.html` is a 2.9MB dev tool
+still publicly reachable at `/_sb`.
+
+The stylesheet and script are still named `v2.css` / `v2.js`. Renaming them buys
+nothing and would touch every reference.
+
+### OPEN: the monitor films lose the device on their macros
+Mikkel's standing requirement: **the desktop device must be visible at all
+times.** It currently is not, on both Maersk and Formalize.
+
+This is NOT the vanishing-enclosure bug from `eb03990` — that fix is intact and
+live (graphite `#6e747b` against ground `0x6b6f73`, verified in the deployed
+config). This is framing. Measured off the live WebGL buffer: for ~7s of the
+~19s loop the frame washes to near-white, mid-tones collapsing from ~70% to 3%,
+because the two macro shots are framed inside the bezel and the screen runs edge
+to edge. The plate is still rendering — the supplier table is legible in the
+pixel data — it just has no device around it.
+
+It is authored that way. `stage-configs-mono.js` says so: *"The macros are meant
+to lose the frame; that is what makes them macros"*, and shot 3 is commented
+*"This one IS inside the bezel"*. So it needs an intentional change, not a fix.
+
+The header comment's geometry is stale in one respect: it assumes the card
+renders at **aspect 1.06 at every breakpoint**. Measured, it is 1.600 at desktop
+(1351x844) and 1.333 at mobile (342x257), with `fov` 34deg at both. Visible
+half-width is therefore `0.489 * dist` on desktop and `0.408 * dist` on mobile —
+mobile is the binding constraint, and any framing sum must use it.
+
+The prepared fix keeps every `dist` exactly as authored and pans `tx` toward the
+screen edge, so the bezel stays in frame at the same closeness. Flattening the
+distances instead would push the macros to ~9-13 and make all four shots the
+same size. Required `|tx|` is `3.595 + 0.25 - 0.408 * dist` (enclosure
+half-width, plus a margin so the edge reads as an edge rather than a clip):
+
+| shot | dist | tx now | tx needed |
+|---|---|---|---|
+| formalize sh2 from | 4.07 | +1.90 | **+2.19** |
+| formalize sh2 to   | 3.70 | +1.25 | **+2.34** |
+| formalize sh3 from | 6.47 | -0.30 | **-1.21** |
+| formalize sh3 to   | 5.92 | +0.10 | **-1.43** |
+| maersk sh2 from    | 3.99 | -2.15 | **-2.22** |
+| maersk sh2 to      | 3.62 | -1.55 | **-2.37** |
+| maersk sh3 from    | 4.15 | +1.60 | **+2.15** |
+| maersk sh3 to      | 3.78 | +1.00 | **+2.30** |
+
+Formalize sh3 has to commit to one side — both keyframes go left, or the camera
+swings across the screen mid-shot. Panning `tx` moves the look-at target, so it
+also changes which part of the UI each macro centres on; sh2's comment says it
+is aimed at the dense left columns of the supplier table, and that will shift.
+
+Bump the `?v=139` on the three stage scripts in `v2.js` when changing this. The
+dev server sends only an ETag, so an edited config sits behind a cached copy and
+the fix looks like it did not take — this has wasted time before.
+
+Verify by reading the buffer, not by eye: `gl.readPixels` on the live context
+inside a double-rAF, then check that no frame's mid-tone share (120 <= L < 210)
+drops near zero. Check at 390px as well as desktop.
