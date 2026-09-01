@@ -18,17 +18,7 @@
   .text{ flex:1; display:flex; flex-direction:column; justify-content:center;
          position:relative; }
 
-  .avail{
-    display:flex; align-items:center; gap:9px;
-    font-size:16px; font-weight:500; color:var(--ink-55);
-    letter-spacing:-0.005em;
-  }
-  .dot{ width:8px; height:8px; border-radius:50%; background:var(--green); }
-
   h1{
-    /* the availability line and the headline are one block, so the card does
-       not read as a line orphaned at the top edge */
-    margin-top:30px;
     font-size:80px; font-weight:400; line-height:1.14; letter-spacing:-0.04em;
     /* the site's optical pull — General Sans has a 0.081em left side bearing,
        so the box lines up but the ink does not */
@@ -37,11 +27,13 @@
 
   .sign{
     position:absolute; left:0; bottom:0;
-    display:flex; align-items:baseline; gap:14px;
-    font-size:18px; letter-spacing:-0.01em;
+    display:flex; align-items:baseline; gap:18px;
+    font-size:26px; letter-spacing:-0.02em;
   }
   .sign b{ font-weight:500; }
-  .sign span{ color:var(--ink-55); font-weight:400; }
+  /* A step down rather than the same size in grey — at 26px two identical
+     sizes read as one string broken by a gap. */
+  .sign span{ color:var(--ink-55); font-weight:400; font-size:22px; }
 
   /* Same panel as .hero__figure: surface ground, 20px radius, a ratio wider
      than the plate's 0.489 so cover crops the bottom and never the arms. */
@@ -60,7 +52,6 @@
 </style></head>
 <body>
   <div class="text">
-    <p class="avail"><span class="dot"></span>Available for freelance and fractional work</p>
     <h1>Design at scale.<br>Player-coach.<br>Maker.</h1>
     <p class="sign"><b>Mikkel Køster</b><span>mikkelkoster.com</span></p>
   </div>
