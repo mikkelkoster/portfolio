@@ -137,11 +137,18 @@
               enclosure: cfg.enclosure,
               model: modelUrl,
               sticky: cfg.sticky,
-              /* These films run the full width of the page here, not a third
-                 of it. The default budget pins a frame this size to 1x and
-                 the browser upscales it, which is what softened the wide
-                 opening shot. Enough for 1.5x at this size. */
-              pixelBudget: 3.2e6,
+              /* Enough to render at the device's own resolution rather than
+                 below it. setPixelRatio takes min(dpr, 2, sqrt(budget/wh)),
+                 and at this card size 3.2e6 resolved to 1.68 — so on any 2x
+                 screen the scene drew 2262x1414 and the browser resampled it
+                 up to 2688x1680 every frame. A fractional upscale of a moving
+                 high-contrast silhouette is what read as static: black and
+                 white pixels crawling along the phone's bezel and body edge,
+                 worst on the Matas card because a dark body on a bright ground
+                 with a hard alpha mask is the hardest case in the set.
+                 4.6e6 clears 4 * 1344 * 840, so the ratio lands on 2 and
+                 nothing is resampled. */
+              pixelBudget: 4.6e6,
             }));
             return new Promise((done) => {
               let settled = false;
