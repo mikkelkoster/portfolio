@@ -1704,6 +1704,19 @@ a { color: inherit; text-decoration: none; }
                  overflow: hidden; border-radius: 14px;
                  box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 10px 28px rgba(0,0,0,.09); }
 .cm-mech__screen { width: 100%; height: auto; display: block; }
+/* Mobile takes the live case's proportions. The frame is sized to the panel on
+   desktop, and on a phone that let one screen run ~318px wide and ~870px tall —
+   a single mechanic filling most of the viewport. The live case pins the shot
+   at 170px and the badge at 150px and tightens the gaps, so both mechanics read
+   as a pair on one screen. Below the base rules, not above: a media query adds
+   no specificity, so source order is what decides this. */
+@media (max-width: 759px) {
+  .cm-mech { margin-top: 24px; }
+  .cm-mech__panel { padding: 28px 20px; }
+  .cm-mech__what { font-size: 21px; margin-bottom: 20px; }
+  .cm-mech__badge { width: 150px; margin-bottom: 14px; }
+  .cm-mech__shot { width: 170px; }
+}
 
 /* ── Equal spend ─────────────────────────────────────────
    The live case's shape, on --surface instead of navy: a panel holding two
