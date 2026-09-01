@@ -231,7 +231,22 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   justify-content: space-between;
   height: var(--nav-h);
-  background: rgba(255,255,255,0.86);
+  /* 0.98, not 0.86, and the reason is iOS Safari rather than taste.
+     Safari paints the band behind the status bar itself, as a SOLID colour —
+     theme-color when the page declares one, the sampled page background
+     otherwise. It is browser chrome, not page canvas, so no amount of
+     backdrop-filter reaches it. Measured at 393px with the About section
+     scrolled under the bar, the nav surface rendered 237 against that band's
+     255: an 18-level seam straight across the top of the screen, 26 at its
+     worst.
+
+     Content blurred under the bar averages about 126, so the seam is
+     (1 - alpha) * (255 - 126). At 0.86 that is 18 levels; at 0.98 it is 2-3,
+     which is under the threshold on an OLED phone. The blur is kept because
+     it still does the work under genuinely dark content, and because losing
+     it changes how the bar reads on desktop, where there is no band to match
+     and the effect was never the problem. */
+  background: rgba(255,255,255,0.98);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: var(--rule) solid transparent;
@@ -481,7 +496,18 @@ a { color: inherit; text-decoration: none; }
 .case__num { font-size: 14px; color: var(--ink-55); font-variant-numeric: tabular-nums; }
 /* Same grey as the About lede. --ink-40 measures about 3.3:1 on white, under
    the 4.5 floor, and at 18px this is body copy rather than a caption. */
-.case__line { color: var(--ink-55); font-size: 18px; max-width: 62ch; margin: 0 0 28px; }
+.case__line {
+  color: var(--ink-55);
+  /* The same clamp as .lede. It was a flat 18px, which is the FLOOR of that
+     clamp — so on a phone the two were already identical, and on a desktop
+     the case description sat 4px under every other passage of body copy on
+     the page. One scale for body copy, not two. */
+  font-size: clamp(18px, 1.5vw, 22px);
+  line-height: 1.55;
+  letter-spacing: -0.015em;
+  max-width: 62ch;
+  margin: 0 0 28px;
+}
 /* The lead clause is the claim; the rest is context. Colour alone left the
    two halves reading as one flat line, so the highlighted half takes the
    heavier of the two weights too — matching .two-tone above. */
@@ -604,7 +630,14 @@ a { color: inherit; text-decoration: none; }
   padding-block: 30px;
   transition: opacity .2s ease;
 }
-.xp__row:hover { opacity: 0.62; }
+/* Guarded. On iOS the first tap on an element carrying a :hover rule is
+   spent applying that hover state rather than firing the click, so the row
+   needed tapping twice to open. (hover: hover) keeps the effect on pointers
+   that genuinely hover and takes it off touch entirely. */
+@media (hover: hover) {
+  .xp__row:hover { opacity: 0.62; }
+  .xp__row:hover .xp__chev { color: var(--ink); }
+}
 @media (prefers-reduced-motion: reduce) { .xp__row { transition: none; } }
 @media (min-width: 860px) { .xp__row { grid-template-columns: 200px 190px 1fr auto; } }
 /* Badge and chevron are one cell, not two columns. As separate columns their
@@ -632,7 +665,6 @@ a { color: inherit; text-decoration: none; }
   justify-self: end;
   transition: transform .3s cubic-bezier(0.22, 0.7, 0.3, 1), color .2s ease;
 }
-.xp__row:hover .xp__chev { color: var(--ink); }
 .xp[data-open="true"] .xp__chev { transform: rotate(180deg); }
 
 /* 0fr → 1fr animates without anyone having to know the content's height, and
@@ -968,7 +1000,11 @@ a { color: inherit; text-decoration: none; }
     width: 100%;
     height: auto;
     max-height: 42vh;
-    margin-top: 18px;
+    /* 18px put the portrait closer to the buttons than the buttons were to
+       the lede above them (28px), so the image read as part of the button
+       row. A picture starting wants more air than the gaps inside the text
+       block, not less. */
+    margin-top: 40px;
   }
   .hero__figure img { object-position: center 12%; }
   .hero__avail { margin-bottom: 24px; }

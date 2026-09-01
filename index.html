@@ -7,7 +7,12 @@
 <meta name="description" content="Product design and product strategy, hands-on. 15 years in design, 8 of them leading teams.">
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
-<link rel="stylesheet" href="v2.css?v=240">
+<link rel="stylesheet" href="v2.css?v=242">
+
+<!-- Safari fills the band behind the status bar with this. Left undeclared it
+     samples the page background, which is right until something at the top of
+     the page is not white. Naming it pins the band to the nav's own surface. -->
+<meta name="theme-color" content="#ffffff">
 
 <!-- Icons. The SVG is the master and is what any current browser takes; the
      32px PNG is the fallback, and /favicon.ico is there for crawlers that
@@ -1843,6 +1848,6 @@
   </svg>
 </button>
 
-<script src="v2.js?v=240"></script>
+<script src="v2.js?v=241"></script>
 </body>
 </html>

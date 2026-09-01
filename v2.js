@@ -127,6 +127,14 @@
               plates: el.dataset.plates.split(","),
               shots: cfg.shots,
               ground: cfg.ground,
+              /* The per-case enclosure colour. Without this the scene falls back
+                 to its own default, which is the COLOUR build's silver — and
+                 a silver body on this build's neutral grey environment
+                 reflects the backdrop's own tone and disappears, leaving the
+                 screen floating over its contact shadow with no device around
+                 it. The graphite in stage-configs-mono.js was written to fix
+                 exactly that and had never been reaching the scene. */
+              enclosure: cfg.enclosure,
               model: modelUrl,
               sticky: cfg.sticky,
               /* These films run the full width of the page here, not a third
