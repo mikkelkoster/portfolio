@@ -1,4 +1,4 @@
-/* Grey-ground variant of stage-configs.js, for the minimal build (v2.html).
+/* Grey-ground variant of stage-configs.js, for the minimal build (index.html).
  *
  * The monitor sweep is DARKER than the colour version it replaces, not
  * lighter. Measured in linear terms the old blue top came to about 0.68
