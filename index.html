@@ -7,7 +7,7 @@
 <meta name="description" content="Product design and product strategy, hands-on. 15 years in design, 8 of them leading teams.">
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
-<link rel="stylesheet" href="v2.css?v=245">
+<link rel="stylesheet" href="v2.css?v=247">
 
 <!-- Safari fills the band behind the status bar with this. Left undeclared it
      samples the page background, which is right until something at the top of
@@ -161,11 +161,11 @@
           <h3 class="h3">Matas</h3>
           <span class="case__num">03 / 03</span>
         </div>
-        <p class="case__line"><strong>Denmark's largest loyalty club, rebuilt</strong> — 1.5M members and a 4.6 App Store rating across 32,800+ reviews.</p>
+        <p class="case__line"><strong>Denmark's largest loyalty club, rebuilt</strong> — 2M+ members, 4.6 in the App Store, and best e-commerce app at <span style="white-space:nowrap">E-handelsprisen</span> 2023.</p>
         <div class="meta meta--3">
           <div><p class="meta__k">Role</p><p class="meta__v">Lead UX Designer</p></div>
           <div><p class="meta__k">Scope</p><p class="meta__v">Loyalty programme, app, research</p></div>
-          <div><p class="meta__k">Reach</p><p class="meta__v">1.5M members</p></div>
+          <div><p class="meta__k">Reach</p><p class="meta__v">2M+ members</p></div>
         </div>
         <p style="margin-top:32px"><button class="btn btn--ghost btn--sm" type="button" data-case="matas">See case study</button></p>
       </article>
@@ -1452,7 +1452,7 @@
             <div class="cm-fact"><dt>Industry</dt><dd>Retail, beauty</dd></div>
             <div class="cm-fact"><dt>Scope</dt><dd>Loyalty programme, app, research</dd></div>
             <div class="cm-fact"><dt>Team</dt><dd>2 designers, 2 UX, an account director</dd></div>
-            <div class="cm-fact"><dt>Reach</dt><dd>1.5M club members</dd></div>
+            <div class="cm-fact"><dt>Reach</dt><dd>2M+ club members</dd></div>
             <div class="cm-fact"><dt>Timeline</dt><dd>2018 – 2021</dd></div>
           </dl>
         </div>
@@ -1607,7 +1607,7 @@
         <figure class="cm-breaker">
             <img decoding="async" src="public/images/matas/matas-breaker-02.jpg" alt="Two Club Matas members" loading="lazy" width="1800" height="956">
             <figcaption class="cm-breaker__stat">
-              <span class="cm-breaker__num">1.5M</span>
+              <span class="cm-breaker__num">2M+</span>
               <span class="cm-breaker__lbl">members</span>
             </figcaption>
         </figure>
@@ -1723,25 +1723,28 @@
           <p class="cm-body">How often someone shops changes what the club is worth to them. We mapped what each level of buyer actually wants, then built the programme to pay out accordingly.</p>
 
           <div class="cm-freq">
+            <!-- data-tier regroups these three rows into one card per
+                 frequency on a phone; data-row gives each cell the label the
+                 shared column carries on desktop. See .cm-freq in v2.css. -->
             <div class="cm-freq__row cm-freq__row--head">
               <p class="cm-freq__lab"></p>
-              <p class="cm-freq__col">Low frequency</p>
-              <p class="cm-freq__col">Medium frequency</p>
-              <p class="cm-freq__col">High frequency</p>
+              <p class="cm-freq__col" data-tier="1">Low frequency</p>
+              <p class="cm-freq__col" data-tier="2">Medium frequency</p>
+              <p class="cm-freq__col" data-tier="3">High frequency</p>
             </div>
 
             <div class="cm-freq__row">
               <p class="cm-freq__lab">Spend</p>
-              <div class="cm-freq__dots" aria-label="Low spend"><i class="is-on"></i><i></i><i></i></div>
-              <div class="cm-freq__dots" aria-label="Medium spend"><i class="is-on"></i><i class="is-on"></i><i></i></div>
-              <div class="cm-freq__dots" aria-label="High spend"><i class="is-on"></i><i class="is-on"></i><i class="is-on"></i></div>
+              <div class="cm-freq__dots" data-tier="1" data-row="Spend" aria-label="Low spend"><i class="is-on"></i><i></i><i></i></div>
+              <div class="cm-freq__dots" data-tier="2" data-row="Spend" aria-label="Medium spend"><i class="is-on"></i><i class="is-on"></i><i></i></div>
+              <div class="cm-freq__dots" data-tier="3" data-row="Spend" aria-label="High spend"><i class="is-on"></i><i class="is-on"></i><i class="is-on"></i></div>
             </div>
 
             <div class="cm-freq__row">
               <p class="cm-freq__lab">What they want</p>
-              <ul class="cm-freq__list"><li>Convenience</li><li>Price</li><li>Inspiration</li></ul>
-              <ul class="cm-freq__list"><li>Practical driven</li><li>Good guides for using products</li><li>Targeted product inspiration</li></ul>
-              <ul class="cm-freq__list"><li>Personal service and recommendations</li><li>Close brand relationship</li><li>Deeply committed</li></ul>
+              <ul class="cm-freq__list" data-tier="1" data-row="What they want"><li>Convenience</li><li>Price</li><li>Inspiration</li></ul>
+              <ul class="cm-freq__list" data-tier="2" data-row="What they want"><li>Practical driven</li><li>Good guides for using products</li><li>Targeted product inspiration</li></ul>
+              <ul class="cm-freq__list" data-tier="3" data-row="What they want"><li>Personal service and recommendations</li><li>Close brand relationship</li><li>Deeply committed</li></ul>
             </div>
 
             <div class="cm-freq__row cm-freq__row--offer">

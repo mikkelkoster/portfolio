@@ -1820,6 +1820,39 @@ a { color: inherit; text-decoration: none; }
 .cm-spend__eq { font-size: 14px; color: var(--ink); margin: 0 0 46px; background: var(--bg);
                 border-radius: 100px; padding: 8px 16px; white-space: nowrap; }
 
+/* ── The spend chart, on a phone ──────────────────────────
+   Three items across does not fit. The "Equal spend" pill is nowrap and sits
+   between the two bars, so at 390 it took the width the columns needed and
+   both of them shrank below their 120px floor — flex items shrink whatever
+   their width says. At about 60pt a column cannot hold "The bottom" on one
+   line, which is why the key broke into three.
+
+   Grid instead: two equal columns with the pill spanning both underneath. It
+   still reads as the thing joining them, and each column gets roughly 139pt —
+   enough for the key in two lines and for "lowest spenders" to stop wrapping
+   at all. */
+@media (max-width: 760px) {
+  .cm-spend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-items: center;
+    align-items: end;
+    gap: 22px 16px;
+    padding: 28px 20px;
+  }
+  .cm-spend__col { width: 100%; order: 1; }
+  /* Order, not just the span. The pill sits BETWEEN the two columns in source
+     order, so a full-width cell there breaks the row and the bars stacked —
+     which loses the comparison the chart exists to make. Ordered last, the two
+     bars pair up and the pill spans underneath them. */
+  .cm-spend__eq { order: 2; grid-column: 1 / -1; margin: 0; }
+  .cm-spend__bar { height: clamp(150px, 42vw, 200px); }
+}
+/* The key is two short lines stacked, not a paragraph — it was inheriting the
+   body's leading and reading as two separate labels rather than one caption. */
+.cm-spend__k b { line-height: 1.25; }
+.cm-spend__k span { display: block; line-height: 1.3; margin-top: 2px; }
+
 /* ── The frequency matrix ────────────────────────────────
    The live case's shape, which carries an argument the ledger could not: the
    Points band runs the full width because everyone earns them, and the Rewards
@@ -1850,6 +1883,74 @@ a { color: inherit; text-decoration: none; }
    card was rounded on all four corners, so the ground showed through in two
    little crescents where the corner curved away from it and the bar read as
    detached from the card it belongs to. */
+/* ── The frequency ladder, on a phone ─────────────────────
+   Desktop reads row-major off a shared label column. Collapse that to one
+   column and source order gives a flat list — "Spend", three sets of dots,
+   "What they want", three lists — where no cell is attached to the frequency
+   it describes. This is the layout the v1 case used, brought over: the same
+   cells regroup by TIER, so each frequency becomes one card, and since a
+   shared label cannot repeat across three cards, each cell carries its own
+   from data-row.
+
+   display: contents on the rows is what makes it possible without touching
+   the desktop DOM — it promotes the cells into .cm-freq's own grid, where
+   `order` can regroup them across what were three separate rows.
+
+   The offer row stays as it is: its two bands already say who each is for,
+   and Points deliberately covers everyone, so it does not belong inside a
+   per-tier card. */
+@media (max-width: 899px) {
+  .cm-freq { display: grid; grid-template-columns: 1fr; }
+  .cm-freq__row:not(.cm-freq__row--offer) {
+    display: contents;
+  }
+  /* The shared label column has nothing to attach to once the cells regroup. */
+  .cm-freq__row:not(.cm-freq__row--offer) .cm-freq__lab { display: none; }
+
+  [data-tier="1"] { --t: 0; }
+  [data-tier="2"] { --t: 1; }
+  [data-tier="3"] { --t: 2; }
+
+  .cm-freq__col,
+  .cm-freq__dots,
+  .cm-freq__list {
+    background: var(--surface);
+    padding-inline: 16px;
+  }
+  /* Three parts of one card: heading, dots, list. Rounded at the two ends
+     only, so they read as a single panel rather than three stacked chips. */
+  .cm-freq__col {
+    order: calc(var(--t) * 3 + 1);
+    margin-top: 14px;
+    padding-top: 16px;
+    padding-bottom: 12px;
+    border-radius: 12px 12px 0 0;
+  }
+  .cm-freq__dots { order: calc(var(--t) * 3 + 2); padding-bottom: 14px; }
+  .cm-freq__list {
+    order: calc(var(--t) * 3 + 3);
+    padding-bottom: 18px;
+    border-radius: 0 0 12px 12px;
+  }
+  /* The row label each cell has to carry for itself now. */
+  .cm-freq__dots::before,
+  .cm-freq__list::before {
+    content: attr(data-row);
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-55);
+    margin-bottom: 8px;
+  }
+  .cm-freq__dots { display: block; }
+  .cm-freq__dots i { display: inline-block; margin-right: 7px; }
+  /* The tier cells carry an explicit order, so this row needs one too — at the
+     default 0 it sorted ahead of all of them and the offer landed above the
+     ladder it is meant to follow. */
+  .cm-freq__row--offer { order: 10; border-top: 0; padding-top: 26px; }
+}
+
 .cm-freq__band { position: relative; background: var(--surface); border-radius: 0 12px 12px 0; padding: 18px 20px 18px 22px; }
 .cm-freq__band::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
