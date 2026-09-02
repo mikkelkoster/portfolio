@@ -18,7 +18,7 @@
      greys 7% apart do not read as a hierarchy, they read as a mistake, and
      0.40 measured 2.85:1 which is under the floor for words. */
   --ink:        #121212;
-  --ink-55:     rgba(0,0,0,0.55);
+  --ink-55:     rgba(0,0,0,0.66);   /* #575757 on white, 7.0:1 — hierarchy comes from size, not from fading the text out */
   --ink-25:     rgba(0,0,0,0.25);   /* non-text only: dots, hairline marks —
                                        2.3:1 on white, below the 4.5 floor */
   /* Badges only. 0.62 on the tint measures about 5.6:1 — passing, but thin at
@@ -57,6 +57,11 @@
      so it comes off --sec too rather than being its own clamp. It was 104,
      which is 7px from the minor value it was pretending not to be. */
   --hero-pb:    calc(var(--sec) * 0.62);
+  /* One column gutter for every three-up block — stats, meta, the "How I
+     work" rows and Beyond the work. They each had their own (24, 40, 48, 88),
+     so four sections that all look like thirds started their columns at four
+     different x positions and the page had no grid you could feel. */
+  --col-gap:    32px;
   --maxw:       1600px;
   --gutter:     48px;
   /* Where the content column's edge falls on any viewport: the gutter while
@@ -399,7 +404,7 @@ a { color: inherit; text-decoration: none; }
 
 
 /* ── Meta list (label over value) ──────────────────────── */
-.meta { display: grid; gap: 40px; }
+.meta { display: grid; gap: 40px var(--col-gap); }
 @media (min-width: 860px) { .meta--4 { grid-template-columns: repeat(4, 1fr); } }
 @media (min-width: 860px) { .meta--3 { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 859px) { .meta { grid-template-columns: repeat(2, 1fr); gap: 32px 24px; } }
@@ -407,7 +412,7 @@ a { color: inherit; text-decoration: none; }
 .meta__v { font-size: 18px; color: var(--ink-55); margin: 0; }
 
 /* ── Stats ─────────────────────────────────────────────── */
-.stats { display: grid; gap: 44px 24px; }
+.stats { display: grid; gap: 44px var(--col-gap); }
 @media (min-width: 860px) { .stats { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 859px) { .stats { grid-template-columns: repeat(2, 1fr); } }
 .stat__n {
@@ -425,7 +430,7 @@ a { color: inherit; text-decoration: none; }
 /* ── Numbered rows (how I work / experience) ───────────── */
 .row {
   display: grid;
-  gap: 20px 48px;
+  gap: 12px var(--col-gap);
   padding-block: 44px;
   border-top: var(--rule) solid var(--line);
   align-items: start;
@@ -433,7 +438,16 @@ a { color: inherit; text-decoration: none; }
 /* Title and body share the space rather than the title taking a fixed 300px.
    The body starts further right and runs wider, which stops the row from
    sitting in the left third with a page of white beside it. */
-@media (min-width: 860px) { .row { grid-template-columns: 88px 1fr 1.4fr; } }
+/* Thirds, like every other three-up block, instead of 88px/1fr/1.4fr — which
+   put the title in a 400px column holding two words and left a void down the
+   middle of the row. The index sits above the title in the first third; the
+   body spans the other two. */
+@media (min-width: 860px) {
+  .row { grid-template-columns: repeat(3, 1fr); }
+  .row__n { grid-column: 1; }
+  .row__t { grid-column: 1; }
+  .row__b { grid-column: 2 / -1; }
+}
 @media (max-width: 859px) { .row { grid-template-columns: 1fr; gap: 12px; padding-block: 32px; } }
 .row__n { font-size: 14px; color: var(--ink-55); font-variant-numeric: tabular-nums; }
 .row__t { font-size: clamp(22px, 2.2vw, 30px); font-weight: 400; letter-spacing: -0.03em; margin: 0; }
@@ -969,7 +983,7 @@ a { color: inherit; text-decoration: none; }
    of the height. */
 /* A wide column gap, because there is no card edge or rule separating these
    — the space is the only thing telling them apart. */
-.bey-grid { display: grid; gap: 56px 88px; }
+.bey-grid { display: grid; gap: 56px var(--col-gap); }
 @media (min-width: 900px) { .bey-grid { grid-template-columns: repeat(3, 1fr); } }
 .bey__icon { color: var(--ink); margin-bottom: 22px; }
 .bey__t {
