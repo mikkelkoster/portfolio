@@ -1239,6 +1239,7 @@ window.initPhoneStage = function (canvas, config) {
      ════════════════════════════════════════════════════════════════ */
   let tl = null;
   let idle = null;
+  let started = false;   // start() has run and the scene has something to draw
   let running = false;
 
   function buildTimeline(from) {
@@ -1367,6 +1368,7 @@ window.initPhoneStage = function (canvas, config) {
     Object.assign(rig, SHOTS[0].from);
     showPlate(SHOTS[0].plate);
     if (!still) buildTimeline(0);
+    started = true;
     running = true;
     canvas.dataset.running = "1";
     renderer.setAnimationLoop(() => {
@@ -1406,8 +1408,22 @@ window.initPhoneStage = function (canvas, config) {
       if (scrollTween) scrollTween.pause();
       renderer.setAnimationLoop(null);
     },
+  /* Nothing may drive the loop until start() has run.
+
+     v2.js hands back this object the moment init() is called, and its
+     visibility pass calls resume() on any film that is on screen — which is
+     long before the plates and the model have arrived. resume() only guarded
+     on `running`, which start() sets, so on any connection slower than a local
+     server it began rendering a scene that had no screen texture yet. Measured
+     on a 700kbps profile: resume() at 11.4s with plates: 0, start() at 14.1s.
+     For 2.6 seconds the card drew the GLB's own stock wallpaper — an empty
+     dark device, nothing like the film's opening frame.
+
+     start() begins the loop itself, so refusing early resumes loses nothing.
+     A film that is off screen by the time it is ready gets paused by the next
+     visibility pass, exactly as before. */
     resume() {
-      if (running) return;
+      if (running || !started) return;
       running = true;
       canvas.dataset.running = "1";
       if (tl && !still) tl.resume();

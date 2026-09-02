@@ -1241,6 +1241,7 @@ window.initSoftboxStage = function (canvas, config) {
 
   let tl = null;
   let idle = null;
+  let started = false;   // start() has run and the scene has something to draw
   let running = false;
 
   function buildTimeline(from) {
@@ -1408,6 +1409,7 @@ window.initSoftboxStage = function (canvas, config) {
     /* Reduced motion holds that establishing shot rather than animating on
        from it. The page still shows the product, it simply does not move. */
     if (!still) buildTimeline(0);
+    started = true;
     running = true;
     /* Mirrored onto the element so the running state is observable from
        outside — useful for testing that a card which has scrolled away has
@@ -1435,8 +1437,21 @@ window.initSoftboxStage = function (canvas, config) {
       renderer.setAnimationLoop(null);
       if (tl) tl.pause();
     },
+  /* Nothing may drive the loop until start() has run.
+
+     v2.js hands back this object the moment init() is called, and its
+     visibility pass calls resume() on any film that is on screen — which is
+     long before the plates have arrived. resume() only guarded on `running`,
+     which start() sets, so on any connection slower than a local server it
+     began rendering a scene with no screen texture yet. Measured on the phone
+     scene at 700kbps: resume() at 11.4s with plates: 0, start() at 14.1s — 2.6
+     seconds of a device with nothing on its display.
+
+     start() begins the loop itself, so refusing early resumes loses nothing.
+     A film that is off screen by the time it is ready gets paused by the next
+     visibility pass, exactly as before. */
     resume() {
-      if (running) return;
+      if (running || !started) return;
       running = true;
       canvas.dataset.running = "1";
       if (tl) tl.resume();
