@@ -2257,26 +2257,42 @@ a { color: inherit; text-decoration: none; }
     flex-direction: column;
     align-items: center;
     flex-wrap: nowrap;
-    gap: 4px;
+    /* Nothing. The arrows carry their own breathing room and the captions
+       already sit 6px under their plates, so a gap on top of that read as the
+       chain falling apart into separate items. */
+    gap: 0;
   }
+  /* The pair stacks too. Side by side it could not hold the plate size the
+     rest of the chain uses — two of them plus the plus sign needs about 352px
+     of a 266px panel — so its images were running 124 against everyone else's
+     156, and the one step made of two inputs was also the one with smaller
+     pictures. Stacked, every plate in both chains is the same size and the
+     plus still reads as joining the two above and below it. */
   .flow__pair {
-    align-self: stretch;
+    flex-direction: column;
+    align-items: center;
+    align-self: center;
     justify-content: center;
     margin: 0;
-    padding: 14px;
+    padding: 16px 20px;
   }
   /* Auto height, or the link keeps the tall box it needed to centre an arrow
      against a plate beside it — which as a row of its own is just a gap. */
   .flow__link,
-  .cm-lego-row--lead .flow__link { height: auto; padding: 2px 0; }
+  .cm-lego-row--lead .flow__link { height: auto; padding: 6px 0; }
   .flow__link svg { transform: rotate(90deg); }
   /* The plus stays a plus: it joins two things side by side, not top to
      bottom, and it is the one link that is still horizontal. */
-  .flow__link--plus { padding: 0; align-self: center; }
+  .flow__link--plus { padding: 4px 0; align-self: center; }
   .flow__step img,
-  .cm-lego-row--lead .flow__step img { height: 132px; }
-  .flow__pair .flow__step img { height: 112px; }
-  .flow__step figcaption { margin-top: 8px; }
+  .cm-lego-row--lead .flow__step img { height: 156px; }
+  /* No override: the pair's plates match every other plate in the chain. */
+  .flow__step figcaption { margin-top: 6px; }
+  /* Centred with the chain it labels. On desktop the label is its own column
+     to the left of the flow, so it reads left-aligned against that column's
+     edge; stacked, the flow is centred and a left-aligned label above it sits
+     off to one side of everything it belongs to. */
+  .cm-lego-row__label { justify-content: center; }
 }
 
 .flow__key { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
