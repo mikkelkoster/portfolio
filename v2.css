@@ -2136,6 +2136,48 @@ a { color: inherit; text-decoration: none; }
    two-letter difference at the end of a row. Underlined rather than coloured
    or bolded: colour is reserved for pressable things here, and weight is
    already carrying the row labels. */
+/* ── The flow, stacked ────────────────────────────────────
+   Below 760 the chain cannot stay horizontal. It is five steps and four
+   links; flex-wrap broke it mid-sequence, so a row ended on an arrow pointing
+   at nothing and the next began with the step that arrow meant, while the
+   grey pair-panel sat alone on the first line looking like a separate block.
+   A wrapped sequence is not a sequence.
+
+   So it becomes one column and the arrows turn to point down — the same
+   diagram, read top to bottom. The pair stays side by side, because "system
+   plus instructions" is one step with two inputs rather than two links in the
+   chain, and two plates fit across a phone comfortably.
+
+   The plates go UP, not down. Stacked, each one has the full column to itself,
+   and at the horizontal size they were unreadably small with the caption
+   wider than the picture. */
+@media (max-width: 760px) {
+  .flow {
+    flex-direction: column;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+  .flow__pair {
+    align-self: stretch;
+    justify-content: center;
+    margin: 0;
+    padding: 14px;
+  }
+  /* Auto height, or the link keeps the tall box it needed to centre an arrow
+     against a plate beside it — which as a row of its own is just a gap. */
+  .flow__link,
+  .cm-lego-row--lead .flow__link { height: auto; padding: 2px 0; }
+  .flow__link svg { transform: rotate(90deg); }
+  /* The plus stays a plus: it joins two things side by side, not top to
+     bottom, and it is the one link that is still horizontal. */
+  .flow__link--plus { padding: 0; align-self: center; }
+  .flow__step img,
+  .cm-lego-row--lead .flow__step img { height: 132px; }
+  .flow__pair .flow__step img { height: 112px; }
+  .flow__step figcaption { margin-top: 8px; }
+}
+
 .flow__key { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 /* The first chain has three steps where the second has five, so at a shared
    height the short row looked like a thinner version of the same thing. The
