@@ -1836,7 +1836,11 @@ a { color: inherit; text-decoration: none; }
     display: grid;
     grid-template-columns: 1fr 1fr;
     justify-items: center;
-    align-items: end;
+    /* Top, not bottom. Bottom-aligned, the column with the taller key pushed
+       its bar UP, so the two tracks started at different heights and the
+       comparison the chart is making stopped being readable. Aligned at the
+       top the bars share a baseline whatever the keys below them do. */
+    align-items: start;
     gap: 22px 16px;
     padding: 28px 20px;
   }
@@ -1851,6 +1855,14 @@ a { color: inherit; text-decoration: none; }
 /* The key is two short lines stacked, not a paragraph — it was inheriting the
    body's leading and reading as two separate labels rather than one caption. */
 .cm-spend__k b { line-height: 1.25; }
+/* One line, always. "The bottom 50%" is the longest of the two keys and at
+   17px it wrapped in a 139px column — which is what tilted the two tracks out
+   of line. 15px measures about 105px, so it fits with room to spare, and the
+   nowrap makes it a guarantee rather than a calculation that holds until the
+   next viewport. */
+@media (max-width: 760px) {
+  .cm-spend__k b { font-size: 15px; white-space: nowrap; }
+}
 .cm-spend__k span { display: block; line-height: 1.3; margin-top: 2px; }
 
 /* ── The frequency matrix ────────────────────────────────
@@ -2293,6 +2305,15 @@ a { color: inherit; text-decoration: none; }
      edge; stacked, the flow is centred and a left-aligned label above it sits
      off to one side of everything it belongs to. */
   .cm-lego-row__label { justify-content: center; }
+
+  /* The block spacing was set for the desktop layout, where the label sits
+     beside the flow and the rows are short. Stacked, and with the chains now
+     packed tight, 36px of padding on each row put 72px between "Not like this"
+     and the paragraph above it, and another 72 between the two chains — so the
+     gaps BETWEEN the parts were several times the gaps inside them, and each
+     chain read as adrift rather than as one of a pair. */
+  .cm-lego-row { padding-block: 18px; gap: 14px; }
+  .cm-lego-section > div:first-child { margin-bottom: 22px; }
 }
 
 .flow__key { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
