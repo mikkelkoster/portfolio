@@ -16,10 +16,15 @@
 
 <!-- Icons. The SVG is the master and is what any current browser takes; the
      32px PNG is the fallback, and /favicon.ico is there for crawlers that
-     request the root path directly rather than reading these tags. -->
-<link rel="icon" href="public/meta/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="public/meta/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="public/meta/apple-touch-icon.png">
+     request the root path directly rather than reading these tags.
+     ?v= because these paths carried the first icon (blue MK on navy) before
+     it was redrawn, and Safari's favicon store is keyed by URL and does not
+     revalidate — same URL, so it kept serving the old one from disk however
+     many times the page was reloaded. Bump the number on any redraw.
+     Root-absolute so they resolve the same from /public/meta/preview. -->
+<link rel="icon" href="/public/meta/favicon.svg?v=2" type="image/svg+xml">
+<link rel="icon" href="/public/meta/favicon-32.png?v=2" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/public/meta/apple-touch-icon.png?v=2">
 
 <!-- Share card. Source: og-card.html. -->
 <meta property="og:type" content="website">
