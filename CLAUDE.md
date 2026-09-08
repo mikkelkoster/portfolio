@@ -603,3 +603,380 @@ loop, and histogramming the card's rect. Do not judge it by eye, and do not
 compare two separate page loads frame to frame — the loop is not deterministic
 across loads, so any such diff is dominated by animation phase.
 
+
+---
+
+## CLOSED: the guard was a second camera move — 2026-09-07
+
+Reported as "the panning is nice but then there is a very distinct zoom out
+which does not seem smooth or natural." It was not the panning and it was not
+new.
+
+`applyRig` ran the framing guard **every frame**. The push-back it computes
+depends on azimuth — a device seen obliquely is foreshortened and fits, the
+same device seen head-on presents its full width and does not — and every shot
+in the list rotates. So the guard's output moved through each shot, and because
+it multiplies the authored distance it became a second camera move that nobody
+wrote, running opposite to the authored one and larger than it.
+
+Measured over a full loop as authored change in distance against rendered:
+
+| lens | shot | authored | rendered |
+|---|---|---|---|
+| fov 34 | wide | −0.86 | −0.86 |
+| fov 34 | macro 1 | −0.37 | **+0.96** |
+| fov 34 | macro 2 | −0.37 | **+1.22** |
+| fov 22 | wide | −0.87 | −0.05 |
+| fov 22 | macro 1 | −0.37 | **+1.56** |
+| fov 22 | macro 2 | −0.37 | **+1.79** |
+
+Both macros were authored as slow push-ins and both rendered as pull-backs **on
+the original lens**, before any of the quality work. A longer lens made it worse
+rather than causing it.
+
+It is now solved **once per shot**: sample the shot end to end, take the largest
+push-back any point along it needs, hold that constant for the whole shot. The
+authored move then renders exactly, offset to a distance where the device is in
+frame at every point. That guarantee is strictly stronger than the per-frame
+version — satisfied for the whole shot rather than for the current instant — so
+the CLOSED note above still holds. After:
+
+| shot | mult | authored | rendered | max step/frame |
+|---|---|---|---|---|
+| wide | 1.13 | −0.86 | −0.97 | 0.054 |
+| macro 1 | 2.41 | −0.37 | −0.89 | 0.005 |
+| macro 2 | 2.79 | −0.37 | −1.03 | 0.006 |
+
+`rendered / authored` equals the multiplier exactly for every shot, which is the
+check that the move is the authored one scaled by a constant and nothing else.
+
+The per-frame loop stays underneath as a safety net for the one case the solve
+cannot see coming — the reader dragging the view. It is a no-op otherwise. The
+solve is redone in `resize()`, because it is computed against a projection.
+
+**Fixed in both scene files.** The phone film barely engaged the guard
+(multiplier 1.00–1.05, a phone is narrow) so it never showed the artifact, but
+it had the same code.
+
+## `public/js/stage-quality.js` — the optional render path
+
+Additive and gated: a stage takes it only by carrying a `quality` block in its
+config, and if the file 404s the stages fall through to the base path. Only
+**Maersk** carries one, deliberately — Formalize runs the base path directly
+below it on the same page, which is the A/B.
+
+| flag | what it does |
+|---|---|
+| `?film=base` | forces every card down the base path, lens included |
+| `?capture=1` | `preserveDrawingBuffer` for `toDataURL`, and exposes `canvas.__rig` |
+| `?qo=k:v,k:v` | overrides any quality dial for one load |
+
+What it adds that the base path cannot do:
+
+- **An environment above 1.0.** `buildEnvironment()` paints into a 2D canvas,
+  which is 8-bit sRGB and therefore clamped — which is why the key slit had to
+  sit at alpha 0.5. The float version paints the identical studio into a
+  `Float32Array` so the slit can sit at 46.
+- **Ambient occlusion**, 16-sample view-space hemisphere off the depth buffer.
+  The painted `contactPool()` reads as contact under the foot but cannot reach
+  the chin, the arm/base joint or the bezel seam.
+- **Bloom**, thresholded in linear light at 1.5.
+- Supersampling, **off** — see below.
+
+### Tone mapping cannot simply move to the composite
+Bloom needs linear light before the curve: after ACES a chamfer highlight and a
+white UI card are both 1.0 and nothing separates them. But three tone-maps *per
+material* and the screen plate opts out, because a UI screenshot's whites are
+meant to be white. Running it through a composite that cannot tell it from the
+aluminium turned every white card on the dashboard grey — the base path clips
+45.2% of the frame at 250+, the naive composite clipped 0.0%, which sounds like
+headroom and is the screen going dull. The screen **and the backdrop** are drawn
+into a mask on camera layer 1, and the composite applies ACES everywhere the
+mask is not set.
+
+### The environment's mean is the exposure dial
+Raising the peaks raises the ambient, because irradiance is the map's average.
+Swept against the plinth, the darkest large surface in frame:
+
+| ambientGain | plinth |
+|---|---|
+| 1.25 | 73,81,92 |
+| 0.45 | 34,39,45 |
+| **0.30** | **24,28,34** |
+| base path | 21,27,35 |
+
+At 0.30 the backdrop matches the base path exactly (161,162,166 against
+160,162,166), so what changed is the shape of the light and not its level.
+
+### The render target itself does not fit — AO and bloom are OFF
+Superseded twice, so the first two conclusions here were wrong and are recorded
+as such.
+
+**First wrong conclusion:** that supersampling was the only thing that cost
+anything. It did cost the most at the time (ss 1.4 took the median from 16.7ms
+to 30.3ms), but turning it off left a worse problem underneath.
+
+**The problem underneath:** moving the scene into a render target gives up the
+canvas's antialiasing. `antialias: true` applies to the DEFAULT framebuffer
+only. Mikkel spotted it immediately — "on the edges of the device, it looks
+pixelated." Measured on the top bezel as RMS deviation of the sub-pixel edge
+from a straight line, where 0.289 is what a fully staircased edge gives:
+
+| | RMS |
+|---|---|
+| base path, canvas MSAA | 0.129px |
+| post chain, no MSAA | **0.365px** |
+| post chain, MSAA 4 | 0.076px |
+
+**Second wrong conclusion:** that `samples: 4` fixes it cheaply. three accepts
+`samples` on a target carrying a `depthTexture` — the target reports 4 — and
+then never resolves it. AO needs that depth, so the two cannot share a target;
+splitting the depth into its own prepass works but costs ~15ms.
+
+**What actually fits.** On the real card at 3.2 megapixels, where the base path
+already sits at 16.7ms against a 16.7ms budget with no headroom:
+
+| | median | frames on time |
+|---|---|---|
+| base | 16.7ms | 78% |
+| post chain, no MSAA, AO + bloom | 31.3ms | 1% |
+| post chain, MSAA 4, no AO/bloom | 42.4ms | 0% |
+| post chain, MSAA 4, AO + bloom | 57.5ms | 1% |
+| **no post chain at all** | **16.7ms** | **78%** |
+
+MSAA on a 3.2MP half-float target is ~26ms by itself. There is no arrangement
+of a full-resolution buffer that fits in this frame.
+
+So `ao` and `bloom` are **off**, and `usePost` in softbox-stage is false unless
+one of them is on — in which case the film renders straight to the canvas and
+keeps its MSAA. Everything else in the quality block needs no buffer: the HDR
+environment, the lens, the ground, the shadow map and the roughness map are
+scene setup and cost nothing per frame. Final state measures 16.7ms / 78%,
+identical to base, with the edge at 0.078px against base's 0.129px.
+
+The post chain code is kept and still works — flip `ao` or `bloom` on and it
+builds. It is simply not affordable at this card size on this hardware.
+
+### Already done, do not redo
+`brushed()` already generates a 2048x1024 directional abrasion map used as
+`roughnessMap` with anisotropy 0.6. The quality path adds only a low-frequency
+blotch layer on top, because the existing map is uniform at panel scale.
+
+## CLOSED: the screen overlays were blending in gamma space — 2026-09-07
+
+Reported as "in the Remotion render you can see the grey background in the UI,
+on the live path the entire background is white."
+
+Every film lays an additive reflection over its picture — the monitor's glare
+streak, the phone's sheen bar and its lit glass layer. All of them were
+separate meshes with `AdditiveBlending`, and that is the bug: the canvas is
+sRGB-encoded, so the blend happens in **gamma space**, where the transfer curve
+is almost flat near white. A constant added up there is worth roughly two and a
+half times as much linear light as the same constant added low down — the exact
+inverse of how a reflection behaves.
+
+It was doubled by a second effect. `glareTex` and `sheenTex` carry no
+`colorSpace`, so three treats them as linear and sRGB-encodes on output: 0.05
+of linear light leaves the shader as 0.24, and *that* is what got added.
+
+The plates cannot survive it. Maersk's page background is `rgb(247,247,247)`
+against cards at 255 — eight levels apart. Matas is worse: **44.3% of its
+plate is at 255 and 47.2% sits in the 240-252 band.**
+
+Measured on the Maersk film, share of neutral-bright pixels:
+
+| | at 255 | 240-252 | navy header mean |
+|---|---|---|---|
+| additive quad (was shipping) | 88.2% | 7.9% | 40.2 |
+| **added in linear** | 82.8% | **12.8%** | **47.2** |
+| glare off entirely | 80.1% | 15.3% | 36.8 |
+| the plate itself | 81.5% | 15.1% | — |
+
+Better on **both** axes at once: 62% more of the page grey survives and the
+reflection reads *harder* on the navy header. That asymmetry is the whole
+point — the same added light is a four-fold lift at linear 0.02 and nothing at
+0.93.
+
+The fix, in both scene files: the reflection is sampled inside the SCREEN's own
+material via `onBeforeCompile` and added to `diffuseColor` — which is linear,
+because three encodes once at the end. The old quad is kept but masked to the
+bezel with a soft edge, or the streak would be applied twice.
+
+On the phone the same change costs 0.3pp of clipping (4.2% -> 4.5%) against
+19.2% of greys retained, i.e. the sheen is now essentially free.
+
+**Two things that will bite anyone repeating this:**
+- The screen materials had **no `map` at first compile**, so `vMapUv` was never
+  declared and the injected shader failed silently — the film renders blank. A
+  1x1 white placeholder texture at construction fixes it.
+- The screen and the overlay are **both `MeshBasicMaterial` with a map and
+  `toneMapped: false`**, so three hands them the same compiled program and one
+  injection lands on both. Each needs its own `customProgramCacheKey`.
+
+Dials: `glareLinear` / `sheenLinear` (default 1.2, capped so the added light
+never exceeds 0.06), `glareGain`, `glassGain`. The phone reads them from
+`?qo=` as well as from its config, because it carries no `quality` block and
+otherwise could not be A/B'd. `?capture=1` now sets `preserveDrawingBuffer` on
+**both** scene files; without it every measurement of the phone read zero.
+
+**Still open:** the phone's lit glass layer (`MeshStandardMaterial`, additive,
+sampling the environment) is still blended in gamma. It is a reflection of the
+room rather than a bar, so it is spread out and much fainter than the sheen,
+but it is the same error. Fixing it properly means either replicating the IBL
+sample inside the screen shader or moving the screen to a Standard material
+with the plate as `emissiveMap` — the second is probably right and is a
+bigger change than this one.
+
+## CLOSED: the monitor's glass cannot carry a shaped highlight — 2026-09-08
+
+Asked for after a reference film (dstudio's Tryeden page): "the highend glare
+of the device and how smooth the panning and zooming is."
+
+The first thing to know about that reference is that it is **a pre-rendered
+MP4** — 1194x720, 11.9s, looping, and `document.querySelectorAll('canvas')`
+returns nothing. It is not real-time, so none of its smoothness is evidence
+that a browser can do the same thing.
+
+### The reasoning that looked right and was not
+
+Every source in `buildEnvHDR` sits behind or beside the device: the key at
+u 0.24 is diametrically opposite the camera, and the slit runs u 0.117 to
+0.742 and stops just short of the camera side. That is a deliberate rim-light
+setup. A panel facing the lens mirrors what is BEHIND the lens, and behind the
+lens this studio is bare gradient.
+
+So the obvious diagnosis was that the earlier reflective-overlay attempt —
+recorded above as "a flat -3 levels across 96% of the pixels, not a highlight"
+— had failed for want of anything to reflect, and that adding a front source
+would bring it to life. A `frontKey` dial was added to `stage-quality.js` to
+test exactly that (`frontKey`, `frontKeyU/V/W/H`, default 0, off).
+
+It does not. Measured on Maersk's macro at t=5.5, against a baseline of
+88.77% of neutral-bright pixels clipped at 255 and 10.08% held in the
+240–252 band:
+
+| frontKey (narrow strip, v 0.46) | % at 255 | % in 240–252 | coarse SD |
+|---|---|---|---|
+| off | 88.77 | 10.08 | 39.09 |
+| 6   | 91.72 | 7.12  | 39.18 |
+| 12  | 92.47 | 6.39  | 39.23 |
+| 20  | 92.98 | 5.90  | 39.28 |
+| 12, broad box at v 0.50 | 98.70 | 0.69 | 39.45 |
+
+`coarse SD` is the spread of the panel's luminance over a 12x8 grid — how
+much the picture VARIES across the glass. It is the number that would move if
+a highlight had appeared. It moves by 0.09 while the grey band loses three
+points. The reflection arrives as a uniform wash and the wash eats the
+interface's separation between its white cards and its grey page.
+
+The cause is geometric, not a matter of dose or placement. The panel is flat
+and a PMREM environment is infinitely far away, so across the glass the
+mirrored direction varies only slowly and smoothly; a source broad enough to
+cover the sweep is uniform over it, and one narrow enough to be structured
+leaves the panel entirely (v 0.52 measured 89.35/9.59, essentially baseline).
+The reference device gets its travelling glare from **curved** glass. Ours is
+a flat slab and no lighting change fixes that.
+
+**So the earlier verdict was right, and the reason given here for overturning
+it was wrong.** The dials are left in, defaulted off, so this is not
+rediscovered a third time.
+
+### Do not redo either of these
+
+- **Converting the monitor's screen to a `MeshStandardMaterial` emitting the
+  plate as `emissiveMap`.** It was written, it compiles, and it is redundant:
+  `roomMat` already puts an additive Fresnel-weighted dielectric quad over the
+  whole glass at `FACE_Z + 0.010` sampling `scene.environment`. The reflection
+  mechanism was never missing. (This is also the answer to the "still open"
+  note at the end of the gamma-blending section above, for the monitor.)
+- **`ACESFilmicToneMapping(x, 1.0)` inside an injected chunk.** three's is
+  one-argument and is not declared at all on a `toneMapped: false` material.
+  The phone stage defines its own `mkAces` for this reason. Note that the
+  ACES fit has a slope near 0.21 at the origin, so it scales an ordinary
+  reflection down by five before it ever approaches clipping — if a curve is
+  ever wanted there again, a soft knee (linear below ~0.55, exponential
+  approach to 1) is the right shape, not a grading curve.
+
+### `public/dev/env-probe.html`
+One film, one instant, one fixed canvas size, `?case=`, `?at=` and `?qo=`.
+Two loads of the same URL are bit-identical (verified: mean delta 0, max 0),
+which is what makes a one-dial A/B trustworthy. `window.__stat()` from
+`screenstat.js` returns the panel histogram and the coarse SD above.
+
+Beware measuring the "panel" on a WIDE shot: the detector takes the widest
+bright run per row and at those framings the backdrop qualifies, so the
+region grows between configurations and the numbers stop being comparable.
+The macro shots are the honest place to measure.
+
+## The monitor films are pre-rendered — 2026-09-08
+
+`public/videos/maersk-loop.mp4` and `formalize-loop.mp4` (1792x1120, 15.2s,
+30fps, h264 yuv420p, no audio track, faststart) are the **same scene, the
+same shot list and the same materials** as the live path, rendered offline
+through Remotion and played as `<video loop muted playsinline preload=none>`.
+
+**Matas is not on this path and cannot be.** Its plates scroll, and a
+scrolling plate is exactly what a fixed render cannot carry. All of the live
+scene code stays for it — and as the fallback below.
+
+### What this actually buys, and what it does not
+
+Offline there is no frame budget, so everything switched off for the live
+card is switched back on: **8x MSAA, 2x supersampling, AO, bloom**, and five
+accumulated sub-frames of **motion blur**. Supersampling alone measured
+30.3ms against a 16.7ms budget in the browser and is the reason specular
+crawl along the chamfers was left unsolved there.
+
+**The smoothness argument does NOT hold, and was the original reason for
+doing this.** Measured on this machine with all three cards forced back to
+WebGL (strip `data-film`, remove the `<video>` elements, then sample rAF
+gaps) against the shipped configuration:
+
+| | median | p95 | % of frames on time |
+|---|---|---|---|
+| three live scenes | 16.7ms | 18.5ms | 99.7 |
+| two videos + one live scene | 16.6ms | 18.4ms | 99.7 |
+
+Identical. An earlier figure of "78% of frames on time" was quoted while
+arguing for this change; it does not reproduce and should not be repeated.
+The video path decodes 238 frames in 8s with **0 dropped**, which is good,
+but so is the scene. Keep this change for the render quality, which is real
+and visible, not for smoothness on a fast Mac. Whether it helps a weak
+machine or a phone is UNMEASURED — plausible, but do not assert it.
+
+### The fallback is real and is tested
+
+`startFilm()` in `v2.js` returns false when there is no usable video element,
+and on a video `error` it removes the element, clears `data-film`, drops the
+card from `starting`/`handles`, and hands it to `startWebGL()`. Verified by
+moving `maersk-loop.mp4` aside and reloading: the card built the scene, went
+`is-live`, and ran at 1854x1158. Under `prefers-reduced-motion` it returns
+true and does nothing at all — the poster IS the film's opening frame, so
+that is the same still the scene would have held, and 6MB is not fetched.
+
+Video handles register in the same `handles` map the scenes use, so the
+existing visibility pass pauses them off-screen. Do not add a second
+observer; the two would disagree.
+
+### Re-rendering
+
+The project is at `scratchpad/maersk-film` (outside the repo). It loads the
+site's own scene scripts through `staticFile`, so **`public/js/*.js` and the
+plates must be copied into its `public/` before a render** or it will
+faithfully reproduce a stale scene. `render-loops.sh` does both films;
+`--props='{"samples":5,"aperture":0,"shutter":0.5}'` is shutter-only
+accumulation. Aperture is deliberately 0: the macros run to dist 3.6 and an
+aperture wide enough to read would soften the interface the film exists to
+show. Remotion writes a silent AAC track — strip it (`-an -c:v copy`), it is
+about 600KB.
+
+Compositions are `<Case>Loop`, `<Case>Draft` (quarter pixels, 4s) and
+`<Case>Still`. Adding a case means adding one entry to `CASES` in
+`src/Composition.tsx`.
+
+### `public/dev/` is now gitignored
+Everything committed is deployed — `outputDirectory` is `"."` and there is no
+`.vercelignore`. The comparison harnesses and the multi-megabyte captures
+they load must never be tracked. `public/dev/film-vs-render.html` puts the
+live scene and the video side by side at the same instant and the same buffer
+size; verified matching at t = 1.2, 9.0 and 13.5.

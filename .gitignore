@@ -1,2 +1,7 @@
 .DS_Store
 **/.DS_Store
+
+# Comparison harnesses and their captures. Everything committed here is
+# deployed — outputDirectory is "." and there is no .vercelignore — so these
+# pages, and the multi-megabyte renders they load, must never be tracked.
+public/dev/

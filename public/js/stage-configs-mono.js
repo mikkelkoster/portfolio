@@ -68,8 +68,95 @@ window.STAGE_CONFIGS = {
        a metal body reflects its surroundings, and this build surrounds it with
        a grey of the silver's own value. */
     enclosure: "#6e747b",
+    /* ── the quality path, Maersk only ──────────────────────────────
+       Deliberately on ONE case. Formalize sits directly below it running
+       the base path on the same page, in the same scroll, on the same
+       hardware — which is the only honest way to judge whether any of this
+       is worth what it costs. Delete this block and the film renders
+       exactly as the other two do.
+
+       fov 22 is roughly a 105mm equivalent, up from 34 (~65mm). The framing
+       guard in applyRig derives the distance from the fov, so this reframes
+       itself rather than needing every shot retyped. */
+    quality: {
+      hdrEnv: true,
+      /* Both OFF, and this is the finding rather than a compromise reached
+         early. They are the only two effects here that need the scene in a
+         render target, and a full-resolution buffer does not fit in this
+         frame — see the measurements in softbox-stage. Worse, moving the
+         scene off the canvas gives up the canvas's own MSAA, and a render
+         target cannot get it back: three accepts `samples` on a target
+         carrying a depthTexture and then never resolves it, and separating
+         the depth into its own prepass costs another 15ms.
+
+         The edge that regression produced was the first thing anyone
+         noticed. Measured on the top bezel as RMS deviation of the
+         sub-pixel edge from a straight line, where 0.289 is what a fully
+         staircased edge gives:
+
+           base path, canvas MSAA      0.129px
+           post chain, no MSAA         0.365px   <- what shipped, and looked it
+           post chain, MSAA 4          0.076px   <- but 3.4x the frame time
+
+         So the buffer goes, and with it AO and bloom. What is left needs no
+         buffer at all: the environment, the lens, the ground, the shadow
+         map and the roughness map are scene setup, they cost nothing per
+         frame, and the film renders straight to the canvas exactly as the
+         base path does — same antialiasing, same budget. */
+      ao: false,
+      bloom: false,
+      macroRoughness: true,
+      fov: 22,
+      fovNarrow: 32,
+      /* 1.0 — supersampling is OFF, and this is the one item of the eight
+         that did not survive being measured.
+
+         At 1.4 it renders 1.96x the pixels, and this scene is fill-rate
+         bound on the splat backdrop, so that is very nearly double the
+         frame. Measured on the real card at its real size (3.2 megapixels
+         on a 1440 desktop):
+
+           base path            16.7ms median, 75% of frames on time
+           quality, ss 1.4      30.3ms median,  1% of frames on time
+           quality, ss 1.0      16.7ms median, 87% of frames on time
+           quality, ss 1.0, AO off  16.7ms median, 83%
+
+         So AO, bloom, the HDR environment and the 4096 shadow map together
+         cost nothing measurable, and the entire regression was the
+         supersample. 33fps to buy cleaner specular edges is not a trade
+         worth making on a card that is mostly a UI screenshot.
+
+         Specular aliasing along the chamfers is therefore still unsolved.
+         FXAA would be affordable but softens text, which is the one thing
+         this film cannot afford. */
+      ss: 1.0,
+      shadowMap: 4096,
+      aoRadius: 0.28,
+      aoIntensity: 0.9,
+      bloomThreshold: 1.5,
+      bloomIntensity: 0.55,
+      exposure: 1.05,
+      /* Measured, not chosen. The environment's peaks are what this whole
+         path is for, but its MEAN sets the ambient, and raising the peaks
+         raised both. Swept against the plinth, which is the darkest large
+         surface in frame and so the most sensitive to ambient:
+           gain 1.25 -> plinth 73,81,92
+           gain 0.70 -> plinth 47,54,62
+           gain 0.45 -> plinth 34,39,45
+           gain 0.30 -> plinth 24,28,34   (base path: 21,27,35)
+         0.30 puts the overall exposure back where the base path had it, so
+         what changes is the SHAPE of the light and not its level. */
+      ambientGain: 0.3,
+    },
     ground: {
-      deep: 0x6b6f73,
+      /* Darker than the 0x6b6f73 the base path uses. A mid grey is the one
+         value a graphite enclosure cannot separate from, and it is also the
+         least studio-like choice available — product films go near-black or
+         clean white, because both give the silhouette an edge to hold.
+         Not black: at 0x2a2d31 the body still has something to sit against,
+         and the vignette in the backdrop composite carries it the rest of
+         the way down toward the corners. */
+      deep: 0x2a2d31,
       low: [0.34, 0.35, 0.37],
       /* The bright end of the sweep, and it is what the enclosure has to
          stand against. At 0.92-0.98 it was effectively white, and a silver
@@ -110,6 +197,30 @@ window.STAGE_CONFIGS = {
      cut also changes what is on the display; Maersk holds its first plate
      across two shots. Warmer, more indigo ground to match the card. */
   formalize: {
+    /* ── the lens only ─────────────────────────────────────────────
+       Maersk's wides read much closer than these did, and the reason was
+       never the shot list — both sit near distance 13. It is the lens.
+       Visible width is 2 * dist * tan(fov/2) * aspect, so at fov 34 this
+       film showed 13.6 units across where Maersk at fov 22 showed 8.8, and
+       the device is 7.2 wide: 53% of the frame against 82%.
+
+       So this block carries the focal length and NOTHING else. ao and bloom
+       are off explicitly because StageQuality defaults them ON, and turning
+       them on here would build a full-resolution post chain that does not
+       fit in the frame budget. hdrEnv is off because this film's enclosure
+       and ground were tuned against the 8-bit environment — swapping it is
+       a separate decision, and the last time this scene's environment moved
+       the device disappeared into it.
+
+       The framing guard derives the distances from the fov, so the shot
+       list needs no edits and the macros stay macros. */
+    quality: {
+      fov: 22,
+      fovNarrow: 32,
+      hdrEnv: false,
+      ao: false,
+      bloom: false,
+    },
     /* Graphite, not the silver of the colour build. See softbox-stage.js:
        a metal body reflects its surroundings, and this build surrounds it with
        a grey of the silver's own value. */

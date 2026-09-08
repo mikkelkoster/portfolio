@@ -7,7 +7,7 @@
 <meta name="description" content="Product design and product strategy, hands-on. 15 years in design, 8 of them leading teams.">
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
-<link rel="stylesheet" href="v2.css?v=252">
+<link rel="stylesheet" href="v2.css?v=253">
 
 <!-- Safari fills the band behind the status bar with this. Left undeclared it
      samples the page background, which is right until something at the top of
@@ -122,7 +122,9 @@
       <article class="case rise">
         <div class="case__media">
           <img class="case__poster" src="public/images/formalize/formalize-stage-poster.jpg?v=2" alt="" loading="lazy">
-          <canvas class="case__canvas" data-stage="formalize"
+          <video class="case__video" data-src="public/videos/formalize-loop.mp4?v=2"
+                 muted loop playsinline preload="none" aria-hidden="true"></video>
+          <canvas class="case__canvas" data-stage="formalize" data-film="1"
                   data-plates="public/images/formalize/plates/plate-1.webp,public/images/formalize/plates/plate-2.webp,public/images/formalize/plates/plate-3.webp,public/images/formalize/plates/plate-4.webp"></canvas>
         </div>
         <div class="case__head">
@@ -141,7 +143,9 @@
       <article class="case rise">
         <div class="case__media">
           <img class="case__poster" src="public/videos/maersk-stage-poster.jpg?v=2" alt="" loading="lazy">
-          <canvas class="case__canvas" data-stage="maersk"
+          <video class="case__video" data-src="public/videos/maersk-loop.mp4?v=2"
+                 muted loop playsinline preload="none" aria-hidden="true"></video>
+          <canvas class="case__canvas" data-stage="maersk" data-film="1"
                   data-plates="public/images/maersk/plates/plate-1.webp,public/images/maersk/plates/plate-2.webp,public/images/maersk/plates/plate-3.webp"></canvas>
         </div>
         <div class="case__head">
@@ -1864,6 +1868,6 @@
   </svg>
 </button>
 
-<script src="v2.js?v=248"></script>
+<script src="v2.js?v=294"></script>
 </body>
 </html>

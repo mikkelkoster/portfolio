@@ -40,8 +40,49 @@ window.initPhoneStage = function (canvas, config) {
   let screenAspect = 0.479;
 
   /* ── renderer ───────────────────────────────────────────────────── */
+  /* Quad opacity -> linear light added to the picture, and a dial on the
+     lit glass reflection so its own contribution can be measured rather
+     than assumed. */
+  /* Read from the config when there is one, and otherwise from ?qo= on the
+     URL. This film carries no `quality` block — only Maersk does — so
+     without the URL path there is no way to A/B its own dials, and a claim
+     about them could not be measured. */
+  const _qo = (() => {
+    const m = /[?&]qo=([^&]+)/.exec(location.search);
+    if (!m) return {};
+    const out = {};
+    for (const part of decodeURIComponent(m[1]).split(",")) {
+      const [k, v] = part.split(":");
+      out[k] = v === "true" ? true : v === "false" ? false : parseFloat(v);
+    }
+    return out;
+  })();
+  const _dial = (name, fallback) => {
+    if (_qo[name] !== undefined && !Number.isNaN(_qo[name])) return _qo[name];
+    if (config.quality && config.quality[name] !== undefined) return config.quality[name];
+    return fallback;
+  };
+  const SHEEN_LINEAR = _dial("sheenLinear", 1.2);
+  const GLASS_GAIN = _dial("glassGain", 1);
+  /* Restores the pre-fix behaviour — both overlays drawn across the whole
+     picture, blending in gamma space — so the two can be put side by side.
+     A tonal change is very hard to argue about in prose. */
+  const PHONE_LEGACY = /[?&]glare=legacy\b/.test(location.search)
+    || _dial("legacyOverlay", false) === true;
+  const GLASS_LEGACY = PHONE_LEGACY;
+  /* Off only to prove what it is doing. */
+  const SPEC_TONE = _dial("specTone", true) !== false;
+
+  const DIAG = /[?&]capture=1\b/.test(location.search);
+
+  /* preserveDrawingBuffer costs a copy per frame and is off in normal use.
+     ?capture=1 turns it on so canvas.toDataURL and drawImage return the
+     frame rather than a blank — the same switch softbox-stage.js carries,
+     and without it every measurement of this film reads zero. */
   const renderer = new THREE.WebGLRenderer({
     canvas, antialias: true, powerPreference: "high-performance",
+    preserveDrawingBuffer:
+      /[?&]capture=1\b/.test(location.search) || !!window.__STAGE_CAPTURE,
   });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
@@ -486,6 +527,21 @@ window.initPhoneStage = function (canvas, config) {
      pixels; the strip light does the rest. */
   const GLASS_ENV = 0.24;
   let sheenTex = null, sheenMat = null;
+  /* The sheen, added inside the screen's own shader in LINEAR light rather
+     than as an additive quad over the top. Same fix and same reason as the
+     glare in softbox-stage.js: the canvas is sRGB-encoded, so an additive
+     quad blends in GAMMA space where the curve is flat near white, and a
+     constant added up there is worth far more linear light than the same
+     constant added low down. It flattens a UI's near-white greys into its
+     cards — measured on the monitor films at 88.2% of neutral-bright pixels
+     pushed to pure white against 81.5% in the plate itself. */
+  const screenSheen = {
+    map: { value: null },
+    amt: { value: 0 },
+    off: { value: new THREE.Vector2(0, 0) },
+    scale: { value: new THREE.Vector2(1, 1) },
+    origin: { value: new THREE.Vector2(0, 0) },
+  };
 
   const BEZEL = 0.028;        // of the screen's WIDTH
   const RADIUS = 0.098;       // ditto — the display's corner, not the body's
@@ -583,7 +639,110 @@ window.initPhoneStage = function (canvas, config) {
     overlayGeo = geo.clone();
     overlayGeo.setAttribute("uv", new THREE.BufferAttribute(uvPanel, 2));
 
-    screenMat = new THREE.MeshBasicMaterial({ color: 0x0b0d11, toneMapped: false });
+    /* A 1x1 white placeholder so USE_MAP is defined at the FIRST compile.
+       Without it three builds this shader with no map, `vMapUv` is never
+       declared, and the sheen injection below fails to compile — the film
+       comes back blank. The plate replaces it when it decodes. */
+    const screenPlaceholder = new THREE.DataTexture(
+      new Uint8Array([255, 255, 255, 255]), 1, 1, THREE.RGBAFormat);
+    screenPlaceholder.needsUpdate = true;
+    /* ── the screen is a STANDARD material, and the plate is EMISSIVE ──
+       This is the proper fix for the glass reflection, and it replaces an
+       additive overlay that had the same gamma-space fault as the sheen.
+
+       The reflection layer was a second mesh — a black dielectric sampling
+       the environment, blended additively over the picture. Additive in an
+       sRGB framebuffer means additive in GAMMA space, where a constant is
+       worth far more linear light near white than it is low down, so it ate
+       the plate's near-white greys. Matas is the worst case on the site:
+       44.3% of its plate is at 255 and another 47.2% sits in the 240-252
+       band, all of it within a few levels of clipping.
+
+       Rather than approximate that reflection back in a hand-written
+       shader, the screen simply becomes the thing it was pretending to be:
+       one dielectric surface that EMITS the interface and REFLECTS the
+       room. three then sums the two in linear inside its own shader and
+       encodes once at the end, which is what the separate quad could never
+       do.
+
+         emissive + emissiveMap  the UI, unlit and exact
+         color black             nothing diffuse to light; a screen is not lit
+         metalness 0, rough .05  a dielectric, so Fresnel stays in play and
+                                 the reflection arrives as the phone turns
+         envMapIntensity         the same GLASS_ENV the overlay used
+
+       toneMapped stays false so the interface's whites are still its own. */
+    screenMat = new THREE.MeshStandardMaterial({
+      color: 0x000000,
+      emissive: 0x0b0d11,
+      emissiveMap: screenPlaceholder,
+      metalness: 0,
+      roughness: 0.05,
+      envMapIntensity: PHONE_LEGACY ? 0 : GLASS_ENV * GLASS_GAIN,
+      toneMapped: false,
+    });
+
+    /* Display UV -> panel UV, which is what the sheen was authored across.
+       The two are related by exactly the inset above, so this is a scale and
+       an offset rather than a second attribute. */
+    screenSheen.scale.value.set(1 - 2 * bu, 1 - 2 * bv);
+    screenSheen.origin.value.set(bu, bv);
+    screenMat.onBeforeCompile = (shader) => {
+      shader.uniforms.uSheenMap = screenSheen.map;
+      shader.uniforms.uSheenAmt = screenSheen.amt;
+      shader.uniforms.uSheenOff = screenSheen.off;
+      shader.uniforms.uSheenScale = screenSheen.scale;
+      shader.uniforms.uSheenOrigin = screenSheen.origin;
+      shader.uniforms.uSpecTone = { value: SPEC_TONE ? 1 : 0 };
+      shader.fragmentShader = shader.fragmentShader
+        .replace("#include <common>", `#include <common>
+          uniform sampler2D uSheenMap;
+          uniform float uSheenAmt;
+          uniform vec2 uSheenOff;
+          uniform vec2 uSheenScale;
+          uniform vec2 uSheenOrigin;
+          uniform float uSpecTone;
+          vec3 mkAces(vec3 x) {
+            const float a = 2.51, b = 0.03, c = 2.43, d = 0.59, e = 0.14;
+            return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+          }`)
+        /* ── the SPECULAR is tone-mapped, the emissive is not ──────────
+           Two different kinds of light are leaving this surface and they
+           want opposite treatment.
+
+           The interface is display-referred: its whites are already 1.0 and
+           putting them through a curve turns every white card grey. That is
+           why the material carries toneMapped: false.
+
+           The reflection is not. It is scene-referred light off a room, and
+           at roughness 0.05 on glass that curves away at the panel's edge
+           its value climbs fast over very few pixels. Left uncompressed it
+           clips, and a clipped high-frequency specular is exactly what an
+           aliased, ragged edge looks like — which is what appeared along
+           the bezel the moment these two were merged into one material.
+           Previously they were not merged: the reflection lived on its own
+           overlay, which three DID tone-map.
+
+           So the curve is put back, on the specular alone. */
+        .replace("#include <lights_fragment_end>", `#include <lights_fragment_end>
+          if (uSpecTone > 0.5) {
+            reflectedLight.indirectSpecular = mkAces(reflectedLight.indirectSpecular);
+            reflectedLight.directSpecular = mkAces(reflectedLight.directSpecular);
+          }`)
+        /* Onto the EMISSIVE term, not the diffuse one. The screen's base
+           colour is black and diffuse is multiplied by incoming light, so
+           anything added there would be lit rather than emitted — and
+           multiplied by nearly nothing. totalEmissiveRadiance goes straight
+           into outgoingLight, in linear. */
+        .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
+          if (uSheenAmt > 0.0) {
+            vec2 sUv = vEmissiveMapUv * uSheenScale + uSheenOrigin + uSheenOff;
+            sUv = clamp(sUv, 0.0, 1.0);
+            totalEmissiveRadiance += texture2D(uSheenMap, sUv).rgb * uSheenAmt;
+          }`);
+    };
+    screenMat.customProgramCacheKey = () => "mk-phone-screen-emissive-" + (SPEC_TONE ? "tone" : "raw");
+
     screenMesh.material = screenMat;
     screenMesh.castShadow = false;
 
@@ -710,18 +869,48 @@ window.initPhoneStage = function (canvas, config) {
 
        Standard rather than Physical, for the frame budget — see the same
        layer in softbox-stage.js for the measurement. */
-    const glass = new THREE.Mesh(overlayGeo, new THREE.MeshStandardMaterial({
+    /* The BEZEL's share of the reflection only. The display's is no longer
+       drawn here at all — the screen material above is itself a dielectric
+       now and reflects the room in linear, alongside the interface it
+       emits. Leaving this over the picture as well would add the room
+       twice, once correctly and once in gamma space.
+
+       alphaMap is a 1x1 white texture and does nothing to the alpha. It is
+       here to make three declare a UV varying: this material has no other
+       map, and without one there is no `vAlphaMapUv` to test against. */
+    const glassKeepOut = new THREE.DataTexture(
+      new Uint8Array([255, 255, 255, 255]), 1, 1, THREE.RGBAFormat);
+    glassKeepOut.needsUpdate = true;
+    const glassMat = new THREE.MeshStandardMaterial({
       color: 0x000000,
       metalness: 0,
       roughness: 0.05,
-      envMapIntensity: GLASS_ENV,
+      envMapIntensity: GLASS_ENV * GLASS_GAIN,
+      alphaMap: glassKeepOut,
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       polygonOffset: true,
       polygonOffsetFactor: -3,
       polygonOffsetUnits: -3,
-    }));
+    });
+    glassMat.onBeforeCompile = (shader) => {
+      shader.uniforms.uGlassKeepOut = { value: new THREE.Vector2(bu, bv) };
+      shader.uniforms.uGlassKeepOutOn = { value: GLASS_LEGACY ? 0 : 1 };
+      shader.fragmentShader = shader.fragmentShader
+        .replace("#include <common>", `#include <common>
+          uniform vec2 uGlassKeepOut;
+          uniform float uGlassKeepOutOn;`)
+        .replace("#include <alphamap_fragment>", `#include <alphamap_fragment>
+          vec2 gEdge = min(vAlphaMapUv, 1.0 - vAlphaMapUv);
+          float gInDisplay = min(
+            smoothstep(uGlassKeepOut.x, uGlassKeepOut.x + 0.012, gEdge.x),
+            smoothstep(uGlassKeepOut.y, uGlassKeepOut.y + 0.008, gEdge.y));
+          diffuseColor.a *= 1.0 - gInDisplay * uGlassKeepOutOn;`);
+    };
+    glassMat.customProgramCacheKey = () =>
+      "mk-phone-glass-keepout-" + (GLASS_LEGACY ? "legacy" : "1");
+    const glass = new THREE.Mesh(overlayGeo, glassMat);
     glass.castShadow = false;
     glass.renderOrder = 3;
     screenMesh.add(glass);
@@ -755,6 +944,28 @@ window.initPhoneStage = function (canvas, config) {
       depthWrite: false,
       toneMapped: false,
     });
+    screenSheen.map.value = sheenTex;
+
+    /* The quad now covers the BEZEL ONLY — the display is handled in the
+       screen's shader above. Left overlapping, the bar would be applied
+       twice: once in linear and once the old way. Faded rather than cut,
+       because a hard alpha edge across a reflection is a visible seam. */
+    sheenMat.onBeforeCompile = (shader) => {
+      shader.uniforms.uKeepOut = { value: new THREE.Vector2(bu, bv) };
+      shader.uniforms.uKeepOutOn = { value: PHONE_LEGACY ? 0 : 1 };
+      shader.fragmentShader = shader.fragmentShader
+        .replace("#include <common>", `#include <common>
+          uniform vec2 uKeepOut;
+          uniform float uKeepOutOn;`)
+        .replace("#include <map_fragment>", `#include <map_fragment>
+          vec2 edge = min(vMapUv, 1.0 - vMapUv);
+          float inDisplay = min(
+            smoothstep(uKeepOut.x, uKeepOut.x + 0.012, edge.x),
+            smoothstep(uKeepOut.y, uKeepOut.y + 0.008, edge.y));
+          diffuseColor.a *= 1.0 - inDisplay * uKeepOutOn;`);
+    };
+    sheenMat.customProgramCacheKey = () => "mk-phone-sheen-keepout-" + (PHONE_LEGACY ? "legacy" : "1");
+
     const sheen = new THREE.Mesh(overlayGeo, sheenMat);
     sheen.castShadow = false;
     sheen.renderOrder = 4;
@@ -1144,6 +1355,52 @@ window.initPhoneStage = function (canvas, config) {
     camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
   }
 
+  /* ── The guard is solved PER SHOT, not per frame ──────────────────
+     The same fix as softbox-stage, and for the same reason — see the long
+     note there. In short: the push-back the guard computes depends on
+     azimuth, every shot rotates, so evaluating it per frame turned it into
+     an unauthored second camera move that ran opposite to the authored one.
+     On the monitor films both macros were written as slow push-ins and both
+     rendered as pull-backs.
+
+     Solving it once per shot, against the worst point along that shot, keeps
+     the framing guarantee (it holds for the whole shot rather than for the
+     current instant, which is strictly stronger) and lets the authored move
+     through unaltered. The per-frame loop stays as a safety net for drag. */
+  const _shotTarget = new THREE.Vector3();
+  let shotGuard = 1;
+  let currentShot = null;
+
+  function solveShotGuard(shot) {
+    if (!shot) return 1;
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const SAMPLES = 9;
+    const savedRoll = rig.roll;
+    let worst = 1;
+    for (let i = 0; i < SAMPLES; i++) {
+      const t = i / (SAMPLES - 1);
+      const az = THREE.MathUtils.degToRad(lerp(shot.from.az, shot.to.az, t));
+      const el = THREE.MathUtils.degToRad(
+        THREE.MathUtils.clamp(lerp(shot.from.el, shot.to.el, t), -22, 46)
+      );
+      const dist = lerp(shot.from.dist, shot.to.dist, t);
+      _shotTarget.set(lerp(shot.from.tx, shot.to.tx, t), lerp(shot.from.ty, shot.to.ty, t), 0);
+      rig.roll = lerp(shot.from.roll, shot.to.roll, t);
+
+      let d = dist, mult = 1;
+      placeCamera(_shotTarget, az, el, d);
+      for (let k = 0; k < 3; k++) {
+        const over = overflowFactor();
+        if (over <= 1) break;
+        d *= over; mult *= over;
+        placeCamera(_shotTarget, az, el, d);
+      }
+      if (mult > worst) worst = mult;
+    }
+    rig.roll = savedRoll;
+    return worst;
+  }
+
   function applyRig() {
     const az = THREE.MathUtils.degToRad(rig.az + drag.az);
     const el = THREE.MathUtils.degToRad(
@@ -1151,7 +1408,7 @@ window.initPhoneStage = function (canvas, config) {
     );
     const target = new THREE.Vector3(rig.tx, rig.ty, 0);
 
-    let dist = rig.dist;
+    let dist = rig.dist * shotGuard;
     placeCamera(target, az, el, dist);
     for (let i = 0; i < 3; i++) {
       const over = overflowFactor();
@@ -1160,6 +1417,8 @@ window.initPhoneStage = function (canvas, config) {
       placeCamera(target, az, el, dist);
     }
     rig.framedDist = dist;
+    /* Under ?capture=1 only — the monitor scene carries the same hook. */
+    if (DIAG) canvas.__rig = rig;
 
     key.intensity = 2.5 * rig.key;
     ambient.intensity = 0.16 + 0.2 * rig.amb;
@@ -1194,7 +1453,16 @@ window.initPhoneStage = function (canvas, config) {
       sheenTex.offset.y = THREE.MathUtils.clamp(
         -Math.atan2(eye.x, Math.max(cosT, 0.08)) * 0.40, -0.46, 0.46
       );
-      sheenMat.opacity = THREE.MathUtils.clamp(0.015 + fres * 0.55, 0.015, 0.09);
+      const sheenOpacity = THREE.MathUtils.clamp(0.015 + fres * 0.55, 0.015, 0.09);
+      sheenMat.opacity = sheenOpacity;
+
+      /* Ceiling by arithmetic, as on the monitor: the Matas plates' page
+         grey sits just under white, so past roughly 0.07 of added linear
+         light the cards and the page behind them become one flat white. */
+      screenSheen.amt.value = PHONE_LEGACY
+        ? 0
+        : Math.min(sheenOpacity * SHEEN_LINEAR, 0.06);
+      screenSheen.off.value.set(sheenTex.offset.x, sheenTex.offset.y);
     }
   }
 
@@ -1204,9 +1472,12 @@ window.initPhoneStage = function (canvas, config) {
   function showPlate(index) {
     const plate = plates[index];
     if (!plate || !screenMat) return;
-    if (screenMat.map !== plate) {
-      screenMat.map = plate;
-      screenMat.color.set(0xffffff);
+    if (screenMat.emissiveMap !== plate) {
+      screenMat.emissiveMap = plate;
+      /* White emissive, black base: the plate IS the light leaving the
+         panel. Setting color here instead would make the UI something the
+         room lights, which is not what a screen does. */
+      screenMat.emissive.set(0xffffff);
       screenMat.needsUpdate = true;
     }
     // rewind to the top of the page for this shot
@@ -1252,6 +1523,8 @@ window.initPhoneStage = function (canvas, config) {
       tl.call(() => {
         showPlate(shot.plate);
         scrollPlate(shot.plate, shot.scroll !== undefined ? shot.scroll : 0.7, shot.hold);
+        currentShot = shot;
+        shotGuard = solveShotGuard(shot);
       });
       tl.set(rig, shot.from);
       tl.to(rig, { ...shot.to, duration: shot.hold, ease: "none" });
@@ -1333,6 +1606,8 @@ window.initPhoneStage = function (canvas, config) {
        widens so a landscape card does not push the phone away to fit. */
     camera.fov = w / h < 0.85 ? 30 : 26;
     camera.updateProjectionMatrix();
+    /* The solve is against a projection, and this just changed it. */
+    if (currentShot) shotGuard = solveShotGuard(currentShot);
   }
   const ro = new ResizeObserver(resize);
   ro.observe(canvas);

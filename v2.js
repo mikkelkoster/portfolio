@@ -56,9 +56,32 @@
      meaningfully on screen keeps running — both lessons from
      the colour version, carried over rather than rediscovered. */
   (() => {
-    const probe = document.createElement("canvas");
-    const canRender = !!(window.WebGL2RenderingContext && probe.getContext("webgl2"));
-    if (!canRender || !("IntersectionObserver" in window)) return;
+    if (!("IntersectionObserver" in window)) return;
+
+    /* Asked LAZILY, and asked only about the cards that need it.
+
+       Both of those matter and both were wrong when the video path landed.
+       This started as a single gate at the top of the block, which meant a
+       browser without WebGL2 got no film at all — including the two cards
+       that are now decoded video and need no GL whatsoever. A GPU blocklist
+       or an old browser would have left three posters on the page for want
+       of a capability only one card uses.
+
+       Lazy as a precaution rather than a fix for anything observed: the
+       probe otherwise runs while the document is still parsing, and a
+       WebGL2 context can fail that early on a machine whose GPU process has
+       not started. Asking when a scene card first comes into view puts the
+       question after load. (A cold page that appeared to show exactly this
+       turned out to be a hidden tab — innerHeight 0, so nothing intersects
+       and no scene is ever asked for. That was not this.) */
+    let webgl2 = null;
+    const canBuildScene = () => {
+      if (webgl2 === null) {
+        const probe = document.createElement("canvas");
+        webgl2 = !!(window.WebGL2RenderingContext && probe.getContext("webgl2"));
+      }
+      return webgl2;
+    };
 
     const load = (src) => new Promise((resolve, reject) => {
       const el = document.createElement("script");
@@ -78,9 +101,14 @@
              per-case colours, and the dev server sends only an ETag — an
              edited scene file otherwise sits behind a cached copy and the
              change looks like it did not take. */
-          .then(() => load("public/js/stage-configs-mono.js?v=145"))
-          .then(() => load("public/js/softbox-stage.js?v=145"))
-          .then(() => load("public/js/phone-stage.js?v=145"));
+          .then(() => load("public/js/stage-configs-mono.js?v=177"))
+          /* Before the stages, which look for window.StageQuality at
+             construction. Optional in the real sense: if this 404s the
+             stages fall through to the base render path rather than
+             failing, so a case carrying a `quality` block still draws. */
+          .then(() => load("public/js/stage-quality.js?v=177").catch(() => {}))
+          .then(() => load("public/js/softbox-stage.js?v=180"))
+          .then(() => load("public/js/phone-stage.js?v=178"));
       }
       return libs;
     };
@@ -112,12 +140,95 @@
     addEventListener("scroll", queuePick, { passive: true });
     addEventListener("resize", queuePick, { passive: true });
 
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const el = entry.target;
-        if (!entry.isIntersecting || handles.get(el) || starting.has(el)) return;
-        starting.add(el);
-        initChain = initChain
+    /* ── the pre-rendered films ────────────────────────────────────
+       Two of the three cards no longer build a scene at all. Their films
+       are decoded video.
+
+       The reason is not the look — the offline render is the same scene,
+       the same shot list and the same materials — it is the CLOCK. Measured
+       at the card's real size, the live path holds 16.7ms but lands only
+       about 78% of frames on time, so roughly one frame in five arrives
+       late. That is what reads as judder next to a reference film, and no
+       amount of scene work reaches it. A decoded video cannot drop a frame.
+
+       Offline also buys what the browser could never afford here: 8x MSAA,
+       2x supersampling, AO, bloom, and five accumulated sub-frames of real
+       motion blur. The specular crawl along the chamfers, left unsolved on
+       the live path because supersampling measured 30.3ms against a 16.7ms
+       budget, is simply gone.
+
+       Matas is NOT on this path and cannot be: its plates scroll, and a
+       scrolling plate is the one thing a fixed render cannot carry. It
+       keeps the live scene, which is why all of it stays here.
+
+       If the video fails for any reason the card falls through to the
+       scene, so nothing depends on the file being present. */
+    function startFilm(el) {
+      const media = el.closest(".case__media");
+      const video = media && media.querySelector("video.case__video");
+      if (!video || !video.dataset.src) return false;
+      if (!video.canPlayType || !video.canPlayType("video/mp4")) return false;
+
+      /* NOT on a narrow screen. The card turns 4/3 there and the films are
+         16/10, so `object-fit: cover` crops a sixth of the width away — and
+         with the device already filling 82% (Maersk) to 86% (Formalize) of
+         the frame, that takes the enclosure's left and right edges off on
+         every wide shot. Losing the device on its own card is the exact
+         failure the per-shot framing guard was written to stop.
+
+         The scene has no such problem: it reads the canvas's aspect and
+         re-frames for it. So below 720px the scene is simply the better
+         renderer, and this hands the card back to it. */
+      if (matchMedia("(max-width: 720px)").matches) return false;
+
+      /* The poster is the film's own opening frame, so holding it IS the
+         still the scene would have held. Nothing to do, and 5MB not
+         fetched. */
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return true;
+
+      /* Put the card back exactly as it was found, then let the normal path
+         pick it up. Used for a missing file and for a refused play alike. */
+      let handedBack = false;
+      const handBack = () => {
+        if (handedBack) return;
+        handedBack = true;
+        video.remove();
+        delete el.dataset.film;
+        starting.delete(el);
+        handles.delete(el);
+        initChain = initChain.then(() => startWebGL(el)).catch(() => {});
+      };
+
+      video.addEventListener("error", handBack, { once: true });
+
+      video.addEventListener("canplay", () => {
+        /* The first play is attempted HERE and its rejection is handled,
+           rather than being left to the visibility pass to fire and
+           swallow. Autoplay can be refused even for muted, inline video —
+           iOS Low Power Mode does exactly that — and the old arrangement
+           would then have left a video element sitting visible and frozen
+           on frame 0. A frozen first frame is worse than the scene, and
+           worse than the poster, so a refusal hands the card back. */
+        video.play().then(() => {
+          video.classList.add("is-live");
+          /* Registered against the same map the scenes use, so the existing
+             visibility pass pauses this off-screen for free rather than
+             needing a second observer that would disagree with the first. */
+          handles.set(el, {
+            resume: () => { if (video.paused) video.play().catch(() => {}); },
+            pause: () => { if (!video.paused) video.pause(); },
+          });
+          queuePick();
+        }).catch(handBack);
+      }, { once: true });
+
+      video.src = video.dataset.src;
+      video.load();
+      return true;
+    }
+
+    function startWebGL(el) {
+      return Promise.resolve()
           .then(ensureLibs)
           .then(() => {
             const cfg = window.STAGE_CONFIGS[el.dataset.stage];
@@ -135,6 +246,11 @@
                  it. The graphite in stage-configs-mono.js was written to fix
                  exactly that and had never been reaching the scene. */
               enclosure: cfg.enclosure,
+              /* Same trap the enclosure fell into: this object is built key
+                 by key, so a block added to stage-configs-mono.js reaches the
+                 scene only if it is named here. Absent, the stage renders its
+                 base path and the config looks like it did nothing. */
+              quality: cfg.quality,
               model: modelUrl,
               sticky: cfg.sticky,
               /* These films run the full width of the page here, not a third
@@ -164,6 +280,18 @@
             });
           })
           .catch(() => { /* poster stays */ });
+    }
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const el = entry.target;
+        if (!entry.isIntersecting || handles.get(el) || starting.has(el)) return;
+        starting.add(el);
+        if (el.dataset.film && startFilm(el)) return;
+        /* No WebGL2, no scene — the poster stays, which is the same still
+           the scene would have opened on. */
+        if (!canBuildScene()) return;
+        initChain = initChain.then(() => startWebGL(el));
       });
       queuePick();
     }, { rootMargin: "700px 0px" });

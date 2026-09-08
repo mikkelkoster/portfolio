@@ -491,7 +491,7 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 36px;
 }
 @media (max-width: 720px) { .case__media { aspect-ratio: 4 / 3; border-radius: 14px; } }
-.case__poster, .case__canvas {
+.case__poster, .case__canvas, .case__video {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
@@ -501,8 +501,8 @@ a { color: inherit; text-decoration: none; }
    — so the still and the first rendered frame are the same picture. Filtering
    one of them made the handoff a visible colour pop, and the poster no longer
    matched what it was standing in for. */
-.case__canvas { opacity: 0; transition: opacity .6s ease; }
-.case__canvas.is-live { opacity: 1; }
+.case__canvas, .case__video { opacity: 0; transition: opacity .6s ease; }
+.case__canvas.is-live, .case__video.is-live { opacity: 1; }
 .case__head {
   display: flex;
   flex-wrap: wrap;

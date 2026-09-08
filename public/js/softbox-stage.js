@@ -76,8 +76,14 @@ window.initSoftboxStage = function (canvas, config) {
   const PL_TOP = GROUND_Y;
 
   /* ── renderer ───────────────────────────────────────────────────── */
+  /* preserveDrawingBuffer costs a copy per frame and is off in normal use.
+     ?capture=1 turns it on so canvas.toDataURL returns the frame rather
+     than a blank — without it a WebGL canvas is cleared the moment the
+     compositor takes it, and every A/B capture comes back black. */
   const renderer = new THREE.WebGLRenderer({
     canvas, antialias: true, powerPreference: "high-performance",
+    preserveDrawingBuffer:
+      /[?&]capture=1\b/.test(location.search) || !!window.__STAGE_CAPTURE,
   });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   /* ── An open one, so nobody re-walks the same path ────────────────
@@ -118,7 +124,80 @@ window.initSoftboxStage = function (canvas, config) {
      whole device into the depth target sixty times a second to arrive at
      an identical result. Refreshed by hand in start(). */
   renderer.shadowMap.autoUpdate = false;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+  /* The optional quality path, and it is optional in both directions: a
+     case takes it only by carrying a `quality` block, and if the file is
+     missing this is null and everything below renders as it always did. */
+  /* ?film=base forces every card down the base path regardless of config,
+     which is how the two are compared without editing a file between the
+     captures. It is the only way to get the SAME shot at the SAME moment
+     under both, and a comparison of two different frames is worth nothing. */
+  const FORCE_BASE = /[?&]film=base\b/.test(location.search);
+  const DIAG = /[?&]capture=1\b/.test(location.search) || !!window.__STAGE_CAPTURE;
+  const Q = (config.quality && window.StageQuality && !FORCE_BASE)
+    ? window.StageQuality(THREE, renderer, config.quality)
+    : null;
+
+  /* Only AO and bloom need the scene in a render target. The environment,
+     the lens, the ground and the shadow map are all just scene setup and
+     cost nothing extra — so when neither of those two is on, the film
+     renders STRAIGHT TO THE CANVAS exactly as the base path does, and keeps
+     the canvas's own MSAA along with it.
+
+     That distinction turned out to be the whole ballgame. Measured on the
+     real card at 3.2 megapixels, where the base path already sits at 16.7ms
+     against a 16.7ms budget and has no headroom at all:
+
+       base                                   16.7ms   78% of frames on time
+       post chain, no MSAA, AO + bloom        31.3ms    1%
+       post chain, MSAA 4, no AO, no bloom    42.4ms    0%
+       post chain, MSAA 4, AO + bloom         57.5ms    1%
+
+     A full-resolution buffer costs more than the frame has, before anything
+     is done with it. MSAA on a 3.2MP half-float target is ~26ms by itself
+     and the depth prepass another ~15ms. There is no arrangement of these
+     that fits, so the two effects that require the buffer are off and the
+     ones that do not are kept. */
+  const usePost = !!(Q && (Q.opts.ao || Q.opts.bloom));
+  /* Scales the glare. Exists so its contribution can be switched off and
+     measured rather than reasoned about — it is additive over the picture
+     and the plate's greys sit within 3% of white, so it is the first
+     suspect whenever the UI's backgrounds flatten into each other. */
+  const GLARE_GAIN = (Q && Q.opts.glareGain !== undefined) ? Q.opts.glareGain : 1;
+  /* Converts the quad's opacity into an amount of linear light for the
+     picture. Tunable because the two are not the same quantity. */
+  const GLARE_LINEAR = (Q && Q.opts.glareLinear !== undefined) ? Q.opts.glareLinear : 1.2;
+  /* Restores the pre-fix behaviour: the streak drawn as an additive quad
+     across the whole picture, blending in gamma space. Exists ONLY so the
+     two can be put side by side — a description of a tonal change is worth
+     very little next to the thing itself. */
+  const GLARE_LEGACY = /[?&]glare=legacy\b/.test(location.search)
+    || !!(Q && Q.opts.glareLegacy);
+  /* Readable from outside, so a capture can prove which path it caught
+     rather than inferring it from the pixels it is meant to be judging. */
+  canvas.dataset.quality = Q ? "1" : "0";
+  canvas.dataset.frontKey = (Q && Q.opts.frontKey) || 0;
+
+  /* Tone mapping moves to the composite on the quality path, and the
+     awkward part is that it cannot move wholesale.
+
+     Bloom has to read linear light BEFORE the curve: after ACES a
+     specular hit off a chamfer and a plain white UI card are both 1.0 and
+     nothing can tell them apart, so the threshold catches the dashboard
+     and lays a veil over the whole film. Measured that way round, the
+     screen went visibly soft.
+
+     But three's tone mapping is PER MATERIAL, and the screen plate opts
+     out of it — a UI screenshot is already display-referred and its whites
+     are supposed to be white. Tone-mapping it in a composite that cannot
+     tell it from the aluminium turned every white card grey: the base path
+     clips 45.2% of the frame at 250+, the naive composite clipped 0.0%,
+     which sounds like headroom and is actually the screen going dull.
+
+     So the screen is drawn a second time into a mask, and the composite
+     applies ACES everywhere the mask is not set. Two extra draws of one
+     quad, and it buys back both properties at once. */
+  renderer.toneMapping = usePost ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
 
   const scene = new THREE.Scene();
@@ -209,7 +288,11 @@ window.initSoftboxStage = function (canvas, config) {
     tex.dispose();
     return env;
   }
-  scene.environment = buildEnvironment();
+  /* The 8-bit painting above, or the float one — same art direction, but
+     the float version can put a source above 1.0, which is the whole
+     difference between a chamfer that catches a hard line and one that
+     returns a wide dim smear. */
+  scene.environment = (Q && Q.opts.hdrEnv) ? Q.buildEnvHDR() : buildEnvironment();
 
   /* ── lighting ───────────────────────────────────────────────────── */
 
@@ -229,7 +312,10 @@ window.initSoftboxStage = function (canvas, config) {
   const key = new THREE.DirectionalLight(0xffffff, 2.5);
   key.position.set(-8, 11.5, 6.5);
   key.castShadow = true;
-  key.shadow.mapSize.set(2048, 2048);
+  /* Rasterised once, not per frame (autoUpdate is off above), so a larger
+     map costs a single frame at startup and nothing at all after it. */
+  const SHADOW_MAP = (config.quality && config.quality.shadowMap) || 2048;
+  key.shadow.mapSize.set(SHADOW_MAP, SHADOW_MAP);
   key.shadow.radius = 7;
   key.shadow.blurSamples = 16;
   key.shadow.bias = -0.0004;
@@ -439,6 +525,10 @@ window.initSoftboxStage = function (canvas, config) {
   bgQuadScene.add(new THREE.Mesh(
     new THREE.PlaneGeometry(2, 2),
     new THREE.ShaderMaterial({
+      /* On the quality path the backdrop is drawn into a linear half-float
+         buffer and converted once at the end of the chain, so it must NOT
+         convert here. */
+      defines: usePost ? { LINEAR_OUT: 1 } : {},
       uniforms: {
         map: { value: bgRT.texture },
         amount: { value: VIGNETTE },
@@ -470,7 +560,9 @@ window.initSoftboxStage = function (canvas, config) {
              backdrop is written in linear and shown as sRGB — every ground
              came out dark and desaturated the moment the MeshBasicMaterial
              this replaced went away. */
-          #include <colorspace_fragment>
+          #ifndef LINEAR_OUT
+            #include <colorspace_fragment>
+          #endif
         }
       `,
     })
@@ -478,16 +570,82 @@ window.initSoftboxStage = function (canvas, config) {
 
   /* autoClear off for the main pass, or it wipes the composite the instant
      the device starts drawing. */
-  function renderFrame() {
-    renderer.setRenderTarget(bgRT);
-    renderer.clear();
-    renderer.render(bgScene, camera);
-    renderer.setRenderTarget(null);
-    renderer.clear();
+  const post = usePost ? Q.createPost(camera) : null;
+  if (DIAG && post) canvas.__post = post;
+
+  /* The stage itself — backdrop composite, then the device over it — with
+     no opinion about where it lands. The base path points it at the canvas;
+     the quality path points it at a linear buffer and runs a chain. */
+  function drawStage() {
     renderer.render(bgQuadScene, bgCam);
     renderer.autoClear = false;
     renderer.render(scene, camera);
     renderer.autoClear = true;
+  }
+
+  /* Which pixels the composite must leave alone. Two surfaces qualify and
+     for the same reason — neither was ever tone-mapped on the base path,
+     and the point of this exercise is to change what I meant to change.
+
+       - the BACKDROP, drawn by a ShaderMaterial that never included three's
+         tonemapping chunk. Running ACES over it lifted the haze from 160 to
+         190 and flattened it. So the mask starts WHITE: everything is
+         exempt until the device paints itself back in.
+       - the SCREEN, which is a UI screenshot and already display-referred.
+
+     Everything between the two — enclosure, glass, stand, plinth — is lit
+     by the environment and does want the curve. Hence black for the device
+     and white again for the screen on top of it. Three draws of geometry
+     that is already resident; the cost is not in the vertices. */
+  /* The depth prepass. Ambient occlusion needs a depth texture and the scene
+     buffer cannot carry one — a target with a depthTexture attached is never
+     resolved through three's multisampled path, so asking for both silently
+     gives up the antialiasing. This draws the same geometry under a flat
+     unlit material purely to fill a depth buffer: no environment sampling,
+     no PBR, and the splat backdrop is not in this scene at all, so it costs
+     a fraction of the pass it shadows. */
+  const depthMat = new THREE.MeshBasicMaterial();
+  function renderDepth() {
+    const override = scene.overrideMaterial;
+    scene.overrideMaterial = depthMat;
+    renderer.render(scene, camera);
+    scene.overrideMaterial = override;
+  }
+
+  const maskOn = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
+  const maskOff = new THREE.MeshBasicMaterial({ color: 0x000000, toneMapped: false });
+  const _clear = new THREE.Color();
+  function renderMask() {
+    const layers = camera.layers.mask;
+    const override = scene.overrideMaterial;
+    renderer.getClearColor(_clear);
+    const alpha = renderer.getClearAlpha();
+
+    renderer.setClearColor(0xffffff, 1);
+    renderer.clear();
+
+    scene.overrideMaterial = maskOff;
+    renderer.autoClear = false;
+    renderer.render(scene, camera);
+
+    camera.layers.set(EXEMPT_LAYER);
+    scene.overrideMaterial = maskOn;
+    renderer.render(scene, camera);
+
+    renderer.autoClear = true;
+    camera.layers.mask = layers;
+    scene.overrideMaterial = override;
+    renderer.setClearColor(_clear, alpha);
+  }
+
+  function renderFrame() {
+    renderer.setRenderTarget(bgRT);
+    renderer.clear();
+    renderer.render(bgScene, camera);
+    if (post) { post.render(drawStage, renderMask, renderDepth); return; }
+    renderer.setRenderTarget(null);
+    renderer.clear();
+    drawStage();
   }
 
   /* Back-to-front ordering, refreshed only when the view has actually
@@ -648,6 +806,30 @@ window.initSoftboxStage = function (canvas, config) {
         g.beginPath(); g.moveTo(x - w, y); g.lineTo(x + len - w, y); g.stroke();
       }
     }
+    /* Macro variation, on top of the abrasion. The strokes above give the
+       surface its fine grain, but they leave it uniform at panel scale —
+       every square centimetre has the same average roughness, so every
+       square centimetre returns the same reflection. That evenness is one
+       of the things that reads as CG; a real extrusion has faint broad
+       variation from the anodising bath and from handling.
+
+       Very wide and very faint on purpose. Past about 0.05 alpha these stop
+       being variation and start being dirt, which is a different and much
+       worse look on a product that is supposed to be new. */
+    if (config.quality && config.quality.macroRoughness) {
+      for (let i = 0; i < 22; i++) {
+        const cx = rand() * w, cy = rand() * h;
+        const r = 180 + rand() * 460;
+        const a = 0.018 + rand() * 0.03;
+        const grad = g.createRadialGradient(cx, cy, 0, cx, cy, r);
+        const tone = rand() > 0.5 ? "255,255,255," : "0,0,0,";
+        grad.addColorStop(0, "rgba(" + tone + a + ")");
+        grad.addColorStop(1, "rgba(" + tone + "0)");
+        g.fillStyle = grad;
+        g.fillRect(cx - r, cy - r, r * 2, r * 2);
+      }
+    }
+
     const tex = new THREE.CanvasTexture(c);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -699,10 +881,77 @@ window.initSoftboxStage = function (canvas, config) {
   device.add(glass);
 
   const screenGeo = facePlane(SCREEN_W, SCREEN_H, 0.05);
-  const screenMat = new THREE.MeshBasicMaterial({ color: 0x0b0d11, toneMapped: false });
+  /* A 1x1 white placeholder so USE_MAP is defined at the FIRST compile.
+     Without it three builds this material's shader with no map, `vMapUv` is
+     never declared, and the glare injection below fails to compile — the
+     film comes back blank. The real plate replaces it when it decodes. */
+  const screenPlaceholder = new THREE.DataTexture(
+    new Uint8Array([255, 255, 255, 255]), 1, 1, THREE.RGBAFormat);
+  screenPlaceholder.needsUpdate = true;
+  const screenMat = new THREE.MeshBasicMaterial({
+    color: 0x0b0d11, map: screenPlaceholder, toneMapped: false,
+  });
+
+  /* ── the glare is added HERE, in linear light ─────────────────────
+     It used to be a separate additive quad laid over the picture, and that
+     is what flattened the interface: the canvas is sRGB-encoded, so
+     additive blending happens in GAMMA space, where the curve is almost
+     flat near white. A constant added up there is worth roughly two and a
+     half times as much linear light as the same constant added low down —
+     the exact opposite of how a reflection behaves. It also got a second,
+     larger boost on the way out, because three sRGB-encodes the quad's
+     colour before the blend: 0.05 of linear light leaves the shader as
+     0.24 and that is what got added.
+
+     Measured on the plate's own greys, which sit at 247 against cards at
+     255: the additive quad pushed 90.2% of neutral-bright pixels to pure
+     white and left 7.1% in the 240-252 band. The plate itself is 81.5% and
+     15.1%. The page background simply disappeared into the cards.
+
+     Sampling the same streak inside the screen's own shader fixes it at the
+     root. `diffuseColor` here is linear — three encodes once, at the end —
+     so the addition happens in the space a reflection actually adds in:
+     a large relative lift on the navy header and the sidebar, and almost
+     nothing on a white card. Which is what the glare was always described
+     as doing. */
+  const screenGlare = {
+    map: { value: null },
+    amt: { value: 0 },
+    off: { value: new THREE.Vector2(0, 0) },
+    /* The screen quad's UVs run over SCREEN_W x SCREEN_H; the streak was
+       authored across the GLASS. Rescaling here keeps it the same streak
+       rather than a differently-stretched one. */
+    scale: { value: new THREE.Vector2(SCREEN_W / GLASS_W, SCREEN_H / GLASS_H) },
+  };
+  screenMat.onBeforeCompile = (shader) => {
+    shader.uniforms.uGlareMap = screenGlare.map;
+    shader.uniforms.uGlareAmt = screenGlare.amt;
+    shader.uniforms.uGlareOff = screenGlare.off;
+    shader.uniforms.uGlareScale = screenGlare.scale;
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", `#include <common>
+        uniform sampler2D uGlareMap;
+        uniform float uGlareAmt;
+        uniform vec2 uGlareOff;
+        uniform vec2 uGlareScale;`)
+      .replace("#include <map_fragment>", `#include <map_fragment>
+        if (uGlareAmt > 0.0) {
+          vec2 gUv = (vMapUv - 0.5) * uGlareScale + 0.5 + uGlareOff;
+          /* Clamped, matching the texture's own ClampToEdgeWrapping — the
+             streak's ends are painted dark rather than faded to alpha, so
+             sampling past an edge must return the end, not wrap. */
+          gUv = clamp(gUv, 0.0, 1.0);
+          diffuseColor.rgb += texture2D(uGlareMap, gUv).rgb * uGlareAmt;
+        }`);
+  };
+  screenMat.customProgramCacheKey = () => "mk-screen-glare-1";
   const screen = new THREE.Mesh(screenGeo, screenMat);
   screen.position.z = FACE_Z;
   device.add(screen);
+  /* The one surface the composite must not tone-map. Layer 1 is the channel
+     the mask pass renders on its own — see renderMask below. */
+  const EXEMPT_LAYER = 1;
+  screen.layers.enable(EXEMPT_LAYER);
 
   /* The sheen is GONE. It was a full MeshStandardMaterial — metalness 1,
      roughness 0.08, sampling the prefiltered environment — stretched over
@@ -787,6 +1036,30 @@ window.initSoftboxStage = function (canvas, config) {
      and visually useless. Letting the bar run out onto the dark glass gives
      it somewhere to actually read, and the eye then accepts the faint part
      crossing the picture as the same reflection. */
+  screenGlare.map.value = glareTex;
+
+  /* The quad now covers the BEZEL ONLY. The picture is handled in the
+     screen's own shader above, in linear; if the quad still drew over it
+     the streak would be applied twice, once correctly and once the old
+     way. Fading rather than cutting, because a hard alpha edge on a
+     reflection is a visible seam and the bezel is only 0.055 units wide. */
+  glareMat.onBeforeCompile = (shader) => {
+    shader.uniforms.uKeepOut = { value: new THREE.Vector2(
+      SCREEN_W / GLASS_W * 0.5, SCREEN_H / GLASS_H * 0.5) };
+    shader.uniforms.uKeepOutOn = { value: GLARE_LEGACY ? 0 : 1 };
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", `#include <common>
+        uniform vec2 uKeepOut;
+        uniform float uKeepOutOn;`)
+      .replace("#include <map_fragment>", `#include <map_fragment>
+        vec2 fromCentre = abs(vMapUv - 0.5);
+        float inPicture = min(
+          smoothstep(uKeepOut.x, uKeepOut.x - 0.010, fromCentre.x),
+          smoothstep(uKeepOut.y, uKeepOut.y - 0.016, fromCentre.y));
+        diffuseColor.a *= 1.0 - inPicture * uKeepOutOn;`);
+  };
+  glareMat.customProgramCacheKey = () => "mk-glare-keepout-" + (GLARE_LEGACY ? "legacy" : "1");
+
   const glare = new THREE.Mesh(facePlane(GLASS_W, GLASS_H, GLASS_R), glareMat);
   glare.position.z = FACE_Z + 0.012;
   device.add(glare);
@@ -1118,17 +1391,104 @@ window.initSoftboxStage = function (canvas, config) {
     return Math.max(Math.min(x1, -x0), Math.min(y1, -y0)) / LIM;
   }
 
+  /* Aperture offset, in world units, applied perpendicular to the view.
+     Zero on the page — a real-time frame cannot afford what this is for.
+     An offline renderer accumulates many frames per output frame with the
+     offset sampled over a disc, and because every one of them still looks
+     AT the target, everything at the target's distance stays sharp while
+     everything nearer or further separates. That is ground-truth depth of
+     field: no depth buffer, no blur kernel, no halo around the silhouette
+     where a screen-space approximation would give itself away. */
+  const lens = { x: 0, y: 0 };
+  const _lensRight = new THREE.Vector3();
+  const _lensUp = new THREE.Vector3();
+  const _lensFwd = new THREE.Vector3();
+
   function placeCamera(target, az, el, dist) {
     camera.position.set(
       target.x + dist * Math.sin(az) * Math.cos(el),
       target.y + dist * Math.sin(el),
       target.z + dist * Math.cos(az) * Math.cos(el)
     );
+    if (lens.x !== 0 || lens.y !== 0) {
+      _lensFwd.subVectors(target, camera.position).normalize();
+      _lensRight.crossVectors(_lensFwd, camera.up.set(0, 1, 0)).normalize();
+      _lensUp.crossVectors(_lensRight, _lensFwd).normalize();
+      camera.position.addScaledVector(_lensRight, lens.x);
+      camera.position.addScaledVector(_lensUp, lens.y);
+    }
     camera.up.set(0, 1, 0);
     camera.lookAt(target);
     camera.rotateZ(THREE.MathUtils.degToRad(rig.roll));
     camera.updateMatrixWorld();
     camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+  }
+
+  /* ── The guard is solved PER SHOT, not per frame ──────────────────
+     Running it every frame was the obvious implementation and it is wrong,
+     because the push-back it computes depends on azimuth: a device seen
+     obliquely is foreshortened and fits, and the same device seen head-on
+     presents its full width and does not. Every shot here rotates. So the
+     guard's output moved through the shot, and since it multiplies the
+     authored distance, it became a SECOND camera move that nobody wrote —
+     one that ran opposite to the authored one and was larger than it.
+
+     Measured over a loop, authored change in distance against rendered:
+
+       fov 34   wide     -0.86  ->  -0.86     guard never engaged
+       fov 34   macro 1  -0.37  ->  +0.96     authored push-in, rendered pull-back
+       fov 34   macro 2  -0.37  ->  +1.22
+       fov 22   wide     -0.87  ->  -0.05     move flattened to nothing
+       fov 22   macro 1  -0.37  ->  +1.56
+       fov 22   macro 2  -0.37  ->  +1.79
+
+     Both macros were authored as slow push-ins and both rendered as
+     pull-backs, on the ORIGINAL lens, before any of this quality work. The
+     longer lens made it worse rather than causing it.
+
+     Solved once per shot instead: sample the shot from end to end, take the
+     largest push-back any point along it needs, and hold that constant for
+     the whole shot. The authored move then renders exactly, offset to a
+     distance where the device is in frame at every point — which is the
+     guarantee the guard exists for, and it is strictly stronger than the
+     per-frame version, because it is satisfied for the whole shot rather
+     than for the current instant.
+
+     The per-frame loop stays underneath as a safety net. It is a no-op on a
+     solved shot and exists for the one case the solve cannot see ahead of
+     time: the reader dragging the view. */
+  const _shotTarget = new THREE.Vector3();
+  let shotGuard = 1;
+  let currentShot = null;
+
+  function solveShotGuard(shot) {
+    if (!shot) return 1;
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const SAMPLES = 9;
+    const savedRoll = rig.roll;
+    let worst = 1;
+    for (let i = 0; i < SAMPLES; i++) {
+      const t = i / (SAMPLES - 1);
+      const az = THREE.MathUtils.degToRad(lerp(shot.from.az, shot.to.az, t));
+      const el = THREE.MathUtils.degToRad(
+        THREE.MathUtils.clamp(lerp(shot.from.el, shot.to.el, t), -6, 46)
+      );
+      const dist = lerp(shot.from.dist, shot.to.dist, t);
+      _shotTarget.set(lerp(shot.from.tx, shot.to.tx, t), lerp(shot.from.ty, shot.to.ty, t), 0);
+      rig.roll = lerp(shot.from.roll, shot.to.roll, t);
+
+      let d = dist, mult = 1;
+      placeCamera(_shotTarget, az, el, d);
+      for (let k = 0; k < 3; k++) {
+        const over = overflowFactor();
+        if (over <= 1) break;
+        d *= over; mult *= over;
+        placeCamera(_shotTarget, az, el, d);
+      }
+      if (mult > worst) worst = mult;
+    }
+    rig.roll = savedRoll;
+    return worst;
   }
 
   function applyRig() {
@@ -1141,7 +1501,7 @@ window.initSoftboxStage = function (canvas, config) {
     /* Projected size goes as 1/dist, so one multiply lands very close and
        the extra passes only clean up the perspective the approximation
        ignores. Three is convergence, not a search. */
-    let dist = rig.dist;
+    let dist = rig.dist * shotGuard;
     placeCamera(target, az, el, dist);
     for (let i = 0; i < 3; i++) {
       const over = overflowFactor();
@@ -1150,6 +1510,18 @@ window.initSoftboxStage = function (canvas, config) {
       placeCamera(target, az, el, dist);
     }
     rig.framedDist = dist;
+    /* Under ?capture=1 only. The guard's output is the one number that
+       cannot be read off a screenshot — an apparent size confounds the
+       push-back with the shot's own authored move — and a pop in the
+       camera has to be located in the distance curve, not guessed at. */
+    if (DIAG) {
+      rig.fov = camera.fov;
+      rig.aspect = +camera.aspect.toFixed(4);
+      rig.shotGuard = shotGuard;
+      rig.shotFromDist = currentShot ? currentShot.from.dist : -1;
+      rig.shotPlate = currentShot ? currentShot.plate : -1;
+      canvas.__rig = rig;
+    }
 
     /* The whole SET is relit per shot, not just the key.
        In the reference the backdrop swings from a bright lower sweep on the
@@ -1214,7 +1586,22 @@ window.initSoftboxStage = function (canvas, config) {
        and the UI it crosses has large DARK regions (the navy header, the
        sidebar) where adding 0.06 is a big relative lift and clearly reads.
        It shows where it can be seen and stays out of the whites. */
-    glareMat.opacity = THREE.MathUtils.clamp(0.02 + fres * 0.5, 0.02, 0.085);
+    const glareOpacity = THREE.MathUtils.clamp(0.02 + fres * 0.5, 0.02, 0.085)
+      * GLARE_GAIN;
+    glareMat.opacity = glareOpacity;
+
+    /* The linear amount for the picture. Ceiling set by arithmetic, not
+       taste: the plate's page grey is 247, which is 0.928 of linear white,
+       so anything above about 0.072 of added linear light closes the gap to
+       the cards and the interface flattens. 0.06 keeps it open with room to
+       spare, and on the navy header — linear 0.02 — the same 0.06 is a
+       four-fold lift that reads clearly. That asymmetry is the entire point
+       of adding in linear rather than in gamma. */
+    screenGlare.amt.value = GLARE_LEGACY
+      ? 0
+      : Math.min(glareOpacity * GLARE_LINEAR, 0.06);
+    screenGlare.off.value.x = glareTex.offset.x;
+    screenGlare.off.value.y = glareTex.offset.y;
   }
 
   /* ════════════════════════════════════════════════════════════════
@@ -1244,13 +1631,23 @@ window.initSoftboxStage = function (canvas, config) {
   let started = false;   // start() has run and the scene has something to draw
   let running = false;
 
+  /* The shot order this timeline was built in, with each shot's start time.
+     buildTimeline can begin anywhere in the list, so "which shot is at time
+     t" is not answerable from SHOTS alone — and renderAt has to answer it
+     without asking gsap. */
+  let schedule = [];
+
   function buildTimeline(from) {
     if (tl) tl.kill();
     tl = gsap.timeline({ repeat: -1 });
+    schedule = [];
+    let at = 0;
 
     SHOTS.forEach((_, i) => {
       const order = (from + i) % SHOTS.length;
       const shot = SHOTS[order];
+      schedule.push({ shot: shot, start: at, end: at + shot.hold });
+      at += shot.hold;
 
       /* A CUT, not a move.
          The reference does this twice in twelve seconds and both are single
@@ -1260,7 +1657,11 @@ window.initSoftboxStage = function (canvas, config) {
          is a very different thing: it reads as one long continuous orbit
          with labels attached, and it never lets the framing change enough
          to be interesting. Jumping lets a wide sit next to a macro. */
-      tl.call(() => showPlate(shot.plate));
+      tl.call(() => {
+        showPlate(shot.plate);
+        currentShot = shot;
+        shotGuard = solveShotGuard(shot);
+      });
       tl.set(rig, shot.from);
 
       /* Linear, and this is the one place it belongs.
@@ -1313,6 +1714,14 @@ window.initSoftboxStage = function (canvas, config) {
   canvas.addEventListener("pointercancel", release);
 
   /* ── resize ─────────────────────────────────────────────────────── */
+  /* Last size resize() actually acted on, so it can tell a real change from
+     a re-entry. renderAt calls this every frame — an offline renderer or a
+     scrubber has no ResizeObserver timing to rely on — and re-solving the
+     framing guard on every one of those calls was pure waste: nine samples,
+     each up to three placeCamera passes projecting eight corners, twice over
+     on a page showing two films. */
+  let sizedW = 0, sizedH = 0;
+
   function resize() {
     /* Measured from the CANVAS, not the window. On the standalone page those
        were the same thing; in a card they are not, and sizing a card-sized
@@ -1320,6 +1729,8 @@ window.initSoftboxStage = function (canvas, config) {
     const r = canvas.getBoundingClientRect();
     const w = Math.max(1, Math.round(r.width));
     const h = Math.max(1, Math.round(r.height));
+    if (w === sizedW && h === sizedH) return false;
+    sizedW = w; sizedH = h;
     /* A pixel BUDGET rather than a fixed ratio. This scene is fill-rate
        bound and nothing else, and what matters is not raw speed but where
        the frame lands against the 16.7ms vsync budget: miss it and the
@@ -1355,11 +1766,27 @@ window.initSoftboxStage = function (canvas, config) {
       Math.max(2, Math.round(buf.x * BG_SCALE)),
       Math.max(2, Math.round(buf.y * BG_SCALE))
     );
+    if (post) post.setSize(buf.x, buf.y);
     camera.aspect = w / h;
     /* Widen the field of view as the frame narrows, so the device does not
        run out of the sides on a phone. */
-    camera.fov = w / h < 0.85 ? 46 : 34;
+    /* 34 degrees is about a 65mm equivalent. Product photography sits far
+       longer than that — 85 to 135 — because a wide lens diverges the near
+       and far edges of a box, and that divergence is one of the strongest
+       tells that a render was set up rather than shot. Longer needs more
+       distance for the same framing, which placeCamera derives. */
+    /* Off Q, not off config.quality — or ?film=base keeps the long lens and
+       the A/B compares two things at once. */
+    const FOV = (Q && config.quality.fov) || 34;
+    const FOV_NARROW = (Q && config.quality.fovNarrow) || 46;
+    camera.fov = w / h < 0.85 ? FOV_NARROW : FOV;
     camera.updateProjectionMatrix();
+    /* The solve is against a projection, and this just changed it. Without
+       this a shot that began before a rotation or a window drag keeps a
+       push-back computed for the old aspect, and the safety net below is
+       left to catch it one frame late. */
+    if (currentShot) shotGuard = solveShotGuard(currentShot);
+    return true;
   }
   const ro = new ResizeObserver(resize);
   ro.observe(canvas);
@@ -1450,6 +1877,99 @@ window.initSoftboxStage = function (canvas, config) {
      start() begins the loop itself, so refusing early resumes loses nothing.
      A film that is off screen by the time it is ready gets paused by the next
      visibility pass, exactly as before. */
+    /* ── one frame, at an exact time ─────────────────────────────────
+       The page drives this scene off wall-clock: a rAF loop and a GSAP
+       timeline that advance with real time. That is right for a film in a
+       card and useless to an offline renderer, which has to be able to ask
+       for frame N and get identical pixels every time it asks.
+
+       Seeking with suppressEvents FALSE is the part that matters. Each shot
+       begins with a `call()` that swaps the plate and solves the framing
+       guard; a seek that suppresses events moves the camera and leaves the
+       previous shot's screen and push-back in place, which renders the
+       right angle on the wrong picture. Passing false lets gsap fire every
+       callback the playhead crossed, so a jump straight to the middle of
+       the loop still arrives in the correct state. */
+    renderAt(seconds, lensX, lensY) {
+      if (!started) return false;
+      lens.x = lensX || 0;
+      lens.y = lensY || 0;
+      /* Size the projection to the canvas FIRST, every time.
+         On the page this is the ResizeObserver's job and it has always run
+         long before anyone looks. An offline renderer has no such luxury:
+         it mounts a canvas and asks for frame 0 immediately, and if the
+         observer has not fired yet the camera is still on its constructed
+         aspect of 1 and its constructed fov of 34. That renders a tighter,
+         wrongly-framed shot that looks plausible on its own and only shows
+         up when you put it beside the live film — measured by where the
+         Maersk logo lands, 0.308/0.385 of the frame against 0.407/0.437.
+         resize() is a rect read and a few assignments, and renderAt is not
+         on any hot path, so it is simply always correct now. */
+      if (running) {
+        running = false;
+        canvas.dataset.running = "0";
+        renderer.setAnimationLoop(null);
+      }
+      if (!tl || !schedule.length) return false;
+
+      const d = tl.duration();
+      const t = d > 0 ? ((seconds % d) + d) % d : 0;
+
+      /* Which shot owns this instant, worked out from the schedule rather
+         than from gsap's callbacks.
+
+         The first version seeked with suppressEvents false and let each
+         shot's own call() set the plate and solve the framing guard. That
+         is correct only while the playhead moves forward in small steps —
+         which it does during playback and during an offline render, and
+         does NOT when something scrubs. On a backwards seek gsap fires the
+         callbacks it crosses in the order it crosses them, so the last one
+         to run is not the one containing the target time: a scrubber landing
+         at 1.6s left the guard solved for the MACRO at dist 3.99 while the
+         rig sat on the wide at 13.34, and the camera was pushed back 2.08x
+         instead of 1.06x. Visible immediately as a much wider frame, and it
+         took a three-way comparison to notice, because the two live panes
+         were wrong together and the correct one looked like the odd one out.
+
+         So the state is set here, explicitly, and the seek suppresses events
+         because nothing is left for them to do. */
+      let entry = schedule[schedule.length - 1];
+      for (let i = 0; i < schedule.length; i++) {
+        if (t < schedule[i].end) { entry = schedule[i]; break; }
+      }
+      const shotChanged = entry.shot !== currentShot;
+      if (shotChanged) {
+        currentShot = entry.shot;
+        showPlate(entry.shot.plate);
+      }
+
+      /* resize() re-solves the guard itself when the size moved, and returns
+         false when it did nothing. So the solve runs on a shot change or a
+         size change and on no other frame — which is the whole point of
+         solving it per shot rather than per frame. */
+      const resized = resize();
+      if (shotChanged && !resized) shotGuard = solveShotGuard(currentShot);
+
+      tl.pause();
+      tl.time(t, true);
+      applyRig();
+      camera.updateMatrixWorld();
+      camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+      sortSplats(rig.az + drag.az);
+      renderFrame();
+      return true;
+    },
+
+    /* The loop length, so a caller can size a render to exactly one loop
+       rather than guessing and landing mid-shot. */
+    duration() {
+      return tl ? tl.duration() : 0;
+    },
+
+    ready() {
+      return started;
+    },
+
     resume() {
       if (running || !started) return;
       running = true;
