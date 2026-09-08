@@ -974,6 +974,38 @@ Compositions are `<Case>Loop`, `<Case>Draft` (quarter pixels, 4s) and
 `<Case>Still`. Adding a case means adding one entry to `CASES` in
 `src/Composition.tsx`.
 
+### Verified on Safari and on iOS — 2026-09-08
+
+Neither is reachable from the Chromium preview pane, and both were the
+surfaces carrying the untested fixes. Two routes that need no extra
+permission, worth reusing:
+
+**iOS** — boot a simulator and drive it with `xcrun simctl` directly:
+`xcrun simctl boot "iPhone 17 Pro"`, `open -a Simulator` (openurl fails with
+"couldn't communicate with a helper application" until the app is running),
+then `xcrun simctl openurl booted <url>` and `xcrun simctl io booted
+screenshot <file>`. The simulator reaches the host's localhost. The native
+integration wants `sudo xcode-select -s`, which needs the user's password.
+
+Result: the narrow-screen gate holds. The session requested three.min.js,
+both stage scripts and all seven plates, and **no .mp4 at all** — so an
+iPhone gets the scene, correctly re-framed for 4/3 with the device intact,
+and never downloads the 14MB.
+
+**Safari** — screen recording was not granted, so the window could not be
+screenshotted. Instead `public/dev/safari-check.html` reports its own
+findings by `fetch`ing a URL whose query string the dev server logs. No
+permission needed, and it reads back with `parse_qs`.
+
+Result on AppleWebKit/605.1.15: `canPlayMp4 maybe`, `canplay true`,
+`1792x1120`, `duration 15.2`, **`playResolved true`**, `advanced true`,
+`currentTime 2.73` after a 2.5s wait. Autoplay is not refused.
+
+Still untested: autoplay refusal itself (iOS Low Power Mode). It is now
+mostly moot — phones do not take the video path at all — but a tablet
+between 720 and 1024px does, and that is what `handBack` on a rejected
+play() covers.
+
 ### `public/dev/` is now gitignored
 Everything committed is deployed — `outputDirectory` is `"."` and there is no
 `.vercelignore`. The comparison harnesses and the multi-megabyte captures
