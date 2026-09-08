@@ -169,17 +169,31 @@
       if (!video || !video.dataset.src) return false;
       if (!video.canPlayType || !video.canPlayType("video/mp4")) return false;
 
-      /* NOT on a narrow screen. The card turns 4/3 there and the films are
-         16/10, so `object-fit: cover` crops a sixth of the width away — and
-         with the device already filling 82% (Maersk) to 86% (Formalize) of
-         the frame, that takes the enclosure's left and right edges off on
-         every wide shot. Losing the device on its own card is the exact
-         failure the per-shot framing guard was written to stop.
+      /* Two cuts of each film, because the card changes shape.
 
-         The scene has no such problem: it reads the canvas's aspect and
-         re-frames for it. So below 720px the scene is simply the better
-         renderer, and this hands the card back to it. */
-      if (matchMedia("(max-width: 720px)").matches) return false;
+         Below 720px it is 4/3 and the wide film is 16/10, so `object-fit:
+         cover` would crop a sixth of the width away — and with the device
+         filling 82% (Maersk) to 86% (Formalize) of the frame, that takes
+         the enclosure's left and right edges off on every wide shot.
+         Losing the device on its own card is the exact failure the per-shot
+         framing guard exists to stop.
+
+         So the narrow card gets its own render rather than a crop. Nothing
+         in the shot list differs between them: the guard reads the canvas
+         aspect and pulls the camera back far enough to keep the device
+         whole, which is why one shot list produces both.
+
+         Chosen HERE rather than with <source media>, because the whole
+         point of `preload="none"` and a `data-src` is that nothing is
+         fetched until the card is near the viewport — and a <source> set is
+         resolved by the browser at parse time. This keeps one request, for
+         the one file this screen actually needs. The breakpoint matches the
+         one in v2.css; they have to move together. */
+      const narrow = matchMedia("(max-width: 720px)").matches;
+      const src = (narrow && video.dataset.srcNarrow) || video.dataset.src;
+      /* No narrow cut published yet? Then the scene, which re-frames
+         itself, beats a cropped film. */
+      if (narrow && !video.dataset.srcNarrow) return false;
 
       /* The poster is the film's own opening frame, so holding it IS the
          still the scene would have held. Nothing to do, and 5MB not
@@ -222,7 +236,7 @@
         }).catch(handBack);
       }, { once: true });
 
-      video.src = video.dataset.src;
+      video.src = src;
       video.load();
       return true;
     }
