@@ -1006,6 +1006,52 @@ mostly moot — phones do not take the video path at all — but a tablet
 between 720 and 1024px does, and that is what `handBack` on a rejected
 play() covers.
 
+### Matas scanned — clean — 2026-09-08
+
+Ten samples across the 13.6s loop, at the card's own retina buffer
+(2200x1376), `blankReads 0` on every one. Three samples flagged a cluster
+around (1142, 215) and **all three are false positives**:
+
+```
+  9  21  54 208 254 235 160 101 101
+ 32  56  86  97 196 252 254 237  94
+ 72  76  61  66  78 126 226 158  56
+```
+
+That is a continuous diagonal ridge — the polished chamfer highlight down
+the phone's edge, one to two pixels wide — not a dot. The detector's cheap
+pre-check only tests the four CARDINAL neighbours at ±5px, and a diagonal
+line clears all four, so it reads as isolated. The monitor's real defect
+looked nothing like it: 243 with 10–52 on every side, diagonals included.
+If this test is reused, add the diagonals to the pre-check.
+
+The speck defect could not have appeared here anyway: it lives in
+`stage-quality.js`'s composite, and Matas carries no `quality` block, so `Q`
+is null, `usePost` is false and none of that code runs.
+
+### Scanning the LIVE phone film needs the iOS simulator
+
+Not a preference — the other two routes do not work:
+
+- **The preview pane** goes `hidden` whenever another app is in front
+  (`document.hidden true`, `innerHeight 0`). No rAF, no IntersectionObserver
+  — a freshly-constructed observer fires zero callbacks. The monitor films
+  are immune because `renderAt` draws synchronously on demand; the phone
+  stage has no such hook and runs only on `setAnimationLoop`.
+- **Desktop Safari** suspends the rAF loop as soon as the tab loses focus,
+  and a shell script cannot keep it frontmost. Every sample came back
+  `blankReads 1` — the canvas is never drawn, which looks exactly like a
+  missing `preserveDrawingBuffer` and is not.
+
+The simulator has nothing else running, so its tab is always frontmost.
+`xcrun simctl openurl booted <url>` plus a page that scans ONE frame and
+reports through the dev server's log works every time. One sample per page
+load, never a long loop — a long loop in a throttled tab stalls silently
+between beacons and is indistinguishable from a crash.
+
+`public/dev/matas-scan.html` does this; `?capture=1` is required
+(`preserveDrawingBuffer`), and `?at=` picks the offset.
+
 ### `public/dev/` is now gitignored
 Everything committed is deployed — `outputDirectory` is `"."` and there is no
 `.vercelignore`. The comparison harnesses and the multi-megabyte captures
