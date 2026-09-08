@@ -496,11 +496,22 @@ a { color: inherit; text-decoration: none; }
   width: 100%; height: 100%;
   object-fit: cover;
 }
-/* No grayscale. The posters are now the films' own opening frames, captured
-   from the live scene under prefers-reduced-motion — which holds SHOTS[0].from
-   — so the still and the first rendered frame are the same picture. Filtering
-   one of them made the handoff a visible colour pop, and the poster no longer
-   matched what it was standing in for. */
+/* No grayscale. The poster and the first frame have to be the same picture,
+   or the handoff is a visible pop — which is why filtering one of them was
+   dropped.
+
+   Keeping that true now takes more care than it used to. The posters were
+   captured from the LIVE scene under prefers-reduced-motion, which holds
+   SHOTS[0].from; the two monitor cards no longer play the live scene, and
+   Formalize's lens changed from fov 34 to 22 along the way, so that capture
+   became a completely different framing — the device filled about half the
+   frame where the film now fills 86%. They are now cut from frame 0 of the
+   films themselves.
+
+   And there are two of each, because the card changes shape: a 16/10 still
+   over a 4/3 film is the same mismatch in a different direction. The
+   <picture> breakpoint matches the one in v2.js and in the rule below, and
+   all three have to move together. */
 .case__canvas, .case__video { opacity: 0; transition: opacity .6s ease; }
 .case__canvas.is-live, .case__video.is-live { opacity: 1; }
 .case__head {

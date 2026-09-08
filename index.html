@@ -7,7 +7,7 @@
 <meta name="description" content="Product design and product strategy, hands-on. 15 years in design, 8 of them leading teams.">
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
-<link rel="stylesheet" href="v2.css?v=253">
+<link rel="stylesheet" href="v2.css?v=254">
 
 <!-- Safari fills the band behind the status bar with this. Left undeclared it
      samples the page background, which is right until something at the top of
@@ -121,7 +121,10 @@
 
       <article class="case rise">
         <div class="case__media">
-          <img class="case__poster" src="public/images/formalize/formalize-stage-poster.jpg?v=2" alt="" loading="lazy">
+          <picture>
+            <source media="(max-width: 720px)" srcset="public/images/formalize/formalize-stage-poster-narrow.jpg?v=3">
+            <img class="case__poster" src="public/images/formalize/formalize-stage-poster.jpg?v=3" alt="" loading="lazy">
+          </picture>
           <video class="case__video" data-src="public/videos/formalize-loop.mp4?v=2"
                  data-src-narrow="public/videos/formalize-loop-narrow.mp4?v=1"
                  muted loop playsinline preload="none" aria-hidden="true"></video>
@@ -143,7 +146,10 @@
 
       <article class="case rise">
         <div class="case__media">
-          <img class="case__poster" src="public/videos/maersk-stage-poster.jpg?v=2" alt="" loading="lazy">
+          <picture>
+            <source media="(max-width: 720px)" srcset="public/videos/maersk-stage-poster-narrow.jpg?v=3">
+            <img class="case__poster" src="public/videos/maersk-stage-poster.jpg?v=3" alt="" loading="lazy">
+          </picture>
           <video class="case__video" data-src="public/videos/maersk-loop.mp4?v=2"
                  data-src-narrow="public/videos/maersk-loop-narrow.mp4?v=1"
                  muted loop playsinline preload="none" aria-hidden="true"></video>
