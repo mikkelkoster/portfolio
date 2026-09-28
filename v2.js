@@ -108,7 +108,7 @@
              failing, so a case carrying a `quality` block still draws. */
           .then(() => load("public/js/stage-quality.js?v=177").catch(() => {}))
           .then(() => load("public/js/softbox-stage.js?v=180"))
-          .then(() => load("public/js/phone-stage.js?v=180"));
+          .then(() => load("public/js/phone-stage.js?v=181"));
       }
       return libs;
     };

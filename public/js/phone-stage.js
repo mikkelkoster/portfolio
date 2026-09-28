@@ -1262,18 +1262,24 @@ window.initPhoneStage = function (canvas, config) {
 
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace;
-    /* The bezel mask's filtering, for the bezel mask's reason (see bezelTex):
-       this canvas is the same size, on the same quad, so it is magnified too,
-       and a cut-out tab bar puts a rounded alpha edge in the middle of the
-       screen, which is where anisotropy on an alpha cliff turns to speckle. */
-    t.generateMipmaps = false;
-    t.minFilter = THREE.LinearFilter;
+    /* Mipmapped, unlike the bezel mask. The bars carry type, and on a phone
+       this 1024-wide canvas lands on ~300 pixels: with plain LinearFilter
+       every screen pixel sampled one texel of three, and the tab labels
+       broke up into blocks (2026-09-28). Anisotropy stays at 1 — on the
+       tab bar's rounded alpha edge it is what turns to speckle (see
+       bezelTex). Premultiplied, so the mip chain averages the transparent
+       surround as nothing rather than as black: straight alpha gave the
+       cut-out bar a dark fringe at every level below the first. */
+    t.generateMipmaps = true;
+    t.minFilter = THREE.LinearMipmapLinearFilter;
     t.magFilter = THREE.LinearFilter;
     t.anisotropy = 1;
+    t.premultiplyAlpha = true;
     t.needsUpdate = true;
     const m = new THREE.Mesh(overlayGeo, new THREE.MeshBasicMaterial({
       map: t,
       transparent: true,
+      premultipliedAlpha: true,
       depthWrite: false,
       toneMapped: false,
       /* -2, level with the bezel, not -1. The strip shares the screen's
@@ -1638,8 +1644,12 @@ window.initPhoneStage = function (canvas, config) {
        the browser upscales to the device ratio, which is what reads as a
        blurred first shot. */
     const PIXEL_BUDGET = config.pixelBudget || 1.15e6;
+    /* Up to 3, not 2: a phone's card is small enough to render at its own
+       3x well inside the budget, and at a 2 cap the screen stretched it by
+       half again, which on the Torque plates' small type read as pixelation
+       (2026-09-28). Desktop cards are budget-limited long before 2. */
     renderer.setPixelRatio(Math.max(1, Math.min(
-      Math.min(devicePixelRatio, 2), Math.sqrt(PIXEL_BUDGET / (w * h))
+      Math.min(devicePixelRatio, 3), Math.sqrt(PIXEL_BUDGET / (w * h))
     )));
     renderer.setSize(w, h, false);
     const buf = renderer.getDrawingBufferSize(new THREE.Vector2());
