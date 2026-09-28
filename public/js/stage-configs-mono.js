@@ -315,4 +315,52 @@ window.STAGE_CONFIGS = {
       },
     ],
   },
+
+  /* Torque — the Matas phone and its camera, carrying four of the app's own
+     screens in light: Progress, History, a ride, and the Plan (2026-09-28).
+     The captures are whole pages stitched from the app's demo build, cut
+     below the status bar as Matas's are. The three tab screens pin their
+     title bar at the top (cut from the plate, 149px, in its scrolled,
+     tinted state with the hairline) and their floating tab bar at the foot,
+     which brings its own cut-out picture so the page shows around it. The
+     ride has no bar: its map scrolls away as it does in the app. */
+  torque: {
+    ground: {
+      deep: 0xc9ccd0,
+      low: [0.56, 0.57, 0.59],
+      high: [0.95, 0.95, 0.96],
+    },
+    sticky: [
+      [{ edge: "top", px: 149, lead: true }, { edge: "bottom", src: "public/images/torque/plates/tabbar-progress.png" }],
+      [{ edge: "top", px: 149, lead: true }, { edge: "bottom", src: "public/images/torque/plates/tabbar-rides.png" }],
+      null,
+      [{ edge: "top", px: 149, lead: true }, { edge: "bottom", src: "public/images/torque/plates/tabbar-plan.png" }],
+    ],
+    shots: [
+      {
+        // Progress: opens three-quarter from the left, as Matas does
+        plate: 0, hold: 4.8, scroll: 0.5,
+        from: { az: -24, el: 8,   dist: 19.9, tx: 0,    ty: 0.2,  roll: -2.2, key: 1, amb: 1 },
+        to:   { az: -14, el: 5.5, dist: 18,   tx: 0.15, ty: -0.1, roll: -0.8, key: 1, amb: 1 },
+      },
+      {
+        // History: closer, from the right, tilted — the reading shot
+        plate: 1, hold: 4.4, scroll: 0.55,
+        from: { az: 22,  el: 3,   dist: 17.2, tx: -0.2, ty: 0.35, roll: 3.4, key: 1, amb: 1 },
+        to:   { az: 12,  el: 6,   dist: 15.8, tx: 0,    ty: 0,    roll: 1.2, key: 1, amb: 1 },
+      },
+      {
+        // the ride: high to close, off-axis the whole way
+        plate: 2, hold: 4.4, scroll: 0.45,
+        from: { az: 21,  el: 18,  dist: 18.9, tx: 0.1,  ty: -0.15, roll: -1.4, key: 1, amb: 1 },
+        to:   { az: 13,  el: 12,  dist: 17.2, tx: -0.1, ty: 0.1,   roll: 0.4,  key: 1, amb: 1 },
+      },
+      {
+        // the Plan: low from the left, the mirror of the History shot
+        plate: 3, hold: 4.4, scroll: 0.4,
+        from: { az: -21, el: 4,   dist: 17.6, tx: 0.2,  ty: 0.3,  roll: -3.0, key: 1, amb: 1 },
+        to:   { az: -12, el: 7,   dist: 16.2, tx: 0,    ty: 0,    roll: -1.0, key: 1, amb: 1 },
+      },
+    ],
+  },
 };

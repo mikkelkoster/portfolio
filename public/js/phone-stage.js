@@ -1197,8 +1197,12 @@ window.initPhoneStage = function (canvas, config) {
      compositing the strip into the scrolling texture every frame would have
      cost. It sits above the plate and below the bezel, so the bezel's
      rounded corners still trim it. */
-  function buildSticky(tex, spec) {
-    if (!spec || !bezelCanvas || !overlayGeo) return null;
+  function buildSticky(tex, specs) {
+    /* One bar or several: a tabbed screen pins its title bar at the top AND
+       its tab bar at the foot (Torque, 2026-09-28), so a plate's entry may be
+       a list. They share one canvas and one mesh either way. */
+    specs = specs ? [].concat(specs) : [];
+    if (!specs.length || !bezelCanvas || !overlayGeo) return null;
     const img = tex.userData.img;
     if (!img) return null;
 
@@ -1212,36 +1216,79 @@ window.initPhoneStage = function (canvas, config) {
     const innerW = W - inset * 2, innerH = H - inset * 2;
     // the plate is fitted to the display's WIDTH, so that is the scale
     const scale = innerW / img.width;
-    const stripH = spec.px * scale;
+    /* Each strip in whole canvas pixels (below): a fractional height leaves
+       its last row half-transparent, a faint band the page scrolls through. */
 
-    if (spec.edge === "bottom") {
-      g.drawImage(img, 0, img.height - spec.px, img.width, spec.px,
-                  inset, inset + innerH - stripH, innerW, stripH);
-    } else {
-      /* The captures start at the app's own header — there is no status bar
-         in them — so pinning the strip flush to the top of the display puts
-         it straight under the Dynamic Island, which ate the title. Reserve
-         the island's band first and fill it by stretching the plate's top
-         row, which is the header's own background: the result reads as the
-         status-bar area the capture never had. The island itself is painted
-         by the bezel at renderOrder 2, so it still lands on top. */
-      const band = Math.max(0, H * 0.082 - inset);
-      g.drawImage(img, 0, 0, img.width, 1, inset, inset, innerW, band + 1);
-      g.drawImage(img, 0, 0, img.width, spec.px, inset, inset + band, innerW, stripH);
+    for (const spec of specs) {
+      /* A bar with its own picture (`src`, loaded into spec.img before this
+         runs): a floating tab bar, cut out with its shadow on transparent,
+         so the page stays visible around it as it scrolls. A strip cut from
+         the plate would freeze whatever the capture had behind the bar. */
+      if (spec.img) {
+        const h = Math.round(spec.img.height * innerW / spec.img.width);
+        const y = spec.edge === "bottom" ? inset + innerH - h : inset;
+        g.drawImage(spec.img, inset, y, innerW, h);
+        continue;
+      }
+      const stripH = Math.round(spec.px * scale);
+      if (spec.edge === "bottom") {
+        g.drawImage(img, 0, img.height - spec.px, img.width, spec.px,
+                    inset, inset + innerH - stripH, innerW, stripH);
+      } else {
+        /* The captures start at the app's own header — there is no status bar
+           in them — so pinning the strip flush to the top of the display puts
+           it straight under the Dynamic Island, which ate the title. Reserve
+           the island's band first and fill it by stretching the plate's top
+           row, which is the header's own background: the result reads as the
+           status-bar area the capture never had. The island itself is painted
+           by the bezel at renderOrder 2, so it still lands on top. */
+        const band = Math.max(0, H * 0.082 - inset);
+        g.drawImage(img, 0, 0, img.width, 1, inset, inset, innerW, band + 1);
+        g.drawImage(img, 0, 0, img.width, spec.px, inset, inset + band, innerW, stripH);
+        /* That band pushes the pinned header DOWN, and the page under it does
+           not move with it, so the header's lower edge covers the top of the
+           content at rest: on Torque, the first card's label. `lead` starts
+           the page that much higher, measured in the plate's own pixels (the
+           plate spans the whole panel width, the strip only the inner
+           window). Above the capture ClampToEdge repeats its top row, the
+           header's own background, which the strip covers anyway. Opt-in:
+           Matas was framed with the overlap and is left as it was. */
+        if (spec.lead) {
+          const bottom = (inset + band + stripH) * img.width / W;
+          tex.userData.lead = Math.max(0, bottom - spec.px) / img.height;
+        }
+      }
     }
 
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    /* The bezel mask's filtering, for the bezel mask's reason (see bezelTex):
+       this canvas is the same size, on the same quad, so it is magnified too,
+       and a cut-out tab bar puts a rounded alpha edge in the middle of the
+       screen, which is where anisotropy on an alpha cliff turns to speckle. */
+    t.generateMipmaps = false;
+    t.minFilter = THREE.LinearFilter;
+    t.magFilter = THREE.LinearFilter;
+    t.anisotropy = 1;
     t.needsUpdate = true;
     const m = new THREE.Mesh(overlayGeo, new THREE.MeshBasicMaterial({
       map: t,
       transparent: true,
       depthWrite: false,
       toneMapped: false,
+      /* -2, level with the bezel, not -1. The strip shares the screen's
+         geometry, and at -1 it lost the depth test to the model's own
+         display border along the inner edge of the frame: black flecks,
+         different every frame, down both sides of the pinned bar and
+         along its edge with the page, which is the flicker at the top of
+         the content (2026-09-28). Found by stepping the loop in exact
+         1/120 s increments and reading the canvas back: with the strip's
+         depth test off, or the strip hidden, the edge is clean; at -2 it is
+         clean with the depth test still on, so the phone's rail still
+         occludes it at steep angles. */
       polygonOffset: true,
-      polygonOffsetFactor: -1,
-      polygonOffsetUnits: -1,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
     }));
     m.castShadow = false;
     m.renderOrder = 1;
@@ -1481,7 +1528,7 @@ window.initPhoneStage = function (canvas, config) {
       screenMat.needsUpdate = true;
     }
     // rewind to the top of the page for this shot
-    plate.offset.y = 1 - plate.userData.window;
+    plate.offset.y = 1 - plate.userData.window + (plate.userData.lead || 0);
     stickyMeshes.forEach((m, i) => { if (m) m.visible = i === index; });
   }
 
@@ -1664,6 +1711,16 @@ window.initPhoneStage = function (canvas, config) {
     .then(() => Promise.all(plateUrls.map(loadPlate)))
     .then((loaded) => {
       plates.push(...loaded);
+      // bars that bring their own picture load before the strips are built
+      const own = STICKY.flatMap((x) => (x ? [].concat(x) : [])).filter((x) => x.src);
+      return Promise.all(own.map((x) => new Promise((ok, fail) => {
+        const im = new Image();
+        im.onload = () => { x.img = im; ok(); };
+        im.onerror = fail;
+        im.src = x.src;
+      }))).then(() => loaded);
+    })
+    .then((loaded) => {
       // after the plates, because each strip is cut from its own plate
       loaded.forEach((tex, i) => stickyMeshes.push(buildSticky(tex, STICKY[i])));
       start();
