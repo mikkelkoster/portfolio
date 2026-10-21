@@ -101,14 +101,14 @@
              per-case colours, and the dev server sends only an ETag — an
              edited scene file otherwise sits behind a cached copy and the
              change looks like it did not take. */
-          .then(() => load("public/js/stage-configs-mono.js?v=179"))
+          .then(() => load("public/js/stage-configs-mono.js?v=180"))
           /* Before the stages, which look for window.StageQuality at
              construction. Optional in the real sense: if this 404s the
              stages fall through to the base render path rather than
              failing, so a case carrying a `quality` block still draws. */
           .then(() => load("public/js/stage-quality.js?v=177").catch(() => {}))
           .then(() => load("public/js/softbox-stage.js?v=180"))
-          .then(() => load("public/js/phone-stage.js?v=181"));
+          .then(() => load("public/js/phone-stage.js?v=182"));
       }
       return libs;
     };

@@ -332,9 +332,10 @@ window.STAGE_CONFIGS = {
     },
     sticky: [
       [{ edge: "top", px: 149, lead: true }, { edge: "bottom", src: "public/images/torque/plates/tabbar-progress.png" }],
-      [{ edge: "top", px: 149, lead: true }, { edge: "bottom", src: "public/images/torque/plates/tabbar-rides.png" }],
+      [{ edge: "top", px: 149, lead: true }, { edge: "bottom", src: "public/images/torque/plates/tabbar-calendar.png" }],
       null,
-      [{ edge: "top", px: 149, lead: true }, { edge: "bottom", src: "public/images/torque/plates/tabbar-plan.png" }],
+      // Ride now mid-session: one screen, nothing pinned (2026-10-21).
+      null,
     ],
     shots: [
       {
@@ -344,7 +345,7 @@ window.STAGE_CONFIGS = {
         to:   { az: -14, el: 5.5, dist: 18,   tx: 0.15, ty: -0.1, roll: -0.8, key: 1, amb: 1 },
       },
       {
-        // History: closer, from the right, tilted — the reading shot
+        // the Calendar: closer, from the right, tilted — the reading shot
         plate: 1, hold: 4.4, scroll: 0.55,
         from: { az: 22,  el: 3,   dist: 17.2, tx: -0.2, ty: 0.35, roll: 3.4, key: 1, amb: 1 },
         to:   { az: 12,  el: 6,   dist: 15.8, tx: 0,    ty: 0,    roll: 1.2, key: 1, amb: 1 },
@@ -356,7 +357,7 @@ window.STAGE_CONFIGS = {
         to:   { az: 13,  el: 12,  dist: 17.2, tx: -0.1, ty: 0.1,   roll: 0.4,  key: 1, amb: 1 },
       },
       {
-        // the Plan: low from the left, the mirror of the History shot
+        // Ride now mid-session: low from the left, the mirror of the Calendar shot
         plate: 3, hold: 4.4, scroll: 0.4,
         from: { az: -21, el: 4,   dist: 17.6, tx: 0.2,  ty: 0.3,  roll: -3.0, key: 1, amb: 1 },
         to:   { az: -12, el: 7,   dist: 16.2, tx: 0,    ty: 0,    roll: -1.0, key: 1, amb: 1 },

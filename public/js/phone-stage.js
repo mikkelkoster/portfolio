@@ -30,7 +30,7 @@ window.initPhoneStage = function (canvas, config) {
 
   const THREE = window.THREE;
   const gsap = window.gsap;
-  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches || /[?&]stagehold\b/.test(location.search); // ?stagehold: the opening frame, for posters
 
   /* The phone, in scene units. Everything else is measured off the model
      once it loads, so this is the only number that sets the scale. */
