@@ -470,6 +470,24 @@
     const list = document.getElementById('xp-list');
     if (!list) return;
 
+    /* The images inside the rows are lazy, and a lazy image inside a closed
+       row is clipped to zero height, so the browser did not fetch it until
+       the row opened: it decoded mid-animation and popped in. Fetch them
+       once the list is within a screen and a half of the viewport. */
+    const imgs = list.querySelectorAll('img[loading="lazy"]');
+    if (imgs.length && 'IntersectionObserver' in window) {
+      const pre = new IntersectionObserver((entries) => {
+        if (!entries.some(e => e.isIntersecting)) return;
+        imgs.forEach(img => { img.loading = 'eager'; });
+        pre.disconnect();
+      }, { rootMargin: '150% 0px' });
+      pre.observe(list);
+    }
+    /* iOS Safari only applies :active on touch when some touchstart
+       listener exists. An empty passive one is the standard switch, and it
+       is what makes the press feedback on the rows show at all. */
+    list.addEventListener('touchstart', () => {}, { passive: true });
+
     list.querySelectorAll('.xp').forEach(item => {
       const btn = item.querySelector('.xp__row');
       if (!btn) return;

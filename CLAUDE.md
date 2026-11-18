@@ -1124,3 +1124,4 @@ gone entirely.
 - `.vercelignore` added. `_sb.html`, `maersk.html`, `og-card.html`, `figma-challenge-icons.js`, `tools/`, `public/dev/` and this file are no longer deployed. Nothing linked to any of them.
 
 - Hausy is built with Mark Petersen. `.pp-credit` on its link line names him and links his LinkedIn (tracking parameters stripped from the URL).
+- Experience rows: `-webkit-tap-highlight-color: transparent` (the iOS highlight covered the whole 90px-tall, full-width button) and an `:active` dimming instead, enabled on iOS by an empty passive touchstart listener on `#xp-list`. The content fades and settles in as the row opens. Row images switch from lazy to eager once the list is within 150% of the viewport, because a lazy image in a closed (zero-height) row was only fetched on open and popped in mid-animation.

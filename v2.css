@@ -727,6 +727,15 @@ section[id] { scroll-margin-top: var(--nav-h); }
   .xp__row:hover { opacity: 0.62; }
   .xp__row:hover .xp__chev { color: var(--ink); }
 }
+/* iOS paints its own grey tap highlight over the whole button, and these
+   buttons are the full width of the page and 90px tall, so a tap lit up a
+   slab. Off, and replaced by the same dimming the hover uses, held only
+   while the finger is down. A keyboard still gets a ring. */
+.xp__row { -webkit-tap-highlight-color: transparent; }
+@media (hover: none) {
+  .xp__row:active { opacity: 0.55; transition-duration: 0s; }
+}
+.xp__row:focus-visible { outline-offset: -2px; border-radius: 8px; }
 @media (prefers-reduced-motion: reduce) { .xp__row { transition: none; } }
 @media (min-width: 860px) { .xp__row { grid-template-columns: 200px 190px 1fr auto; } }
 /* Badge and chevron are one cell, not two columns. As separate columns their
@@ -764,8 +773,25 @@ section[id] { scroll-margin-top: var(--nav-h); }
   grid-template-rows: 0fr;
   transition: grid-template-rows .42s cubic-bezier(0.22, 0.7, 0.3, 1);
 }
-.xp__detail > div { overflow: hidden; }
+.xp__detail > div { overflow: hidden; min-height: 0; }
 .xp[data-open="true"] .xp__detail { grid-template-rows: 1fr; }
+/* The content fades and settles in while the row opens, instead of being
+   uncovered top-down by the moving edge. That wipe is what made a slow
+   frame on a phone read as a stutter. Out is faster than in, and starts
+   at once, so a closing row never shows text sliding under its edge. */
+.xp__body {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity .2s ease, transform .3s cubic-bezier(0.22, 0.7, 0.3, 1);
+}
+.xp[data-open="true"] .xp__body {
+  opacity: 1;
+  transform: none;
+  transition: opacity .35s ease .08s, transform .45s cubic-bezier(0.22, 0.7, 0.3, 1) .04s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .xp__body, .xp[data-open="true"] .xp__body { transition: none; transform: none; }
+}
 /* The one-line summary each row carried on the old site. Hidden while the
    row is closed — that restraint is the point of the collapsed list — and
    used as the detail's own heading once it opens. */
