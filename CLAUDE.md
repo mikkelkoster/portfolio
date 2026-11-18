@@ -1128,3 +1128,4 @@ gone entirely.
 
 ### Positioning pass, 2026-11-18
 The site leads with craft, then people, then organisation, everywhere: hero "Maker. Player-coach. Design at scale.", the How I work rows in the same order, and a "Hands-on" field on every case card (what Mikkel made himself) where "Scope" used to be. The About stats pair "25+ designers led" with "3 products I've designed and built myself". Testimonials open with Emil, the engineering lead who says the design system was built by Mikkel. Keep this order when adding copy: a reader who skims must meet the hands-on proof before the leadership.
+- Testimonial dialog focus: opens with focus on `.t-d-inner` (tabindex -1, autofocus, no outline), so Safari draws no ring on the X. On close, focus returns to the button only when it was opened from the keyboard (`click` with `detail === 0`); after a tap or mouse click the restored focus is blurred so the link text gets no ring.

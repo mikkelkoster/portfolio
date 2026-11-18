@@ -7,7 +7,7 @@
 <meta name="description" content="Product design and product strategy, hands-on. 15 years in design, 8 of them leading teams.">
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
-<link rel="stylesheet" href="v2.css?v=263">
+<link rel="stylesheet" href="v2.css?v=264">
 
 <!-- Safari fills the band behind the status bar with this. Left undeclared it
      samples the page background, which is right until something at the top of
@@ -686,7 +686,7 @@
      paragraph), so the full texts stay in the page source and nothing is
      duplicated. Native <dialog>: focus is held inside, Escape closes it. -->
 <dialog class="t-dialog" id="t-dialog" aria-labelledby="t-d-name">
-  <div class="t-d-inner">
+  <div class="t-d-inner" tabindex="-1" autofocus>
     <button class="t-d-close" id="t-d-close" type="button" aria-label="Close"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
     <div class="t-who t-d-who">
       <img class="t-avatar" id="t-d-avatar" src="" alt="" width="96" height="96">
@@ -2005,6 +2005,6 @@
   </svg>
 </button>
 
-<script src="v2.js?v=302"></script>
+<script src="v2.js?v=303"></script>
 </body>
 </html>

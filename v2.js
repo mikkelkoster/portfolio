@@ -391,8 +391,13 @@
     if (typeof dlg.showModal !== 'function') { toggles.forEach(b => b.remove()); return; }
     const $ = (id) => document.getElementById(id);
     let opener = null;
+    let viaKeyboard = false;
     toggles.forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        /* detail is 0 for a click synthesised from Enter or Space. Only then
+           does focus go back to the button on close; after a tap or a mouse
+           click it would only draw a focus ring on the link text. */
+        viaKeyboard = e.detail === 0;
         const card = btn.closest('.t-card');
         const full = document.getElementById(btn.dataset.full);
         if (!card || !full) return;
@@ -411,7 +416,10 @@
     dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
     dlg.addEventListener('close', () => {
       document.body.style.overflow = '';
-      if (opener) opener.focus({ preventScroll: true });
+      /* The browser restores focus to the opener by itself as the dialog
+         closes. Kept for a keyboard user, dropped for everyone else. */
+      if (viaKeyboard && opener) opener.focus({ preventScroll: true });
+      else if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
       opener = null;
     });
   })();

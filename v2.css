@@ -1139,6 +1139,10 @@ section[id] { scroll-margin-top: var(--nav-h); }
 @keyframes t-fade { from { opacity: 0; } }
 /* All padding lives on the inner box, so a click that lands on the dialog
    element itself can only be a click on the backdrop. */
+/* The dialog opens with focus on this box rather than on the X. Safari
+   draws a focus ring on whatever the dialog focuses, so focusing the X put a
+   blue ring round it on every tap. Tab still reaches the X first. */
+.t-d-inner:focus { outline: none; }
 .t-d-inner { position: relative; display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 40px 40px 0; }
 .t-d-who { padding-right: 48px; margin-bottom: 28px; }
 .t-d-text {
