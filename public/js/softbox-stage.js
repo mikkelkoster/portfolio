@@ -1210,24 +1210,17 @@ window.initSoftboxStage = function (canvas, config) {
     return LINEAR_TO_SRGB[(v * 8192) | 0];
   }
 
-  function buildMips(img) {
-    const levels = [];
-    let w = img.width, h = img.height;
-    const c0 = document.createElement("canvas");
-    c0.width = w; c0.height = h;
-    const g0 = c0.getContext("2d");
-    g0.drawImage(img, 0, 0);
-    levels.push(c0);
-
+  /* The chain itself, as a pure function of the level-0 pixels, so the
+     very same code runs on the main thread (fallback) and in a worker.
+     Returns levels 1..n as raw RGBA. */
+  function mipChain(px, w, h) {
+    const out = [];
     // carry the chain in linear floats rather than re-reading each canvas
     let lin = new Float32Array(w * h * 3);
-    {
-      const px = g0.getImageData(0, 0, w, h).data;
-      for (let i = 0, j = 0; i < w * h; i++, j += 3) {
-        lin[j] = SRGB_TO_LINEAR[px[i * 4]];
-        lin[j + 1] = SRGB_TO_LINEAR[px[i * 4 + 1]];
-        lin[j + 2] = SRGB_TO_LINEAR[px[i * 4 + 2]];
-      }
+    for (let i = 0, j = 0; i < w * h; i++, j += 3) {
+      lin[j] = SRGB_TO_LINEAR[px[i * 4]];
+      lin[j + 1] = SRGB_TO_LINEAR[px[i * 4 + 1]];
+      lin[j + 2] = SRGB_TO_LINEAR[px[i * 4 + 2]];
     }
 
     while (w > 1 || h > 1) {
@@ -1265,29 +1258,89 @@ window.initSoftboxStage = function (canvas, config) {
         }
       }
 
-      const c = document.createElement("canvas");
-      c.width = nw; c.height = nh;
-      const g = c.getContext("2d");
-      const out = g.createImageData(nw, nh);
+      const data = new Uint8ClampedArray(nw * nh * 4);
       for (let i = 0, j = 0; i < nw * nh; i++, j += 3) {
-        out.data[i * 4] = linearToSrgb(cur[j]);
-        out.data[i * 4 + 1] = linearToSrgb(cur[j + 1]);
-        out.data[i * 4 + 2] = linearToSrgb(cur[j + 2]);
-        out.data[i * 4 + 3] = 255;
+        data[i * 4] = linearToSrgb(cur[j]);
+        data[i * 4 + 1] = linearToSrgb(cur[j + 1]);
+        data[i * 4 + 2] = linearToSrgb(cur[j + 2]);
+        data[i * 4 + 3] = 255;
       }
-      g.putImageData(out, 0, 0);
-      levels.push(c);
+      out.push({ w: nw, h: nh, data });
 
       lin = cur; w = nw; h = nh;
     }
-    return levels;
+    return out;
   }
+
+  function levelCanvas(l) {
+    const c = document.createElement("canvas");
+    c.width = l.w; c.height = l.h;
+    c.getContext("2d").putImageData(new ImageData(l.data, l.w, l.h), 0, 0);
+    return c;
+  }
+
+  function buildMips(img) {
+    const w = img.width, h = img.height;
+    const c0 = document.createElement("canvas");
+    c0.width = w; c0.height = h;
+    const g0 = c0.getContext("2d");
+    g0.drawImage(img, 0, 0);
+    const px = g0.getImageData(0, 0, w, h).data;
+    return [c0].concat(mipChain(px, w, h).map(levelCanvas));
+  }
+
+  /* Off the main thread. The chain is ~1s of JavaScript on a phone-speed
+     CPU (measured at 4x slowdown: long tasks of 300-550ms) and it ran in
+     img.onload, so the page froze while a reader scrolled towards the card.
+     The main thread still draws level 0 and reads its pixels, exactly as
+     before; the worker only runs mipChain on them and hands the levels
+     back. Reading the pixels in the worker instead (ImageBitmap on an
+     OffscreenCanvas) gave slightly different bytes in Chrome, whose decode
+     there differs from the <img> one, so that part stays here. Same input,
+     same function, same tables: the levels are byte-identical, checked in
+     Chrome and WebKit. Without Worker the old synchronous path runs. */
+  let mipWorker = null;
+  const mipJobs = new Map();
+  let mipJobId = 0;
+  function getMipWorker() {
+    if (mipWorker !== null) return mipWorker;
+    mipWorker = false;
+    try {
+      if (typeof Worker !== "function") return false;
+      const src = "let SRGB_TO_LINEAR, LINEAR_TO_SRGB;\n" + linearToSrgb.toString() + "\n" + mipChain.toString() +
+        "\nonmessage = (e) => { const d = e.data; SRGB_TO_LINEAR = d.s2l; LINEAR_TO_SRGB = d.l2s;" +
+        " try { const levels = mipChain(d.px, d.w, d.h);" +
+        " postMessage({ id: d.id, levels }, levels.map(l => l.data.buffer)); } catch (err) { postMessage({ id: d.id, levels: null }); } };";
+      mipWorker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+      mipWorker.onmessage = (e) => { const job = mipJobs.get(e.data.id); if (job) { mipJobs.delete(e.data.id); job(e.data.levels); } };
+      mipWorker.onerror = () => { mipWorker = false; mipJobs.forEach(job => job(null)); mipJobs.clear(); };
+    } catch (err) { mipWorker = false; }
+    return mipWorker;
+  }
+  function buildMipsOffThread(img) {
+    const worker = getMipWorker();
+    if (!worker) return Promise.resolve(buildMips(img));
+    const w = img.width, h = img.height;
+    const c0 = document.createElement("canvas");
+    c0.width = w; c0.height = h;
+    const g0 = c0.getContext("2d");
+    g0.drawImage(img, 0, 0);
+    const px = g0.getImageData(0, 0, w, h).data;
+    return new Promise((resolve) => {
+      const id = ++mipJobId;
+      mipJobs.set(id, (levels) => {
+        if (!levels) { resolve(buildMips(img)); return; }
+        resolve([c0].concat(levels.map(levelCanvas)));
+      });
+      worker.postMessage({ id, px, w, h, s2l: SRGB_TO_LINEAR, l2s: LINEAR_TO_SRGB }, [px.buffer]);
+    });
+  }
+  if (/[?&]miptest\b/.test(location.search)) window.__mipTest = { buildMips, buildMipsOffThread };
 
   function loadPlate(id) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => {
-        const mips = buildMips(img);
+      img.onload = () => buildMipsOffThread(img).then((mips) => {
         const tex = new THREE.Texture(mips[0]);
         tex.mipmaps = mips;
         tex.generateMipmaps = false;
@@ -1303,7 +1356,7 @@ window.initSoftboxStage = function (canvas, config) {
         tex.offset.set(0, 1 - crop);
         tex.needsUpdate = true;
         resolve(tex);
-      };
+      }).catch(reject);
       img.onerror = reject;
       img.src = id;
     });

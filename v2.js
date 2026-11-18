@@ -107,8 +107,8 @@
              stages fall through to the base render path rather than
              failing, so a case carrying a `quality` block still draws. */
           .then(() => load("public/js/stage-quality.js?v=177").catch(() => {}))
-          .then(() => load("public/js/softbox-stage.js?v=180"))
-          .then(() => load("public/js/phone-stage.js?v=182"));
+          .then(() => load("public/js/softbox-stage.js?v=182"))
+          .then(() => load("public/js/phone-stage.js?v=184"));
       }
       return libs;
     };
