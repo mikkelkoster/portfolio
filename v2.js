@@ -412,6 +412,20 @@
         $('t-d-text').scrollTop = 0;
       });
     });
+    /* A click anywhere on the card opens it, through the card's own button,
+       so the keyboard path and this one share one handler. A click that is
+       the end of a text selection is left alone. */
+    document.querySelectorAll('.t-card').forEach((card) => {
+      const btn = card.querySelector('.t-toggle[data-full]');
+      if (!btn) return;
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.t-toggle, a')) return;
+        const sel = window.getSelection && String(window.getSelection());
+        if (sel) return;
+        // detail 1 marks it as a pointer click, so no focus ring comes back on close
+        btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 }));
+      });
+    });
     $('t-d-close').addEventListener('click', () => dlg.close());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
     dlg.addEventListener('close', () => {

@@ -1098,6 +1098,25 @@ section[id] { scroll-margin-top: var(--nav-h); }
   justify-content: space-between;
   gap: 28px;
 }
+/* The whole card opens the full recommendation, so it answers the pointer
+   as one target: a shade darker, the avatar lifting a touch, and the link
+   line darkening as if it were hovered itself. Pointer devices only; on
+   touch the card simply opens on tap. */
+.t-card {
+  cursor: pointer;
+  transition: background-color .3s cubic-bezier(0.22, 0.7, 0.3, 1);
+}
+.t-card .t-avatar { transition: transform .35s cubic-bezier(0.22, 1, 0.36, 1); }
+@media (hover: hover) {
+  .t-card:hover { background: #efefef; }
+  .t-card:hover .t-toggle { text-decoration-color: currentColor; }
+  .t-card:hover .t-avatar { transform: scale(1.06); }
+}
+.t-card { -webkit-tap-highlight-color: transparent; }
+@media (prefers-reduced-motion: reduce) {
+  .t-card, .t-card .t-avatar { transition: none; }
+  .t-card:hover .t-avatar { transform: none; }
+}
 .t-quote {
   /* Excerpts now, two or three sentences each, so they can be set larger and
      in the primary ink. At 16px grey the full texts read as a wall: the
