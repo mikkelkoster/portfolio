@@ -468,6 +468,10 @@ section[id] { scroll-margin-top: var(--nav-h); }
 @media (min-width: 860px) { .meta--4 { grid-template-columns: repeat(4, 1fr); } }
 @media (min-width: 860px) { .meta--3 { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 859px) { .meta { grid-template-columns: repeat(2, 1fr); gap: 32px 24px; } }
+/* Hands-on is the longest value on a case card. In half a phone column it
+   stacked seven lines deep, so below 860 it takes the full width under the
+   short pair (Role and Team, or Role and Reach). */
+@media (max-width: 859px) { .meta__wide { grid-column: 1 / -1; order: 1; } }
 .meta__k { font-size: 14px; font-weight: 500; margin: 0 0 6px; }
 .meta__v { font-size: 18px; color: var(--ink-55); margin: 0; }
 

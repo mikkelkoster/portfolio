@@ -1125,3 +1125,6 @@ gone entirely.
 
 - Hausy is built with Mark Petersen. `.pp-credit` on its link line names him and links his LinkedIn (tracking parameters stripped from the URL).
 - Experience rows: `-webkit-tap-highlight-color: transparent` (the iOS highlight covered the whole 90px-tall, full-width button) and an `:active` dimming instead, enabled on iOS by an empty passive touchstart listener on `#xp-list`. The content fades and settles in as the row opens. Row images switch from lazy to eager once the list is within 150% of the viewport, because a lazy image in a closed (zero-height) row was only fetched on open and popped in mid-animation.
+
+### Positioning pass, 2026-11-18
+The site leads with craft, then people, then organisation, everywhere: hero "Maker. Player-coach. Design at scale.", the How I work rows in the same order, and a "Hands-on" field on every case card (what Mikkel made himself) where "Scope" used to be. The About stats pair "25+ designers led" with "3 products I've designed and built myself". Testimonials open with Emil, the engineering lead who says the design system was built by Mikkel. Keep this order when adding copy: a reader who skims must meet the hands-on proof before the leadership.
