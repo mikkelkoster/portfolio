@@ -646,11 +646,17 @@ section[id] { scroll-margin-top: var(--nav-h); }
    scroll reveal at all — this is the easing from their menu and hero, which
    is the motion that reads as "soft" there. Shorter travel too; 18px on a
    slow ease drew attention to the movement itself. */
+/* Ease-out, not ease-in-out. Something arriving should move at once and
+   land softly; the old in-out curve spent its first 150ms barely moving, so
+   a section that had just scrolled into view seemed to hesitate before it
+   answered. The opacity finishes first so text is readable while the last
+   few pixels of travel settle. */
 .js-anim .rise {
+  --rise-ease: cubic-bezier(0.22, 1, 0.36, 1);
   opacity: 0;
   transform: translateY(12px);
-  transition: opacity .55s cubic-bezier(0.76, 0, 0.24, 1),
-              transform .55s cubic-bezier(0.76, 0, 0.24, 1);
+  transition: opacity .45s ease-out,
+              transform .7s var(--rise-ease);
   transition-delay: var(--d, 0ms);
 }
 .js-anim .rise.is-in { opacity: 1; transform: none; }
@@ -666,9 +672,9 @@ section[id] { scroll-margin-top: var(--nav-h); }
 .js-anim .rise.lede,
 .js-anim .rise.body {
   clip-path: inset(0 0 18% 0);
-  transition: opacity .55s cubic-bezier(0.76, 0, 0.24, 1),
-              transform .55s cubic-bezier(0.76, 0, 0.24, 1),
-              clip-path .55s cubic-bezier(0.76, 0, 0.24, 1);
+  transition: opacity .45s ease-out,
+              transform .7s var(--rise-ease),
+              clip-path .7s var(--rise-ease);
   transition-delay: var(--d, 0ms);
 }
 /* Ends BELOW the box, not at it. inset(0) still clips to the border box, and
@@ -912,10 +918,14 @@ section[id] { scroll-margin-top: var(--nav-h); }
   height: 7px;
   border-radius: 100px;
   background: var(--ink);
-  transform: translateY(-50%);
+  /* Positioned with transform, not left: moving it no longer lays the dot
+     row out again on every frame. Width still animates, but it only changes
+     when the number of visible cards does. */
+  left: 0;
+  transform: translate(var(--pill-x, 0px), -50%);
   pointer-events: none;
-  transition: left .38s cubic-bezier(0.76, 0, 0.24, 1),
-              width .38s cubic-bezier(0.76, 0, 0.24, 1);
+  transition: transform .38s cubic-bezier(0.65, 0, 0.35, 1),
+              width .38s cubic-bezier(0.65, 0, 0.35, 1);
 }
 @media (prefers-reduced-motion: reduce) { .car-pill { transition: none; } }
 .car-dot {

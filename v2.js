@@ -663,7 +663,7 @@
       const slot = dotEls[0].offsetWidth;
       const x0 = dotEls[first].offsetLeft + (slot - 7) / 2;
       const x1 = dotEls[last].offsetLeft + (slot - 7) / 2 + 7;
-      pill.style.left = x0 + 'px';
+      pill.style.setProperty('--pill-x', x0 + 'px');
       pill.style.width = (x1 - x0) + 'px';
       if (prev) prev.disabled = i <= 0;
       if (next) next.disabled = i >= lastIndex();
@@ -921,13 +921,52 @@
        paints something opaque wins. For an image that means mapping the screen
        point back into the file's own pixels, which depends on object-fit —
        cover and contain scale differently and both centre what is left. */
-    const probe = document.createElement('canvas');
-    probe.width = probe.height = 1;
-    const pctx = probe.getContext('2d', { willReadFrequently: true });
 
     const lumOf = (r, g, b) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
 
-    const sampleImage = (img, cx, cy) => {
+    /* The pixel is read in a worker, on an OffscreenCanvas. A canvas costs
+       a one-off setup the first time it is drawn to: measured on a
+       phone-speed CPU, 280ms. On the main thread that landed exactly as the
+       sheet opened. Browsers without OffscreenCanvas fall back to a canvas
+       here, made on first use as before. */
+    let pctx = null;
+    const mainCtx = () => {
+      if (!pctx) {
+        const probe = document.createElement('canvas');
+        probe.width = probe.height = 1;
+        pctx = probe.getContext('2d', { willReadFrequently: true });
+      }
+      return pctx;
+    };
+    let reader = null;
+    const waiting = new Map();
+    let readId = 0;
+    try {
+      if (typeof OffscreenCanvas === 'function' && typeof Worker === 'function' && typeof createImageBitmap === 'function') {
+        const src = "let x;onmessage=e=>{const{id,bm}=e.data;try{if(!x)x=new OffscreenCanvas(1,1).getContext('2d',{willReadFrequently:true});x.clearRect(0,0,1,1);x.drawImage(bm,0,0);bm.close&&bm.close();const d=x.getImageData(0,0,1,1).data;postMessage({id,d:[d[0],d[1],d[2],d[3]]})}catch(_){postMessage({id,d:null})}}";
+        reader = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+        reader.onmessage = (e) => { const r = waiting.get(e.data.id); if (r) { waiting.delete(e.data.id); r(e.data.d); } };
+        reader.onerror = () => { reader = null; waiting.forEach(r => r(null)); waiting.clear(); };
+      }
+    } catch (e) { reader = null; }
+    const readPixel = (bitmap) => new Promise((resolve) => {
+      const id = ++readId;
+      waiting.set(id, resolve);
+      reader.postMessage({ id, bm: bitmap }, [bitmap]);
+    });
+
+    /* The pixel is cut out with createImageBitmap, which the browser does
+       off the main thread, and only the resulting 1x1 bitmap is drawn here.
+       Drawing straight from the image did the decode on the main thread:
+       on a phone-speed CPU that froze the sheet's opening for 160ms and
+       made frames up to 550ms while it scrolled onto new images. The pixel
+       is still read at full resolution, so the light/dark decisions are the
+       same as before; they just arrive a frame or two later. */
+    const crop = (img, x, y) => (typeof createImageBitmap === 'function')
+      ? createImageBitmap(img, x, y, 1, 1)
+      : Promise.resolve(img);                      // old browsers: draw from the image as before
+
+    const sampleImage = async (img, cx, cy) => {
       const nw = img.naturalWidth, nh = img.naturalHeight;
       if (!nw) return null;
       const r = img.getBoundingClientRect();
@@ -945,15 +984,29 @@
       }
       if (sx < 0 || sy < 0 || sx >= nw || sy >= nh) return null;
       try {
-        pctx.clearRect(0, 0, 1, 1);
-        pctx.drawImage(img, sx | 0, sy | 0, 1, 1, 0, 0, 1, 1);
-        const d = pctx.getImageData(0, 0, 1, 1).data;
+        const src = await crop(img, sx | 0, sy | 0);
+        let d;
+        if (src !== img && reader) {
+          d = await readPixel(src);
+          if (!d) return null;
+        } else {
+          const ctx = mainCtx();
+          ctx.clearRect(0, 0, 1, 1);
+          if (src === img) ctx.drawImage(img, sx | 0, sy | 0, 1, 1, 0, 0, 1, 1);
+          else { ctx.drawImage(src, 0, 0); if (src.close) src.close(); }
+          d = ctx.getImageData(0, 0, 1, 1).data;
+        }
         return d[3] < 8 ? null : lumOf(d[0], d[1], d[2]);   // transparent: keep looking
       } catch (e) { return null; }
     };
 
-    const updateCloseTheme = () => {
+    /* Async because the image read is. A newer call supersedes an older one
+       still waiting on its pixel, so a fast scroll never lands on a stale
+       colour. */
+    let themeToken = 0;
+    const updateCloseTheme = async () => {
       if (!modal.classList.contains('is-open')) return;
+      const my = ++themeToken;
       const r = closeBtn.getBoundingClientRect();
       const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       closeBtn.style.pointerEvents = 'none';           // do not hit the button itself
@@ -963,7 +1016,8 @@
       for (const el of stack) {
         if (el === closeBtn || closeBtn.contains(el)) continue;
         if (el.tagName === 'IMG') {
-          const v = sampleImage(el, cx, cy);
+          const v = await sampleImage(el, cx, cy);
+          if (my !== themeToken) return;
           if (v !== null) { lum = v; break; }
           continue;
         }
@@ -976,11 +1030,17 @@
       closeBtn.classList.toggle('is-on-dark', lum < 0.5);
     };
 
-    let themeQueued = 0;
-    const queueCloseTheme = () => {
-      if (themeQueued) return;
-      themeQueued = requestAnimationFrame(() => { themeQueued = 0; updateCloseTheme(); });
-    };
+    /* At most every 120ms while the sheet scrolls, with a trailing call so it
+       always settles on the right colour. elementsFromPoint is a hit test
+       over the whole sheet; on every frame of a 12,000px scroll it was the
+       single largest cost left once the pixel reads were cheap. */
+    let themeQueued = 0, themeTimer = 0, themeLast = 0;
+    function queueCloseTheme() {
+      if (themeQueued || themeTimer) return;
+      const run = () => { themeTimer = 0; themeQueued = requestAnimationFrame(() => { themeQueued = 0; themeLast = performance.now(); updateCloseTheme(); }); };
+      const wait = 120 - (performance.now() - themeLast);
+      if (wait > 0) themeTimer = setTimeout(run, wait); else run();
+    }
     scroller.addEventListener('scroll', queueCloseTheme, { passive: true });
     addEventListener('resize', queueCloseTheme, { passive: true });
 
