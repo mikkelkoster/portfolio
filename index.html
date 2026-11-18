@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mikkel Køster — Design Leader</title>
+<title>Mikkel Køster · Product design and leadership</title>
 <meta name="description" content="Product design and product strategy, hands-on. 15 years in design, 8 of them leading teams.">
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap">
-<link rel="stylesheet" href="v2.css?v=254">
+<link rel="stylesheet" href="v2.css?v=261">
 
 <!-- Safari fills the band behind the status bar with this. Left undeclared it
      samples the page background, which is right until something at the top of
@@ -51,11 +51,30 @@
 
 <header class="nav" id="nav">
   <a class="nav__name" href="#top">Mikkel Køster</a>
+  <nav class="nav__anchors" aria-label="Sections">
+    <a class="nav__anchor" href="#personal">Work</a>
+    <a class="nav__anchor" href="#about">About</a>
+    <a class="nav__anchor" href="#testimonial">References</a>
+    <a class="nav__anchor" href="#experience">Experience</a>
+  </nav>
   <nav class="nav__links">
     <a class="nav__link" href="public/cv/mikkel-koster-cv.pdf">Download CV</a>
     <a class="btn btn--ghost btn--sm" href="https://www.linkedin.com/in/mikkelkoester/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
     <a class="btn btn--primary btn--sm" href="mailto:hello@mikkelkoster.com">Get in touch</a>
+    <button class="nav__menu" id="nav-menu" type="button" aria-expanded="false" aria-controls="nav-sheet" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path class="nav__menu-a" d="M3 7h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="nav__menu-b" d="M3 13h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
   </nav>
+  <div class="nav__sheet" id="nav-sheet" hidden>
+    <a class="nav__sheet-a" href="#personal">Work</a>
+    <a class="nav__sheet-a" href="#about">About</a>
+    <a class="nav__sheet-a" href="#testimonial">References</a>
+    <a class="nav__sheet-a" href="#experience">Experience</a>
+    <div class="nav__sheet-row">
+      <a class="btn btn--ghost btn--sm" href="public/cv/mikkel-koster-cv.pdf">Download CV</a>
+      <a class="btn btn--ghost btn--sm" href="https://www.linkedin.com/in/mikkelkoester/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+    </div>
+  </div>
 </header>
 
 <main id="top">
@@ -109,7 +128,70 @@
       <div class="row rise" style="--d:140ms">
         <span class="row__n">03</span>
         <h3 class="row__t">Maker</h3>
-        <p class="row__b">The best design decisions I've made weren't about how something looked. They were about what to build at all. I stay hands-on and use AI heavily to get to something clickable early. I'd rather hand a team a working prototype than a flat frame, because that's the only way to tell how an interaction actually feels.</p>
+        <p class="row__b">The best design decisions I've made weren't about how something looked. They were about what to build at all. I stay hands-on and use AI heavily to get to something clickable early. I'd rather hand a team a working prototype than a flat frame, because that's the only way to tell how an interaction actually feels. <a class="row__link" href="#personal">See three things I've built</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Personal projects ──────────────────────────────
+       Three products of my own, in one row. It borrows the column and the
+       track from Additional work directly below, so the tiles in the two
+       rows start on the same x and the phone gets swipe for free. With
+       exactly three cards the row fits on a desktop, and the carousel engine
+       hides its own dots and arrows when nothing can scroll.
+
+       Chapeau was the Torque case card at the top of Selected work until the
+       app was renamed. The row now opens the work, ahead of the client cases,
+       on request: the products are the newest work and the clearest proof of
+       "Maker". -->
+  <section class="section--tight" id="personal">
+    <div class="wrap">
+      <p class="label muted rise" style="margin-bottom:20px">Personal projects</p>
+      <p class="case__line rise" style="margin-bottom:44px"><strong>Products I design and build end to end.</strong> From the first sketch to shipped code, with AI doing the heavy lifting on engineering.</p>
+    </div>
+    <div class="car" data-car="pp">
+      <div class="car-track" id="pp-track">
+        <article class="cl-col pp-col">
+          <a class="pp-card" href="https://www.chapeau-app.com" target="_blank" rel="noopener" style="--brand:#E7E4F0" aria-label="Chapeau, visit the website">
+            <span class="pp-screen">
+              <img src="public/images/personal/chapeau-poster.webp?v=1" alt="" loading="lazy" width="540" height="1174">
+              <video class="pp-video" data-src="public/videos/chapeau-loop.mp4?v=1" muted loop playsinline preload="none" aria-hidden="true"></video>
+            </span>
+          </a>
+          <p class="cl-name">Chapeau</p>
+          <p class="cl-desc">Training plans for amateur cyclists. It plans the week around the days you can ride, reads every ride back in plain language and adjusts when life gets in the way.</p>
+          <div class="cl-tags"><span class="cl-tag">iOS</span><span class="cl-tag">Training plans</span><span class="cl-tag">AI coach</span></div>
+          <p class="pp-link"><a href="https://www.chapeau-app.com" target="_blank" rel="noopener">chapeau-app.com</a></p>
+        </article>
+        <article class="cl-col pp-col">
+          <a class="pp-card" href="https://hausy.dk" target="_blank" rel="noopener" style="--brand:#F3E3DA" aria-label="Hausy, visit the website">
+            <span class="pp-screen">
+              <img src="public/images/personal/hausy-home.webp?v=1" alt="" loading="lazy" width="600" height="1304">
+            </span>
+          </a>
+          <p class="cl-name">Hausy</p>
+          <p class="cl-desc">A price estimate for a renovation in minutes instead of weeks. Type the address, say what you want to build, and Hausy prices it from public data about the house and the local plan.</p>
+          <div class="cl-tags"><span class="cl-tag">Web</span><span class="cl-tag">Public data</span><span class="cl-tag">Price estimates</span></div>
+          <p class="pp-link"><a href="https://hausy.dk" target="_blank" rel="noopener">hausy.dk</a><span class="pp-credit">Built with <a href="https://www.linkedin.com/in/mpetersendk" target="_blank" rel="noopener noreferrer">Mark Petersen</a></span></p>
+        </article>
+        <article class="cl-col pp-col">
+          <a class="pp-card" href="https://apps.apple.com/app/klar-car-remote/id6824203026" target="_blank" rel="noopener" style="--brand:#DDF3E4" aria-label="Klar, open in the App Store">
+            <span class="pp-screen">
+              <img src="public/images/personal/klar-home.webp?v=1" alt="" loading="lazy" width="600" height="1304">
+            </span>
+          </a>
+          <p class="cl-name">Klar</p>
+          <p class="cl-desc">A calm remote for an electric car. Warm or cool the cabin, lock it, find it and check the charge from iPhone, Apple Watch, a widget or Siri.</p>
+          <div class="cl-tags"><span class="cl-tag">iOS</span><span class="cl-tag">Apple Watch</span><span class="cl-tag">Widgets and Siri</span></div>
+          <p class="pp-link"><a href="https://apps.apple.com/app/klar-car-remote/id6824203026" target="_blank" rel="noopener">On the App Store</a></p>
+        </article>
+      </div>
+      <div class="car-nav">
+        <div class="car-dots" id="pp-dots"></div>
+        <div class="car-btns">
+          <button class="car-btn" id="pp-prev" type="button" aria-label="Previous"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="car-btn" id="pp-next" type="button" aria-label="Next"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
       </div>
     </div>
   </section>
@@ -118,25 +200,6 @@
   <section class="section wrap" id="work">
     <p class="label muted rise" style="margin-bottom:44px">Selected work</p>
     <div class="cases">
-
-      <article class="case rise">
-        <div class="case__media">
-          <img class="case__poster" src="public/images/torque/torque-stage-poster.jpg?v=4" alt="" loading="lazy">
-          <canvas class="case__canvas" data-stage="torque" data-model="public/models/iphone-17-pro.min.glb"
-                  data-plates="public/images/torque/plates/plate-1.webp?v=3,public/images/torque/plates/plate-2.webp?v=3,public/images/torque/plates/plate-3.webp?v=3,public/images/torque/plates/plate-4.webp?v=3"></canvas>
-        </div>
-        <div class="case__head">
-          <h3 class="h3">Torque</h3>
-          <span class="case__num">01 / 04</span>
-        </div>
-        <p class="case__line"><strong>A cycling app I designed and built end to end</strong> — it reads every ride, keeps the plan honest and explains every number.</p>
-        <div class="meta meta--3">
-          <div><p class="meta__k">Role</p><p class="meta__v">Founder, design and code</p></div>
-          <div><p class="meta__k">Scope</p><p class="meta__v">iOS app, training-plan engine, AI coaching</p></div>
-          <div><p class="meta__k">Status</p><p class="meta__v">On TestFlight, 2026</p></div>
-        </div>
-        <p style="margin-top:32px"><a class="btn btn--ghost btn--sm" href="https://www.torque-fitness.com" target="_blank" rel="noopener">Visit the website</a></p>
-      </article>
 
       <article class="case rise">
         <div class="case__media">
@@ -152,7 +215,7 @@
         </div>
         <div class="case__head">
           <h3 class="h3">Formalize</h3>
-          <span class="case__num">02 / 04</span>
+          <span class="case__num">01 / 03</span>
         </div>
         <p class="case__line"><strong>Building the design function from zero</strong> at a hyper-growth compliance startup.</p>
         <div class="meta meta--3">
@@ -177,11 +240,11 @@
         </div>
         <div class="case__head">
           <h3 class="h3">Maersk</h3>
-          <span class="case__num">03 / 04</span>
+          <span class="case__num">02 / 03</span>
         </div>
         <p class="case__line"><strong>Took design from an afterthought to a strategic function</strong> — across one of the world's largest logistics platforms.</p>
         <div class="meta meta--3">
-          <div><p class="meta__k">Role</p><p class="meta__v">Design Lead</p></div>
+          <div><p class="meta__k">Role</p><p class="meta__v">Lead UX Designer</p></div>
           <div><p class="meta__k">Scope</p><p class="meta__v">Design system, research practice, org design</p></div>
           <div><p class="meta__k">Team</p><p class="meta__v">6 → 12 designers</p></div>
         </div>
@@ -196,7 +259,7 @@
         </div>
         <div class="case__head">
           <h3 class="h3">Matas</h3>
-          <span class="case__num">04 / 04</span>
+          <span class="case__num">03 / 03</span>
         </div>
         <p class="case__line"><strong>Denmark's largest loyalty club, rebuilt</strong> — 2M+ members, 4.6 in the App Store, and best e-commerce app at <span style="white-space:nowrap">E-handelsprisen</span> 2023.</p>
         <div class="meta meta--3">
@@ -340,19 +403,11 @@
       <div class="car-track" id="t-track">
         <article class="t-col">
           <div class="t-card">
-            <p class="t-quote">Mikkel is a rare breed of design leader who doesn't just manage pixels—he scales product vision. As Head of Engineering, I had a front-row seat to his impact. He built a comprehensive, cutting-edge design system entirely from scratch, completely elevating our frontend velocity and aesthetic standards. Mikkel has an unparalleled eye for talent, single-handedly recruiting a world-class design team that consistently punched above its weight. He was absolutely instrumental in shipping critical, high-stakes features for both our Formalize and Whistleblower software. Beyond his craft, Mikkel was the ultimate bridge between Product, Design, and Engineering, always dismantling silos to find the absolute best solution for the product. Any company lucky enough to land him next is getting a transformative leader.</p>
-            <div class="t-who">
-              <img class="t-avatar" src="public/images/main/main-testimonial-emil.webp" alt="" loading="lazy" width="96" height="96">
-              <div>
-                <p class="t-name">Emil Holst Petersen</p>
-                <p class="t-role">Head of Engineering, Formalize</p>
-              </div>
+            <div class="t-body">
+              <p class="t-quote t-excerpt" id="t-ex-anders">Mikkel is incredibly inspiring to work with. He is highly productive while maintaining a very high standard of quality. As a manager and leader, Mikkel creates a strong sense of psychological safety, where everyone wants to contribute without being afraid of failing.</p>
+              <p class="t-quote t-full" id="t-full-anders" hidden>I have had the pleasure of working with Mikkel on two occasions: as a colleague at Hello Group, and at Formalize, where Mikkel was my manager. Mikkel is incredibly inspiring to work with. He is one of those people who seems to have more hours in the day than everyone else. He is highly productive while maintaining a very high standard of quality. As a manager and leader, Mikkel creates a strong sense of psychological safety, where everyone wants to contribute without being afraid of failing. He brings out the best in everyone on the team. I sincerely hope I will get the opportunity to work with Mikkel a third time someday.</p>
+              <button class="t-toggle" type="button" aria-haspopup="dialog" data-full="t-full-anders">Read the full recommendation</button>
             </div>
-          </div>
-        </article>
-        <article class="t-col">
-          <div class="t-card">
-            <p class="t-quote">I have had the pleasure of working with Mikkel on two occasions: as a colleague at Hello Group, and at Formalize, where Mikkel was my manager. Mikkel is incredibly inspiring to work with. He is one of those people who seems to have more hours in the day than everyone else. He is highly productive while maintaining a very high standard of quality. As a manager and leader, Mikkel creates a strong sense of psychological safety, where everyone wants to contribute without being afraid of failing. He brings out the best in everyone on the team. I sincerely hope I will get the opportunity to work with Mikkel a third time someday.</p>
             <div class="t-who">
               <img class="t-avatar" src="public/images/main/main-testimonial-anders.webp" alt="" loading="lazy" width="96" height="96">
               <div>
@@ -364,31 +419,11 @@
         </article>
         <article class="t-col">
           <div class="t-card">
-            <p class="t-quote">Mikkel has strong user-focused design thinking and a lot of energy in how he works. Across multiple product cycles, he always pushed for high quality in design iterations and made collaboration between product, design and engineering very smooth. What I appreciated most was his ability to create alignment and momentum in a stage where the product organisation was still forming. His empathy, team-first mindset, and practical way of working made him a very strong partner in building how we worked across functions.</p>
-            <div class="t-who">
-              <img class="t-avatar" src="public/images/main/main-testimonial-simon.webp" alt="" loading="lazy" width="96" height="96">
-              <div>
-                <p class="t-name">Simon la Fontaine Svenstrup</p>
-                <p class="t-role">Staff Product Manager, Formalize</p>
-              </div>
+            <div class="t-body">
+              <p class="t-quote t-excerpt" id="t-ex-viki">Mikkel was one of the first leaders I'd worked with who truly understood the strategic value of research. Working with Mikkel makes you a better and braver designer, a strong believer in teamwork, and a more confident professional.</p>
+              <p class="t-quote t-full" id="t-full-viki" hidden>Mikkel was one of the first leaders I'd worked with who truly understood the strategic value of research. He didn't just make space for it — he integrated it into how the team operated, and made sure our findings shaped direction rather than just informed delivery. Mikkel is one of the best strategic designers I've had the pleasure of working with. While his design expertise is exceptional, his true strength lies in his leadership. He has a rare ability to bring out the best in people, creating an environment where individuals grow, take ownership, and thrive. Working with Mikkel makes you a better and braver designer, a strong believer in teamwork, and a more confident professional. His quiet optimism and endless curiosity are as contagious as they are powerful.</p>
+              <button class="t-toggle" type="button" aria-haspopup="dialog" data-full="t-full-viki">Read the full recommendation</button>
             </div>
-          </div>
-        </article>
-        <article class="t-col">
-          <div class="t-card">
-            <p class="t-quote">Mikkel brings a rare combination of strong design craft and the ability to simplify complexity. He consistently found ways to break messy problems down into simple, practical concepts — his storytelling made alignment feel easy. Together we co-created a design system, defined page recipes, and established UX principles that gave teams clarity and direction, enabling a full navigation and UI overhaul delivered without compromising quality. As someone responsible for raising the bar on experience, I've worked with many strong profiles. Mikkel stands out. He raises the standard in a way that lasts, both in the product and in the team.</p>
-            <div class="t-who">
-              <img class="t-avatar" src="public/images/main/main-testimonial-patrick.webp" alt="" loading="lazy" width="96" height="96">
-              <div>
-                <p class="t-name">Patrick Rischel</p>
-                <p class="t-role">Senior Digital Product Manager, Novo Nordisk</p>
-              </div>
-            </div>
-          </div>
-        </article>
-        <article class="t-col">
-          <div class="t-card">
-            <p class="t-quote">Mikkel was one of the first leaders I'd worked with who truly understood the strategic value of research. He didn't just make space for it — he integrated it into how the team operated, and made sure our findings shaped direction rather than just informed delivery. Mikkel is one of the best strategic designers I've had the pleasure of working with. While his design expertise is exceptional, his true strength lies in his leadership. He has a rare ability to bring out the best in people, creating an environment where individuals grow, take ownership, and thrive. Working with Mikkel makes you a better and braver designer, a strong believer in teamwork, and a more confident professional. His quiet optimism and endless curiosity are as contagious as they are powerful.</p>
             <div class="t-who">
               <img class="t-avatar" src="public/images/main/main-testimonial-viki.webp" alt="" loading="lazy" width="96" height="96">
               <div>
@@ -400,7 +435,43 @@
         </article>
         <article class="t-col">
           <div class="t-card">
-            <p class="t-quote">It was an absolute pleasure to have worked with Mikkel on the same design team. He created a highly supportive environment where the UX team could thrive, guiding us with both empathy and clear strategic vision. One of his greatest strengths is his ability to tackle messy, complex UX problems and help guide the team toward simple, impactful solutions. He is an exemplary leader who genuinely cares about his people.</p>
+            <div class="t-body">
+              <p class="t-quote t-excerpt" id="t-ex-patrick">Mikkel brings a rare combination of strong design craft and the ability to simplify complexity. Mikkel stands out. He raises the standard in a way that lasts, both in the product and in the team.</p>
+              <p class="t-quote t-full" id="t-full-patrick" hidden>Mikkel brings a rare combination of strong design craft and the ability to simplify complexity. He consistently found ways to break messy problems down into simple, practical concepts — his storytelling made alignment feel easy. Together we co-created a design system, defined page recipes, and established UX principles that gave teams clarity and direction, enabling a full navigation and UI overhaul delivered without compromising quality. As someone responsible for raising the bar on experience, I've worked with many strong profiles. Mikkel stands out. He raises the standard in a way that lasts, both in the product and in the team.</p>
+              <button class="t-toggle" type="button" aria-haspopup="dialog" data-full="t-full-patrick">Read the full recommendation</button>
+            </div>
+            <div class="t-who">
+              <img class="t-avatar" src="public/images/main/main-testimonial-patrick.webp" alt="" loading="lazy" width="96" height="96">
+              <div>
+                <p class="t-name">Patrick Rischel</p>
+                <p class="t-role">Senior Digital Product Manager, Novo Nordisk</p>
+              </div>
+            </div>
+          </div>
+        </article>
+        <article class="t-col">
+          <div class="t-card">
+            <div class="t-body">
+              <p class="t-quote t-excerpt" id="t-ex-emil">He built a comprehensive, cutting-edge design system entirely from scratch, completely elevating our frontend velocity and aesthetic standards. Beyond his craft, Mikkel was the ultimate bridge between Product, Design, and Engineering, always dismantling silos to find the absolute best solution for the product.</p>
+              <p class="t-quote t-full" id="t-full-emil" hidden>Mikkel is a rare breed of design leader who doesn't just manage pixels—he scales product vision. As Head of Engineering, I had a front-row seat to his impact. He built a comprehensive, cutting-edge design system entirely from scratch, completely elevating our frontend velocity and aesthetic standards. Mikkel has an unparalleled eye for talent, single-handedly recruiting a world-class design team that consistently punched above its weight. He was absolutely instrumental in shipping critical, high-stakes features for both our Formalize and Whistleblower software. Beyond his craft, Mikkel was the ultimate bridge between Product, Design, and Engineering, always dismantling silos to find the absolute best solution for the product. Any company lucky enough to land him next is getting a transformative leader.</p>
+              <button class="t-toggle" type="button" aria-haspopup="dialog" data-full="t-full-emil">Read the full recommendation</button>
+            </div>
+            <div class="t-who">
+              <img class="t-avatar" src="public/images/main/main-testimonial-emil.webp" alt="" loading="lazy" width="96" height="96">
+              <div>
+                <p class="t-name">Emil Holst Petersen</p>
+                <p class="t-role">Head of Engineering, Formalize</p>
+              </div>
+            </div>
+          </div>
+        </article>
+        <article class="t-col">
+          <div class="t-card">
+            <div class="t-body">
+              <p class="t-quote t-excerpt" id="t-ex-leo">He created a highly supportive environment where the UX team could thrive, guiding us with both empathy and clear strategic vision. One of his greatest strengths is his ability to tackle messy, complex UX problems and help guide the team toward simple, impactful solutions.</p>
+              <p class="t-quote t-full" id="t-full-leo" hidden>It was an absolute pleasure to have worked with Mikkel on the same design team. He created a highly supportive environment where the UX team could thrive, guiding us with both empathy and clear strategic vision. One of his greatest strengths is his ability to tackle messy, complex UX problems and help guide the team toward simple, impactful solutions. He is an exemplary leader who genuinely cares about his people.</p>
+              <button class="t-toggle" type="button" aria-haspopup="dialog" data-full="t-full-leo">Read the full recommendation</button>
+            </div>
             <div class="t-who">
               <img class="t-avatar" src="public/images/main/main-testimonial-leo.webp" alt="" loading="lazy" width="96" height="96">
               <div>
@@ -412,7 +483,27 @@
         </article>
         <article class="t-col">
           <div class="t-card">
-            <p class="t-quote">I have had the absolute joy of working closely together with Mikkel on some very big projects at the digital agency 1508. He is one of the most talented and pleasant people I have ever worked with, being the very rare combination of extremely ambitious without having an inch of toxic dominant behaviour. Because Mikkel lives and breathes for the realisation that solving complex problems and transforming this into meaningful ideas for change requires close collaboration, with trust and room for everybody to excel; together. In Mikkel you get an exceptionally responsible leader, facilitator and executer, with the right balance of pragmatism and believe in his design thinking ideals. And an excellent storyteller who knows the importance of communicating in a trustworthy and inspirational way.</p>
+            <div class="t-body">
+              <p class="t-quote t-excerpt" id="t-ex-simon">Across multiple product cycles, he always pushed for high quality in design iterations and made collaboration between product, design and engineering very smooth. What I appreciated most was his ability to create alignment and momentum in a stage where the product organisation was still forming.</p>
+              <p class="t-quote t-full" id="t-full-simon" hidden>Mikkel has strong user-focused design thinking and a lot of energy in how he works. Across multiple product cycles, he always pushed for high quality in design iterations and made collaboration between product, design and engineering very smooth. What I appreciated most was his ability to create alignment and momentum in a stage where the product organisation was still forming. His empathy, team-first mindset, and practical way of working made him a very strong partner in building how we worked across functions.</p>
+              <button class="t-toggle" type="button" aria-haspopup="dialog" data-full="t-full-simon">Read the full recommendation</button>
+            </div>
+            <div class="t-who">
+              <img class="t-avatar" src="public/images/main/main-testimonial-simon.webp" alt="" loading="lazy" width="96" height="96">
+              <div>
+                <p class="t-name">Simon la Fontaine Svenstrup</p>
+                <p class="t-role">Staff Product Manager, Formalize</p>
+              </div>
+            </div>
+          </div>
+        </article>
+        <article class="t-col">
+          <div class="t-card">
+            <div class="t-body">
+              <p class="t-quote t-excerpt" id="t-ex-adam">He is one of the most talented and pleasant people I have ever worked with, being the very rare combination of extremely ambitious without having an inch of toxic dominant behaviour. And an excellent storyteller who knows the importance of communicating in a trustworthy and inspirational way.</p>
+              <p class="t-quote t-full" id="t-full-adam" hidden>I have had the absolute joy of working closely together with Mikkel on some very big projects at the digital agency 1508. He is one of the most talented and pleasant people I have ever worked with, being the very rare combination of extremely ambitious without having an inch of toxic dominant behaviour. Because Mikkel lives and breathes for the realisation that solving complex problems and transforming this into meaningful ideas for change requires close collaboration, with trust and room for everybody to excel; together. In Mikkel you get an exceptionally responsible leader, facilitator and executer, with the right balance of pragmatism and believe in his design thinking ideals. And an excellent storyteller who knows the importance of communicating in a trustworthy and inspirational way.</p>
+              <button class="t-toggle" type="button" aria-haspopup="dialog" data-full="t-full-adam">Read the full recommendation</button>
+            </div>
             <div class="t-who">
               <img class="t-avatar" src="public/images/main/main-testimonial-adam.webp" alt="" loading="lazy" width="96" height="96">
               <div>
@@ -502,7 +593,7 @@
           <span class="xp__role">Experience Design Director</span>
           <span class="xp__meta"><span class="xp__where">Agency</span><svg class="xp__chev" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </button>
-        <div class="xp__detail"><div><div class="xp__body"><img class="xp__media" src="public/images/main/main-exp-1508.webp" alt="" loading="lazy" decoding="async" width="528" height="528"><div class="xp__copy"><p class="xp__lead">Led UX strategy across major Danish accounts — Finansforbundet, Club Matas, Dansk Metal.</p><p class="xp__text">Led UX and strategy across 1508's most prominent accounts. Led UX for Club Matas' new customer-facing app and loyalty programme — now Denmark's largest loyalty club with 1.5M members and a 4.6 App Store rating (32,800+ reviews). Drove Finansforbundet's full digital transformation — conceptualising, designing, and optimising 5+ new digital products and thinking them into a coherent ecosystem for 50,000 members. Designed the Dansk Metal job-finding app — used weekly by 66% of all unemployed members, with an iOS rating of 4.0.</p></div></div></div></div>
+        <div class="xp__detail"><div><div class="xp__body"><img class="xp__media" src="public/images/main/main-exp-1508.webp" alt="" loading="lazy" decoding="async" width="528" height="528"><div class="xp__copy"><p class="xp__lead">Led UX strategy across major Danish accounts — Finansforbundet, Club Matas, Dansk Metal.</p><p class="xp__text">Led UX and strategy across 1508's most prominent accounts. Led UX for Club Matas' new customer-facing app and loyalty programme — now Denmark's largest loyalty club with 2M+ members and a 4.6 App Store rating (32,800+ reviews). Drove Finansforbundet's full digital transformation — conceptualising, designing, and optimising 8+ new digital products and thinking them into a coherent ecosystem for 50,000 members. Designed the Dansk Metal job-finding app — used weekly by 66% of all unemployed members, with an iOS rating of 4.0.</p></div></div></div></div>
       </div>
       <div class="xp-more"><div>
 <div class="xp xp--more">
@@ -512,7 +603,7 @@
           <span class="xp__role">Senior Experience Strategist</span>
           <span class="xp__meta"><span class="xp__where">Agency</span><svg class="xp__chev" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </button>
-        <div class="xp__detail"><div><div class="xp__body"><img class="xp__media" src="public/images/main/main-exp-firstborn.webp" alt="" loading="lazy" decoding="async" width="528" height="528"><div class="xp__copy"><p class="xp__lead">6 months in NYC at one of the US's top independent digital agencies — global brands, high craft.</p><p class="xp__text">7 months in New York at Firstborn — named #7 best US design studio, known for purpose-driven craft with forward-looking global brands. Worked between the UX and strategy teams to get them to a shared idea of what strategic design meant in practice. Led a new business venture: a skincare platform that gave each customer a skin ID to narrow down what to buy. Conducted comprehensive UX research and conversion optimisation for Ted Baker's e-commerce platform, and delivered internal training on design thinking, agile methodologies, and hypothesis-driven design.</p></div></div></div></div>
+        <div class="xp__detail"><div><div class="xp__body"><img class="xp__media" src="public/images/main/main-exp-firstborn.webp" alt="" loading="lazy" decoding="async" width="528" height="528"><div class="xp__copy"><p class="xp__lead">6 months in NYC at one of the US's top independent digital agencies — global brands, high craft.</p><p class="xp__text">6 months in New York at Firstborn — named #7 best US design studio, known for purpose-driven craft with forward-looking global brands. Worked between the UX and strategy teams to get them to a shared idea of what strategic design meant in practice. Led a new business venture: a skincare platform that gave each customer a skin ID to narrow down what to buy. Conducted comprehensive UX research and conversion optimisation for Ted Baker's e-commerce platform, and delivered internal training on design thinking, agile methodologies, and hypothesis-driven design.</p></div></div></div></div>
       </div>
       <div class="xp xp--more">
         <button class="xp__row" type="button" aria-expanded="false">
@@ -588,6 +679,25 @@
   <a class="foot__mail rise" style="--d:140ms" href="mailto:hello@mikkelkoster.com">hello@mikkelkoster.com</a>
 </footer>
 
+
+<!-- ── Full recommendation ──────────────────────────────
+     The cards show excerpts; this shows the whole text. One dialog, filled
+     from the card that opened it (avatar, name, role and the hidden .t-full
+     paragraph), so the full texts stay in the page source and nothing is
+     duplicated. Native <dialog>: focus is held inside, Escape closes it. -->
+<dialog class="t-dialog" id="t-dialog" aria-labelledby="t-d-name">
+  <div class="t-d-inner">
+    <button class="t-d-close" id="t-d-close" type="button" aria-label="Close"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+    <div class="t-who t-d-who">
+      <img class="t-avatar" id="t-d-avatar" src="" alt="" width="96" height="96">
+      <div>
+        <p class="t-name" id="t-d-name"></p>
+        <p class="t-role" id="t-d-role"></p>
+      </div>
+    </div>
+    <p class="t-d-text" id="t-d-text"></p>
+  </div>
+</dialog>
 
 <!-- ── Case modal ───────────────────────────────────────
      Same pattern as the current site: the case opens as a sheet over the
@@ -1895,6 +2005,6 @@
   </svg>
 </button>
 
-<script src="v2.js?v=295"></script>
+<script src="v2.js?v=300"></script>
 </body>
 </html>

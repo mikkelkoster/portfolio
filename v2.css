@@ -73,7 +73,10 @@
      Derived rather than guessed, so the third card lands flush with the
      column's right edge at every width up to the cap. */
   --col3:       calc((min(100vw, var(--maxw)) - 2 * var(--gutter) - 2 * 24px) / 3);
-  --sec:        156px;      /* vertical rhythm between sections */
+  /* 128, down from 156. At 156 a .section bottom met a .section--tight top
+     at 253px, which on a 900px-tall laptop was more than a quarter of the
+     screen with nothing in it (after the About stats, before How I work). */
+  --sec:        128px;      /* vertical rhythm between sections */
   --rule:       1px;
 }
 
@@ -265,6 +268,63 @@ a { color: inherit; text-decoration: none; }
 /* The nav is three items and stays three items; the CV link drops first
    if a phone runs out of room. */
 @media (max-width: 560px) { .nav__link { display: none; } }
+
+/* Section anchors. The page runs past 11,000px, so a reader who came for the
+   work or the references needs a way to get there. Centred between the name
+   and the actions on a wide screen; below 900 they move into a sheet behind
+   a menu button, because four links, two buttons and the name do not fit a
+   phone bar. */
+.nav__anchors { display: flex; gap: 28px; }
+.nav__anchor { font-size: 15px; color: var(--ink-55); transition: color .2s ease; }
+.nav__anchor:hover { color: var(--ink); }
+.nav__menu {
+  display: none;
+  width: 44px; height: 44px;
+  margin-right: -10px;
+  border: 0; background: none; padding: 0;
+  color: var(--ink);
+  align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.nav__menu path { transition: transform .3s cubic-bezier(0.76, 0, 0.24, 1); transform-origin: 10px 10px; }
+.nav__menu[aria-expanded="true"] .nav__menu-a { transform: translateY(3px) rotate(45deg); }
+.nav__menu[aria-expanded="true"] .nav__menu-b { transform: translateY(-3px) rotate(-45deg); }
+.nav__sheet {
+  position: absolute;
+  top: 100%; left: 0; right: 0;
+  padding: 12px var(--edge) 28px;
+  background: #fff;
+  border-bottom: var(--rule) solid var(--line);
+  display: flex; flex-direction: column;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity .25s ease, transform .3s cubic-bezier(0.22, 0.7, 0.3, 1);
+}
+.nav__sheet.is-open { opacity: 1; transform: none; }
+.nav__sheet[hidden] { display: none; }
+.nav__sheet-a {
+  font-size: 28px;
+  letter-spacing: -0.03em;
+  padding: 10px 0;
+  border-bottom: var(--rule) solid var(--line);
+}
+.nav__sheet-row { display: flex; gap: 10px; margin-top: 24px; }
+@media (max-width: 900px) {
+  .nav__anchors { display: none; }
+  .nav__menu { display: inline-flex; }
+  .nav__links .btn--ghost { display: none; }
+}
+@media (min-width: 901px) { .nav__sheet { display: none !important; } }
+@media (prefers-reduced-motion: reduce) {
+  .nav__sheet, .nav__menu path { transition: none; }
+}
+/* The bar is sticky, so an anchor would otherwise land with the section's
+   first line under it. */
+section[id] { scroll-margin-top: var(--nav-h); }
+
+/* The one link inside the How I work rows: Maker points at the evidence. */
+.row__link { color: var(--blue); white-space: nowrap; }
+.row__link:hover { color: var(--blue-ink); text-decoration: underline; text-underline-offset: 3px; }
 
 /* ── Hero ──────────────────────────────────────────────── */
 /* Fills the first screen. The nav is sticky and therefore still in flow,
@@ -911,6 +971,76 @@ a { color: inherit; text-decoration: none; }
   padding: 5px 11px;
 }
 
+/* ── Personal projects ─────────────────────────────────────
+   Three products of my own in the Additional work column, so the two rows
+   share an x. The tile is taller than a client tile (4/5 against 1/1)
+   because what it holds is a phone screen, not a logo.
+
+   The screen is flat on purpose. The three cards above it are 3D product
+   shots; a fourth, fifth and sixth device at a third of the size would be
+   the same idea shouted smaller. A bezel is enough to say "phone".
+
+   It runs off the bottom of the tile: a whole 1206x2622 screen inside a 4/5
+   tile is 46% of the tile's width and the type on it stops being legible.
+   At 58% it loses its last 12%, which on all three is the tab bar or a
+   button row and never the content. */
+.pp-card {
+  display: block;
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 16px;
+  background: var(--surface);
+  overflow: hidden;
+  margin-bottom: 22px;
+  transition: background-color .35s cubic-bezier(0.22, 0.7, 0.3, 1);
+}
+.pp-col:hover .pp-card { background: var(--brand, var(--surface)); }
+.pp-screen {
+  position: absolute;
+  top: 11%;
+  left: 21%;
+  width: 58%;
+  aspect-ratio: 1206 / 2622;
+  /* Elliptical so the corner comes out circular: 12% of the width and 5.52%
+     of the height are the same length on a 1206x2622 screen. */
+  border-radius: 12% / 5.52%;
+  overflow: hidden;
+  /* Its own layer. Safari otherwise lets a playing <video> ignore the
+     rounded clip of an ancestor until the next repaint. */
+  isolation: isolate;
+  background: var(--ink);
+  box-shadow: 0 0 0 5px var(--ink), 0 30px 60px -34px rgba(0,0,0,0.38);
+  transition: transform .3s ease-in-out;
+}
+.pp-col:hover .pp-screen { transform: translateY(-1.5%); }
+.pp-screen img, .pp-screen video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+/* Same handoff as the case films: the poster is frame 0 of the loop, and the
+   video fades in over it once it is actually playing. */
+.pp-video { opacity: 0; transition: opacity .6s ease; }
+.pp-video.is-live { opacity: 1; }
+.pp-link { margin: 16px 0 0; font-size: 15px; }
+.pp-link a { color: var(--blue); text-decoration: none; }
+.pp-link a:hover { color: var(--blue-ink); text-decoration: underline; text-underline-offset: 3px; }
+/* Hausy is made with a partner. The credit sits on the link line, in the
+   secondary ink, with his name as the only link in it. */
+.pp-credit { color: var(--ink-55); margin-left: 14px; }
+.pp-credit a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.pp-credit a:hover { color: var(--ink); text-decoration-color: currentColor; }
+@media (prefers-reduced-motion: reduce) {
+  .pp-screen { transition: none; }
+  .pp-col:hover .pp-screen { transform: none; }
+}
+/* Below 900 the shared column is one card wide, which is right for a logo
+   tile and wrong for this one: at 820px it made a 736x920 tile holding a
+   phone 427px across. Capped, so a tablet shows two and the start of the
+   third, and a phone still gets its one card and a sliver. */
+@media (max-width: 900px) { .pp-col { width: min(var(--col3), 340px); } }
+
 /* ── Testimonials ──────────────────────────────────────── */
 /* White, with the cards outlined instead. A tint band behind white cards
    made the section a block of its own; a hairline keeps the page one
@@ -927,10 +1057,100 @@ a { color: inherit; text-decoration: none; }
   gap: 28px;
 }
 .t-quote {
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--ink-55);
+  /* Excerpts now, two or three sentences each, so they can be set larger and
+     in the primary ink. At 16px grey the full texts read as a wall: the
+     first card was 140 words. */
+  font-size: clamp(17px, 1.3vw, 19px);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: var(--ink);
   margin: 0;
+}
+/* Excerpt and its button. The button sits under the quote, not at the foot
+   of the card, so it reads as part of the quote it opens. */
+.t-body { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+.t-toggle {
+  font: inherit;
+  font-size: 15px;
+  color: var(--blue);
+  background: none;
+  border: 0;
+  padding: 6px 0;
+  margin: -6px 0;
+  cursor: pointer;
+  text-align: left;
+}
+.t-toggle:hover { color: var(--blue-ink); text-decoration: underline; text-underline-offset: 3px; }
+.t-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; border-radius: 4px; }
+
+/* ── Full recommendation dialog ─────────────────────────
+   Centred card on a wide screen, a sheet from the bottom on a phone. It
+   scrolls itself when a text is longer than the window, and the page under
+   it is locked the same way the case sheet locks it. */
+.t-dialog {
+  width: min(640px, calc(100vw - 2 * var(--gutter)));
+  max-width: none;
+  max-height: min(86vh, 760px);
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: #fff;
+  color: var(--ink);
+  overflow: hidden;
+  box-shadow: 0 40px 80px -40px rgba(0,0,0,0.35);
+}
+/* The header (who + close) stays put and only the text scrolls, so the
+   close button is never scrolled out of reach on a short phone. */
+.t-dialog[open] { display: flex; flex-direction: column; }
+.t-dialog[open] { animation: t-in .32s cubic-bezier(0.22, 0.7, 0.3, 1); }
+.t-dialog::backdrop { background: rgba(18,18,18,0.42); }
+.t-dialog[open]::backdrop { animation: t-fade .25s ease; }
+@keyframes t-in { from { opacity: 0; transform: translateY(16px); } }
+@keyframes t-fade { from { opacity: 0; } }
+/* All padding lives on the inner box, so a click that lands on the dialog
+   element itself can only be a click on the backdrop. */
+.t-d-inner { position: relative; display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 40px 40px 0; }
+.t-d-who { padding-right: 48px; margin-bottom: 28px; }
+.t-d-text {
+  margin: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 40px;
+  font-size: clamp(17px, 1.3vw, 19px);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  white-space: pre-line;
+}
+.t-d-close {
+  position: absolute;
+  top: 24px; right: 24px;
+  width: 44px; height: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: var(--rule) solid var(--line);
+  border-radius: 100px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color .2s ease;
+}
+.t-d-close:hover { background: var(--surface); }
+@media (max-width: 600px) {
+  .t-dialog {
+    width: 100%;
+    max-height: 88svh;
+    margin: auto 0 0;
+    border-radius: 20px 20px 0 0;
+  }
+  .t-dialog[open] { animation-name: t-up; }
+  @keyframes t-up { from { transform: translateY(100%); } }
+  .t-d-inner { padding: 28px 24px 0; }
+  .t-d-text { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+  .t-d-close { top: 16px; right: 16px; }
+  .t-d-text { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-dialog[open], .t-dialog[open]::backdrop { animation: none; }
 }
 .t-who { display: flex; align-items: center; gap: 14px; }
 .t-avatar { width: 44px; height: 44px; border-radius: 100px; object-fit: cover; filter: grayscale(1); }

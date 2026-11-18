@@ -1,0 +1,9 @@
+# Everything in the repo is otherwise deployed (outputDirectory is ".").
+# Nothing on the site links to any of these.
+_sb.html
+maersk.html
+og-card.html
+figma-challenge-icons.js
+tools/
+public/dev/
+CLAUDE.md

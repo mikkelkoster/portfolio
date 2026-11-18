@@ -314,6 +314,109 @@
   })();
 
 
+  /* ── Personal projects: the Chapeau loop ───────────────
+     One small video in a tile, so it does not go through the case-film
+     loader above — that one owns [data-stage] cards, builds scenes and
+     arbitrates between them. This plays while its tile is on screen and
+     pauses when it is not, on both axes: below 900px the row is a
+     carousel, and a card swiped off to the side should stop decoding.
+
+     The source is attached on first sight, not at load, so the 1.6MB is
+     only fetched by someone who scrolls this far. Under reduced motion
+     nothing is attached at all; the poster is the loop's own first frame. */
+  (() => {
+    const videos = document.querySelectorAll('video.pp-video[data-src]');
+    if (!videos.length || !('IntersectionObserver' in window)) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const v = entry.target;
+        if (entry.isIntersecting) {
+          if (!v.src) {
+            if (!v.canPlayType || !v.canPlayType('video/mp4')) { io.unobserve(v); return; }
+            v.src = v.dataset.src;
+            v.addEventListener('playing', () => v.classList.add('is-live'), { once: true });
+            v.addEventListener('error', () => { v.classList.remove('is-live'); io.unobserve(v); }, { once: true });
+          }
+          const p = v.play();
+          if (p && p.catch) p.catch(() => { /* autoplay refused: the poster stays */ });
+        } else if (v.src) {
+          v.pause();
+        }
+      });
+    }, { threshold: 0.25 });
+    videos.forEach(v => io.observe(v));
+  })();
+
+
+  /* ── Mobile menu ───────────────────────────────────────
+     Below 900 the section anchors sit in a sheet under the bar. It closes
+     on a link (the page then scrolls to the anchor), on Escape, on a tap
+     outside the bar, and when the window grows past the breakpoint. */
+  (() => {
+    const btn = document.getElementById('nav-menu');
+    const sheet = document.getElementById('nav-sheet');
+    const nav = document.getElementById('nav');
+    if (!btn || !sheet || !nav) return;
+    let t;
+    const set = (open) => {
+      btn.setAttribute('aria-expanded', String(open));
+      clearTimeout(t);
+      if (open) {
+        sheet.hidden = false;
+        requestAnimationFrame(() => requestAnimationFrame(() => sheet.classList.add('is-open')));
+      } else {
+        sheet.classList.remove('is-open');
+        t = setTimeout(() => { sheet.hidden = true; }, 300);
+      }
+    };
+    btn.addEventListener('click', () => set(btn.getAttribute('aria-expanded') !== 'true'));
+    sheet.addEventListener('click', (e) => { if (e.target.closest('a')) set(false); });
+    addEventListener('keydown', (e) => { if (e.key === 'Escape' && !sheet.hidden) { set(false); btn.focus(); } });
+    document.addEventListener('click', (e) => { if (!sheet.hidden && !nav.contains(e.target)) set(false); });
+    matchMedia('(min-width: 901px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  })();
+
+
+  /* ── Full recommendation dialog ────────────────────────
+     Each testimonial card holds its full text in a hidden .t-full. The
+     button copies that card's avatar, name, role and text into the one
+     <dialog> and opens it. Closes on the X, Escape (native) and a click on
+     the backdrop; focus goes back to the button that opened it. Where
+     <dialog> is missing the buttons are removed and the excerpts stand. */
+  (() => {
+    const dlg = document.getElementById('t-dialog');
+    const toggles = document.querySelectorAll('.t-toggle[data-full]');
+    if (!dlg || !toggles.length) return;
+    if (typeof dlg.showModal !== 'function') { toggles.forEach(b => b.remove()); return; }
+    const $ = (id) => document.getElementById(id);
+    let opener = null;
+    toggles.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const card = btn.closest('.t-card');
+        const full = document.getElementById(btn.dataset.full);
+        if (!card || !full) return;
+        const av = card.querySelector('.t-avatar');
+        $('t-d-avatar').src = av ? av.currentSrc || av.src : '';
+        $('t-d-name').textContent = card.querySelector('.t-name').textContent;
+        $('t-d-role').textContent = card.querySelector('.t-role').textContent;
+        $('t-d-text').textContent = full.textContent.trim();
+        opener = btn;
+        document.body.style.overflow = 'hidden';
+        dlg.showModal();
+        $('t-d-text').scrollTop = 0;
+      });
+    });
+    $('t-d-close').addEventListener('click', () => dlg.close());
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener('close', () => {
+      document.body.style.overflow = '';
+      if (opener) opener.focus({ preventScroll: true });
+      opener = null;
+    });
+  })();
+
+
   /* ── Count up on entry ─────────────────────────────────
      The real number is in the HTML, so with no JS — or with
      reduced motion — the page states the fact rather than a

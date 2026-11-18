@@ -1,7 +1,7 @@
 # Project: Mikkel Køster Portfolio
 
 ## Stack
-- Single file: `index.html` — no build step, plain HTML/CSS/JS
+- Single file: `index.html` — no build step, plain HTML/CSS/JS (styles in `v2.css`, script in `v2.js`)
 - Preview server: port 3456
 - Images: `public/images/`
 
@@ -1058,3 +1058,69 @@ Everything committed is deployed — `outputDirectory` is `"."` and there is no
 they load must never be tracked. `public/dev/film-vs-render.html` puts the
 live scene and the video side by side at the same instant and the same buffer
 size; verified matching at t = 1.2, 9.0 and 13.5.
+
+## Personal projects — 2026-11-17
+
+Torque was renamed **Chapeau** (chapeau-app.com), and two more products of
+Mikkel's own were added: **Hausy** (hausy.dk) and **Klar** ("Klar: Car Remote" on the
+App Store, id6824203026; the car remote that started as Varme. Its card links
+to the App Store, not to the support pages on klar-car.vercel.app). All three live in ONE row,
+`#personal`, between Selected work and Additional work. Selected work is back
+to the three client cases, numbered `/ 03`.
+
+### Why a row and not three case cards
+A case card is a 16:10 product film with a case study behind it. These have no
+case study, and three more films would have put seven moving devices on one
+page. The row reuses the Additional work column (`.cl-col`, `--col3`, the
+`data-car` engine), so the tiles in the two rows start on the same x and the
+phone layout is the existing carousel. Three cards fit a desktop exactly, and
+`showControls()` hides the dots and arrows when nothing can scroll.
+
+| Class | What it is |
+|---|---|
+| `.pp-col` | marks a column as a personal project; caps its width below 900 |
+| `.pp-card` | the 4/5 tile, an `<a>` to the product's site. Hover tint comes from `--brand`, same as `.cl-card` |
+| `.pp-screen` | a flat phone screen, 58% of the tile, running off the bottom. Bezel is a 5px `box-shadow` spread so it follows the elliptical radius |
+| `.pp-video` | the Chapeau loop over its poster. Fades in on `playing` |
+| `.pp-link` | the site address in blue — it is pressable, so it is allowed to be |
+
+### Assets
+| File | Source |
+|---|---|
+| `public/videos/chapeau-loop.mp4` | `assets/hero/app-loop-2.mp4` from chapeau-app.com (720x1566, 40.8s), re-encoded to 540x1174, crf 27, no audio, faststart. 1.6MB |
+| `public/images/personal/chapeau-poster.webp` | frame 0 of that re-encode, NOT the site's own poster. The poster and the first frame have to be the same picture |
+| `public/images/personal/hausy-home.webp` | hausy.dk at 402x874 @3x in headless Chrome, downsampled to 600 wide |
+| `public/images/personal/klar-home.webp` | `AppStore/screenshots/6.3/1-home.png` from the Klar repo (`mikkelkoster/Fiat-500`), 600 wide |
+
+All three screens are 1206x2622 in proportion. A new one has to match, or the
+`aspect-ratio` on `.pp-screen` crops it.
+
+To refresh the Chapeau loop when the site's hero video changes:
+`ffmpeg -i app-loop-N.mp4 -an -vf scale=540:-2:flags=lanczos -c:v libx264
+-preset slow -crf 27 -pix_fmt yuv420p -movflags +faststart chapeau-loop.mp4`,
+then cut the poster from the OUTPUT and bump both `?v=`.
+
+### The video has its own observer, deliberately
+The note above says not to add a second observer for the case films. This is
+not that: `.pp-video` is not a `[data-stage]` card and is never in `handles`.
+Its block in `v2.js` attaches the source on first sight (verified: 0 requests
+for the mp4 at load, at 1440x1000), plays above 25% visible and pauses below,
+on both axes — which matters under 900px, where a card can be swiped off to
+the side. Under `prefers-reduced-motion` no source is attached at all.
+
+### Left in place
+`public/images/torque/` and the `torque` entries in `stage-configs.js` /
+`stage-configs-mono.js` are no longer referenced by any page. They were not
+deleted in this change. Everything committed is deployed, so they are still
+reachable by URL; remove them with `git rm` when the Torque name should be
+gone entirely.
+
+### Same day, second pass
+- `#personal` now comes BEFORE `#work`, on request. The nav's "Work" anchor points at `#personal`.
+- Nav anchors: Work, About, References, Experience (`.nav__anchors`). Below 900 they move into `.nav__sheet` behind `#nav-menu`; the LinkedIn button moves with them so the bar holds the name, Get in touch and the menu at 390px. `section[id]` carries `scroll-margin-top: var(--nav-h)`.
+- Testimonials are **verbatim excerpts**, whole sentences cut from each recommendation, never reworded. The script that cut them asserted every sentence against the original. Order: Anders, Viki, Patrick, Emil, Leo, Simon, Adam. Each card keeps its full text in a hidden `.t-full`; "Read the full recommendation" opens it in `#t-dialog` (native `<dialog>`, a bottom sheet under 600px). The recommendations are NOT on LinkedIn yet, so nothing may link there until they are.
+- `--sec` 156 → 128.
+- Facts aligned across the page: Matas 2M+ everywhere, Finansforbundet 8+ products, Firstborn 6 months, Maersk role "Lead UX Designer" on the card as in Experience.
+- `.vercelignore` added. `_sb.html`, `maersk.html`, `og-card.html`, `figma-challenge-icons.js`, `tools/`, `public/dev/` and this file are no longer deployed. Nothing linked to any of them.
+
+- Hausy is built with Mark Petersen. `.pp-credit` on its link line names him and links his LinkedIn (tracking parameters stripped from the URL).
